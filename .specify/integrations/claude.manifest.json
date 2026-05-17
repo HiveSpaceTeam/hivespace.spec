@@ -1,0 +1,21 @@
+{
+    "integration":  "claude",
+    "version":  "0.8.12.dev0",
+    "installed_at":  "2026-05-17T07:36:38.4564572Z",
+    "files":  {
+                  ".claude/skills/speckit-analyze/SKILL.md":  "d34b31a245123444b50371962fa62eb4efca3ef17550285cbf3328e7e6c404ff",
+                  ".claude/skills/speckit-checklist/SKILL.md":  "456a2de67cd291f33574803a6332686e3ea64ae160e9f8223ebaa9122563e977",
+                  ".claude/skills/speckit-clarify/SKILL.md":  "8c32a9505bce0bd37988ac5dce1a6dab84662a6f4f7283f46a95454e2d1462f8",
+                  ".claude/skills/speckit-constitution/SKILL.md":  "43c763c64dc7301846e2eab48f798a78ddb7bf9034c51586e9bef80dd2ad0abb",
+                  ".claude/skills/speckit-git-commit/SKILL.md":  "2b0a1073e1c3ef230fc857f54e43ad8e55eb41c61e1376f62a3890bff4a9d4f2",
+                  ".claude/skills/speckit-git-feature/SKILL.md":  "fb12f7c839a6dd18c3987e762ba7fdd0ec8953846b73e836ed98b2b28537a0f9",
+                  ".claude/skills/speckit-git-initialize/SKILL.md":  "a49fdfc134fab4cf81b4347f93436293d130bdf224bfc60b43816b97b90d469f",
+                  ".claude/skills/speckit-git-remote/SKILL.md":  "eb49ad3419df63df1e616f6b0d99b8b9c3ba4c179e757e63eb4c7eab186d3aa2",
+                  ".claude/skills/speckit-git-validate/SKILL.md":  "ded5d96ba153609a52c12545c97b65f2b7057934f41283d06f456171905de202",
+                  ".claude/skills/speckit-implement/SKILL.md":  "16705c05ecdf1e2f315b8253834f72224a7932a64532cf470d67ec6ec6df9189",
+                  ".claude/skills/speckit-plan/SKILL.md":  "eb73bd9a4eabc73c185a70c57dc717b5b1ba5b3dc19d4c06a08daec76bbffa33",
+                  ".claude/skills/speckit-specify/SKILL.md":  "749d33314453da561b9daa7e1070a58611c09c507634d06cac883d317dc52a39",
+                  ".claude/skills/speckit-tasks/SKILL.md":  "f2fa47719495685de61b4c646fa9519df2cdbd9ed6280714718ae4df097cd934",
+                  ".claude/skills/speckit-taskstoissues/SKILL.md":  "7b3c9437d22b01f989d5c9dd78512ee531bda3c2c4fc8bd007cca34349db7b78"
+              }
+}
