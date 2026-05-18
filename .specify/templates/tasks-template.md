@@ -5,7 +5,7 @@ description: "Task list template for feature implementation"
 
 # Tasks: [FEATURE NAME]
 
-**Input**: Design documents from `/specs/[###-feature-name]/`
+**Input**: Design documents from `/specs/[NNNN-feature-name]/`
 
 **Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/, saga-design.md (conditional), linked ADRs (conditional)
 
@@ -25,6 +25,15 @@ description: "Task list template for feature implementation"
 - **Web app**: `backend/src/`, `frontend/src/`
 - **Mobile**: `api/src/`, `ios/src/` or `android/src/`
 - Paths shown below assume single project - adjust based on plan.md structure
+
+## Documentation And Catalog Scope
+
+Generated tasks must distinguish editable docs from verification-only context:
+
+- Owning service docs: add update tasks when the shipped feature changes that service.
+- Changed supporting service docs: add update tasks only when that service's API, event, validation, workflow, ownership, or behavior changed.
+- Reused supporting service docs: read/verify only; do not generate edit tasks.
+- Shared API/event catalogs: add or update only new/changed contracts. Existing common rows reused unchanged are verification-only.
 
 <!--
   ============================================================================
@@ -151,7 +160,8 @@ Examples of foundational tasks (adjust based on your project):
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] TXXX [P] Documentation updates in docs/
+- [ ] TXXX [P] Update owning service docs changed by this feature in services/<owner>/
+- [ ] TXXX [P] Verify reused supporting service docs and shared catalog rows remain unchanged unless their contracts changed
 - [ ] TXXX Code cleanup and refactoring
 - [ ] TXXX Performance optimization across all stories
 - [ ] TXXX [P] Additional unit tests (if requested) in tests/unit/

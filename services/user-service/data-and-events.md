@@ -6,12 +6,14 @@ UserService owns:
 
 - ASP.NET Identity users, roles, claims, logins, tokens.
 - Duende IdentityServer configuration and operational grants.
-- User profile fields, including email verification state.
+- User profile fields, including email verification state, `AvatarFileId`, and resolved `AvatarUrl`.
 - User settings such as culture and theme.
 - User addresses.
 - Store registration records and seller role transition state.
 
 ## Integration Events
+
+### Published Events
 
 | Event | Purpose |
 |---|---|
@@ -21,6 +23,12 @@ UserService owns:
 | `UserEmailVerifiedIntegrationEvent` | Signal verified email state |
 | `StoreCreatedIntegrationEvent` | Let CatalogService/OrderService create store references |
 | `StoreUpdatedIntegrationEvent` | Refresh downstream store references |
+
+### Consumed Events
+
+| Event | Producer | Purpose |
+|---|---|---|
+| `MediaAssetProcessedIntegrationEvent` | MediaService | For `EntityType = "user_avatar"`, update the matching user's `AvatarUrl` only when `AvatarFileId` equals the event `FileId` |
 
 ## Projection Consumers
 

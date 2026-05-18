@@ -12,8 +12,8 @@ Keep agent-specific differences limited to command syntax and file locations:
 | --- | --- | --- |
 | Primary instruction file | `AGENTS.md` | `CLAUDE.md` |
 | Spec Kit skills | `.agents/skills/` | `.claude/skills/` |
-| Built-in Spec Kit command style | `/speckit-clarify` | `/speckit-clarify` |
-| Git extension command style | `/speckit-git-feature` | `/speckit-git-feature` |
+| Built-in Spec Kit command style | `$speckit-clarify` | `/speckit-clarify` |
+| Git extension command style | `$speckit-git-feature` | `/speckit-git-feature` |
 | Custom commands | `.agents/skills/<command>/SKILL.md` | `.claude/commands/<command>.md` |
 
 When adding or changing a shared Spec Kit skill, update both `.agents/skills/` and `.claude/skills/`. When changing repo workflow expectations, update both `AGENTS.md` and `CLAUDE.md`.
@@ -44,16 +44,15 @@ Do this silently before responding:
 | Content | Path |
 | --- | --- |
 | Project principles | `.specify/memory/constitution.md` |
-| Per-feature specs | `specs/NNN-feature-name/spec.md` |
-| Per-feature technical plans | `specs/NNN-feature-name/plan.md` |
-| Per-feature task lists | `specs/NNN-feature-name/tasks.md` |
+| Per-feature specs | `specs/NNNN-feature-name/spec.md` |
+| Per-feature technical plans | `specs/NNNN-feature-name/plan.md` |
+| Per-feature task lists | `specs/NNNN-feature-name/tasks.md` |
 | Current feature pointer | `.specify/feature.json` |
 | Architecture decisions | `architecture/decisions/` |
 | Service documentation | `services/<name>/README.md` |
 | Event catalog | `shared/event-catalog.md` |
 | API catalog | `shared/api-catalog.md` |
 | Domain glossary | `shared/glossary.md` |
-| Documentation backlog | `docs-backlog.md` |
 
 ## Spec Kit Commands
 
@@ -61,23 +60,22 @@ Use the command name that matches the active agent:
 
 | Purpose | Codex | Claude Code |
 | --- | --- | --- |
-| Create or update spec | `/speckit-specify` | `/speckit-specify` |
-| Clarify an existing spec | `/speckit-clarify` | `/speckit-clarify` |
-| Generate checklist | `/speckit-checklist` | `/speckit-checklist` |
-| Create implementation plan | `/speckit-plan` | `/speckit-plan` |
-| Generate tasks | `/speckit-tasks` | `/speckit-tasks` |
-| Analyze artifacts | `/speckit-analyze` | `/speckit-analyze` |
-| Execute tasks | `/speckit-implement` | `/speckit-implement` |
+| Create or update spec | `$speckit-specify` | `/speckit-specify` |
+| Clarify an existing spec | `$speckit-clarify` | `/speckit-clarify` |
+| Generate checklist | `$speckit-checklist` | `/speckit-checklist` |
+| Create implementation plan | `$speckit-plan` | `/speckit-plan` |
+| Generate tasks | `$speckit-tasks` | `/speckit-tasks` |
+| Analyze artifacts | `$speckit-analyze` | `/speckit-analyze` |
+| Execute tasks | `$speckit-implement` | `/speckit-implement` |
 
-Git extension skills are available to both agents as `/speckit-git-feature`, `/speckit-git-commit`, `/speckit-git-initialize`, `/speckit-git-remote`, and `/speckit-git-validate`.
+Git extension skills are available to both agents. Use `$speckit-git-feature`, `$speckit-git-commit`, `$speckit-git-initialize`, `$speckit-git-remote`, and `$speckit-git-validate` in Codex. Use `/speckit-git-feature`, `/speckit-git-commit`, `/speckit-git-initialize`, `/speckit-git-remote`, and `/speckit-git-validate` in Claude Code.
 
 ## Custom Commands
 
-| Command | Purpose |
-| --- | --- |
-| `/update-catalog` | Add new events and endpoints to catalogs |
-| `/handoff` | Generate backend and frontend implementation prompts |
-| `/wrap-up [NNN-name]` | Update service docs and mark a shipped feature done |
+| Purpose | Codex | Claude Code |
+| --- | --- | --- |
+| Add new events and endpoints to catalogs | `$update-catalog` | `/update-catalog` |
+| Update service docs and mark a shipped feature done | `$wrap-up [NNNN-name]` | `/wrap-up [NNNN-name]` |
 
 Codex custom commands live as skills under `.agents/skills/<command>/SKILL.md`. Claude Code custom commands live under `.claude/commands/<command>.md`. Keep paired command content semantically equivalent.
 
@@ -86,44 +84,56 @@ Codex custom commands live as skills under `.agents/skills/<command>/SKILL.md`. 
 Always follow this order:
 
 1. Ask any obvious preliminary business questions before creating a spec.
-2. Run specify before clarify because `/speckit-clarify` requires an existing active spec.
+2. Run specify before clarify because clarify requires an existing active spec.
 3. Run clarify before planning.
 4. Run checklist before planning.
 5. Update catalogs after task generation.
-6. Generate a handoff before switching to an implementation repo.
-7. Wrap up after the full feature ships.
+6. Wrap up after the full feature ships.
 
 When referring to a command, use the active agent's syntax from the table above.
 
+## Service Documentation Scope
+
+Classify every service mentioned by a feature before planning, task generation, catalog update, or wrap-up:
+
+| Classification | Meaning | Documentation/catalog rule |
+| --- | --- | --- |
+| Owning service | Domain data, business rules, workflow, API, or events change for the feature | Update its service docs and any new/changed catalog entries |
+| Changed supporting service | A reused service has an actual API, event, validation, workflow, ownership, or behavior change | Update that service's docs and any changed catalog entries |
+| Reused supporting service | The feature only consumes an existing common capability | Read for context and verification only; do not update its docs or rewrite common catalog rows |
+
+Example: if UserService stores a buyer avatar reference and consumes existing MediaService upload/event contracts unchanged, update UserService docs only. Do not update MediaService docs or shared media catalog entries.
+
 ## When The User Describes A Feature Idea
 
-1. Read the relevant `services/<name>/README.md` files for affected services.
+1. Read the relevant `services/<name>/README.md` files for owning services and supporting services.
 2. Ask any blocking preliminary questions that are clear before writing files.
 3. Run the specify workflow to create an active feature spec under `specs/`.
 4. Run the clarify workflow on that active spec.
 5. After the user answers, propose an approach covering services, events, saga needs, ADR needs, and trade-offs.
 6. Wait for user approval before planning technical artifacts.
-7. Then run checklist, plan, tasks, catalog update, and handoff in that order.
+7. Then run checklist, plan, tasks, and catalog update in that order.
 
 ## Repo Rules
 
 - This repo is planning-only; do not add runnable product code here.
-- Every new public endpoint must be added to `shared/api-catalog.md`.
-- Every new cross-service event, command, saga message, failure event, timeout event, or projection event must be added to `shared/event-catalog.md`.
+- Every new public endpoint, or actual change to an existing public endpoint, must be added to `shared/api-catalog.md`.
+- Every new cross-service event, command, saga message, failure event, timeout event, projection event, or actual change to an existing message contract/consumer set must be added to `shared/event-catalog.md`.
+- Do not rewrite common service docs or shared catalog descriptions just because a feature uses an existing common capability.
 - Write ADRs under `architecture/decisions/` for service-boundary changes, non-obvious technical decisions, data-ownership decisions, messaging decisions, or new architectural patterns.
-- Create feature saga design docs from `.specify/templates/saga-design-template.md` when a feature introduces or changes a multi-service async workflow, compensation path, timeout, retry-driven workflow, or MassTransit state machine.
+- Create feature saga design docs from `.specify/templates/saga-design-template.md` only when a feature introduces or changes a MassTransit saga state machine. Do not create them for ordinary cross-service events, direct-upload flows, simple async consumers, or REST workflows that do not add/change saga state.
 - Before implementation work in a source repo, read that repo's `AGENTS.md` and `CLAUDE.md` if both exist.
 
-## Source Repo Handoff Rules
+## Source Repo Preparation Rules
 
 Before switching to `../hivespace.microservice` or `../hivespace.web`:
 
-1. Generate a handoff prompt with the current feature's `spec.md`, `plan.md`, and `tasks.md`.
-2. Include the affected service docs and catalog references.
-3. Keep backend and frontend prompts scoped to one coherent story or task group.
-4. Remind the implementation agent to follow that repo's own agent instruction files.
+1. Use the current feature's `spec.md`, `plan.md`, and `tasks.md` as the implementation scope.
+2. Include owning service docs, changed supporting service docs, and relevant catalog references in the implementation context.
+3. Keep backend and frontend work scoped to one coherent story or task group.
+4. Follow the target repo's own agent instruction files.
 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
-shell commands, and other important information, read the current plan
+shell commands, and other important information, read `specs/0001-buyer-avatar/plan.md`.
 <!-- SPECKIT END -->

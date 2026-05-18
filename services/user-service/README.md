@@ -45,6 +45,7 @@ UserService is the main legacy exception in the backend. Existing identity funct
 
 - Store creation changes user authorization state; seller app must force token refresh after successful registration.
 - User profile/settings APIs are shared by admin, seller, and buyer apps.
+- Buyer avatar changes use the existing profile update API with an optional `avatarFileId`; MediaService still owns upload, storage, and processing.
 - Address APIs are buyer-facing but remain UserService-owned because addresses belong to the user profile.
 - Downstream services should consume user/store events or maintain projections instead of querying UserService database.
 

@@ -1,14 +1,29 @@
 # Implementation Plan: [FEATURE]
 
-**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
+**Branch**: `[NNNN-feature-name]` | **Date**: [DATE] | **Spec**: [link]
 
-**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
+**Input**: Feature specification from `/specs/[NNNN-feature-name]/spec.md`
 
 **Note**: This template is filled in by the `/speckit-plan` command. See `.specify/templates/plan-template.md` for the execution workflow.
 
 ## Summary
 
 [Extract from feature spec: primary requirement + technical approach from research]
+
+## Service Scope
+
+Classify every service mentioned by the feature before adding implementation or documentation tasks.
+
+| Service | Classification | Reason | Documentation/catalog action |
+|---|---|---|---|
+| [Service] | Owning service / Changed supporting service / Reused supporting service | [Why this service is involved] | [Update docs/catalogs, or verification-only] |
+
+Rules:
+
+- Owning services have feature-owned domain, data, workflow, API, or event changes and may need service doc updates.
+- Changed supporting services may need docs/catalog updates only for actual API, event, validation, workflow, ownership, or behavior changes.
+- Reused supporting services are context only. Do not update their docs or shared catalog rows when existing contracts are reused unchanged.
+- Shared catalogs change only for new contracts or actual changes to existing endpoint/message contract, owner, auth, semantics, or consumer set.
 
 ## Technical Context
 
@@ -47,13 +62,13 @@
 ### Documentation (this feature)
 
 ```text
-specs/[###-feature]/
+specs/[NNNN-feature]/
 ├── plan.md              # This file (/speckit-plan command output)
 ├── research.md          # Phase 0 output (/speckit-plan command)
 ├── data-model.md        # Phase 1 output (/speckit-plan command)
 ├── quickstart.md        # Phase 1 output (/speckit-plan command)
 ├── contracts/           # Phase 1 output (/speckit-plan command)
-├── saga-design.md       # Conditional: required when feature adds/changes a saga
+├── saga-design.md       # Conditional: required when feature adds/changes a MassTransit saga
 └── tasks.md             # Phase 2 output (/speckit-tasks command - NOT created by /speckit-plan)
 
 architecture/decisions/
@@ -122,16 +137,18 @@ Create these files during `/speckit-plan` only when the trigger condition is met
 
 | Artifact | Template | Trigger |
 |---|---|---|
-| `specs/[###-feature]/saga-design.md` | `.specify/templates/saga-design-template.md` | The feature introduces or changes a multi-service async workflow, compensation path, timeout, or MassTransit state machine |
+| `specs/[NNNN-feature]/saga-design.md` | `.specify/templates/saga-design-template.md` | The feature introduces or changes a MassTransit saga state machine |
 | `architecture/decisions/ADR-[NNNN]-[short-slug].md` | `.specify/templates/architecture-decision-template.md` | The plan makes a non-obvious architecture, service-boundary, data-ownership, messaging, or cross-repo decision with meaningful alternatives |
 
 ### Saga Design Rules
 
-- Create `saga-design.md` before writing tasks when the feature coordinates multiple services or has compensation.
+- Create `saga-design.md` before writing tasks only when the feature introduces or changes a MassTransit saga state machine.
+- Do not create `saga-design.md` for ordinary cross-service events, direct-upload flows, simple async consumers, or REST workflows that do not add/change saga state.
 - The owner service must be explicit.
 - Every participant must have clear command/event responsibilities.
 - Every external step must define success, failure, timeout, and idempotency behavior.
 - Any new saga message must also be added to `shared/event-catalog.md`.
+- Existing common messages reused unchanged must stay as general catalog entries and should not be rewritten for one feature-specific use.
 
 ### ADR Rules
 

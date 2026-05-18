@@ -55,8 +55,8 @@ Local gateway defaults:
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
-| GET | `/api/v1/users/me` | `RequireAdminOrUser` | Get authenticated user profile |
-| PUT | `/api/v1/users/me` | `RequireAdminOrUser` | Update authenticated user profile |
+| GET | `/api/v1/users/me` | `RequireAdminOrUser` | Get authenticated user profile, including nullable avatar URL |
+| PUT | `/api/v1/users/me` | `RequireAdminOrUser` | Update authenticated user profile, including optional avatar file ID |
 | GET | `/api/v1/users/settings` | `RequireAdminOrUser` | Get locale/theme/user settings |
 | PUT | `/api/v1/users/settings` | `RequireAdminOrUser` | Update locale/theme/user settings |
 

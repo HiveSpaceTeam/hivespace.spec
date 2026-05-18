@@ -1,6 +1,6 @@
 # Implementation Plan: [FEATURE_NAME]
 
-**Branch:** [NNN-feature-name]
+**Branch:** [NNNN-feature-name]
 **Date:** [DATE]
 **Spec:** [link to spec.md]
 
@@ -12,7 +12,7 @@
 
 ### Existing context (read before planning)
 
-- [ ] `services/<affected>/README.md` — existing aggregates, events, endpoints
+- [ ] `services/<owner-or-supporting>/README.md` — existing aggregates, events, endpoints
 - [ ] `shared/event-catalog.md` — verify no event name conflicts
 - [ ] `shared/api-catalog.md` — verify no endpoint conflicts
 - [ ] Existing saga code (if this feature extends a saga)
@@ -33,6 +33,19 @@
 
 Which service owns this feature and why?
 Reference constitution Article I (service boundaries).
+
+Classify every service mentioned by the feature:
+
+| Service | Classification | Reason | Documentation/catalog action |
+| ------- | -------------- | ------ | ---------------------------- |
+| [Service] | Owning service / Changed supporting service / Reused supporting service | [Why this service is involved] | [Update docs/catalogs, or verification-only] |
+
+Rules:
+
+- Owning services have feature-owned domain, data, workflow, API, or event changes and may need service doc updates.
+- Changed supporting services may need docs/catalog updates only for actual API, event, validation, workflow, ownership, or behavior changes.
+- Reused supporting services are context only. Do not update their docs or shared catalog rows when existing contracts are reused unchanged.
+- Shared catalogs change only for new contracts or actual changes to existing endpoint/message contract, owner, auth, semantics, or consumer set.
 
 ### New aggregates
 
@@ -64,11 +77,15 @@ public interface IDisputeRepository : IRepository<Dispute, DisputeId>
 | ------------------------------- | ---------------- | ------------- | -------------------- |
 | `DisputeOpenedIntegrationEvent` | `dispute.opened` | order-service | notification-service |
 
+If this feature reuses an existing common event unchanged, list it as reused and state that no catalog update is required.
+
 ### API endpoints
 
 | Method | Path                        | Auth  | Handler            |
 | ------ | --------------------------- | ----- | ------------------ |
 | POST   | /api/v1/orders/{id}/dispute | Buyer | OpenDisputeHandler |
+
+If this feature reuses an existing common endpoint unchanged, list it as reused and state that no catalog update is required.
 
 ---
 
@@ -105,16 +122,13 @@ public interface IDisputeRepository : IRepository<Dispute, DisputeId>
 
 ### Saga design (if applicable)
 
-Create `saga-design.md` alongside this file from `.specify/templates/saga-design-template.md` when this feature introduces or changes:
+Create `saga-design.md` alongside this file from `.specify/templates/saga-design-template.md` only when this feature introduces or changes a MassTransit saga state machine.
 
-- a multi-service async workflow
-- a compensation path
-- a timeout or retry-driven workflow
-- a MassTransit state machine
+Do not create `saga-design.md` for ordinary cross-service events, direct-upload flows, simple async consumers, or REST workflows that do not add/change saga state.
 
 If a saga is needed, the plan must link to `saga-design.md`, and the saga design must define owner service, participants, states, messages, compensation, timeouts, idempotency, and observability.
 
-If no saga is needed: state "No saga required" and explain why the feature is single-service or synchronous.
+If no saga is needed: state "No saga required" and explain why the feature does not add or change MassTransit saga state.
 
 ### Architecture decision (if applicable)
 

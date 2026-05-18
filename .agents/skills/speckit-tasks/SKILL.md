@@ -67,6 +67,8 @@ You **MUST** consider the user input before proceeding (if not empty).
    - If research.md exists: Extract decisions for setup tasks
    - If saga-design.md exists: Generate tasks for saga state, messages, consumers, compensation, timeout/idempotency handling, observability, and event catalog updates
    - If plan.md links ADRs: Generate tasks that honor the accepted/draft architectural decisions and include any required follow-up docs/catalog updates
+   - Generate docs/catalog update tasks only for owning services, changed supporting services, new contracts, or changed contracts
+   - Generate verification-only tasks for reused supporting services and unchanged common API/event contracts
    - Generate tasks organized by user story (see Task Generation Rules below)
    - Generate dependency graph showing user story completion order
    - Create parallel execution examples per user story
@@ -84,6 +86,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Dependencies section showing story completion order
    - Parallel execution examples per story
    - Implementation strategy section (MVP first, incremental delivery)
+   - Documentation/catalog scope that says which service docs and catalog entries are editable, and which supporting services are verification-only
 
 5. **Report**: Output path to generated tasks.md and summary:
    - Total task count
@@ -188,6 +191,12 @@ Every task MUST strictly follow this format:
    - Shared infrastructure → Setup phase (Phase 1)
    - Foundational/blocking tasks → Foundational phase (Phase 2)
    - Story-specific setup → within that story's phase
+
+5. **From Documentation/Catalog Scope**:
+   - Owning service docs: doc update tasks when the shipped feature changes that service
+   - Changed supporting service docs: doc update tasks only when that service's API, event, validation, workflow, ownership, or behavior changed
+   - Reused supporting services: verification-only tasks; do not generate doc edit tasks
+   - Existing shared API/event catalog rows: verification-only tasks unless the contract itself changed
 
 ### Phase Structure
 

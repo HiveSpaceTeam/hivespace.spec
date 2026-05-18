@@ -19,18 +19,22 @@ I want to add [feature]. It should let [user] do [outcome].
 
 Before creating files, resolve any obvious business questions.
 
+Command examples use hyphenated names. Codex commands start with `$`; Claude
+Code commands start with `/`.
+
 ## 2. Create The Spec
 
 Run:
 
-```text
-/speckit-specify [feature description]
-```
+| Agent | Command |
+| --- | --- |
+| Codex | `$speckit-specify [feature description]` |
+| Claude Code | `/speckit-specify [feature description]` |
 
 This creates an active feature under:
 
 ```text
-specs/NNN-feature-name/spec.md
+specs/NNNN-feature-name/spec.md
 ```
 
 Review the spec for user stories, acceptance criteria, and business rules.
@@ -39,13 +43,15 @@ Review the spec for user stories, acceptance criteria, and business rules.
 
 Run:
 
-```text
-/speckit-clarify
-```
+| Agent | Command |
+| --- | --- |
+| Codex | `$speckit-clarify` |
+| Claude Code | `/speckit-clarify` |
 
 Use this step to settle:
 
 - Service ownership
+- Whether each service is an owning service, changed supporting service, or reused supporting service
 - User roles and permissions
 - Edge cases and failure behavior
 - Whether a new API is needed
@@ -60,9 +66,10 @@ After clarification, approve the business direction before planning.
 
 Run:
 
-```text
-/speckit-checklist
-```
+| Agent | Command |
+| --- | --- |
+| Codex | `$speckit-checklist` |
+| Claude Code | `/speckit-checklist` |
 
 Fix any missing or unclear requirements before generating the technical plan.
 
@@ -70,13 +77,14 @@ Fix any missing or unclear requirements before generating the technical plan.
 
 Run:
 
-```text
-/speckit-plan
-```
+| Agent | Command |
+| --- | --- |
+| Codex | `$speckit-plan` |
+| Claude Code | `/speckit-plan` |
 
 The plan should cover:
 
-- Affected services and ownership boundaries
+- Affected services and ownership boundaries, classified as owning service, changed supporting service, or reused supporting service
 - Domain model changes
 - Application commands and queries
 - Infrastructure changes and migrations
@@ -86,9 +94,12 @@ The plan should cover:
 - Frontend apps and shared package impact
 - Verification strategy
 
-If the feature introduces or changes a multi-service async workflow,
-compensation path, timeout, retry-driven workflow, or MassTransit state machine,
-create `specs/NNN-feature-name/saga-design.md` from the saga template.
+If the feature introduces or changes a MassTransit saga state machine, create
+`specs/NNNN-feature-name/saga-design.md` from the saga template.
+
+Do not create `saga-design.md` for ordinary cross-service events, direct-upload
+flows, simple async consumers, or REST workflows that do not add/change saga
+state.
 
 If the feature changes service boundaries, data ownership, messaging patterns,
 or makes a non-obvious architecture choice, create an ADR under
@@ -98,18 +109,20 @@ or makes a non-obvious architecture choice, create an ADR under
 
 Run:
 
-```text
-/speckit-tasks
-```
+| Agent | Command |
+| --- | --- |
+| Codex | `$speckit-tasks` |
+| Claude Code | `/speckit-tasks` |
 
 Review `tasks.md`. It is the implementation blueprint and should be ordered by
 dependency, with parallelizable tasks marked clearly.
 
 Recommended quality gate:
 
-```text
-/speckit-analyze
-```
+| Agent | Command |
+| --- | --- |
+| Codex | `$speckit-analyze` |
+| Claude Code | `/speckit-analyze` |
 
 Use the analysis output to fix inconsistencies across `spec.md`, `plan.md`, and
 `tasks.md` before handing work to implementation.
@@ -118,35 +131,22 @@ Use the analysis output to fix inconsistencies across `spec.md`, `plan.md`, and
 
 Run:
 
-```text
-/update-catalog
-```
+| Agent | Command |
+| --- | --- |
+| Codex | `$update-catalog` |
+| Claude Code | `/update-catalog` |
 
 Every new public endpoint must be recorded in `shared/api-catalog.md`.
 Every new integration event, command, saga message, timeout event, failure event,
 or projection event must be recorded in `shared/event-catalog.md`.
 
+Only update existing catalog rows when the actual contract, owner, auth policy,
+message semantics, or consumer set changed. Do not rewrite common endpoint/event
+descriptions just because a feature reuses them.
+
 Do not create duplicate endpoints or duplicate events with different names.
 
-## 8. Generate Handoff Prompts
-
-Run:
-
-```text
-/handoff
-```
-
-This produces backend and frontend implementation prompts scoped from the current
-feature's `spec.md`, `plan.md`, and `tasks.md`.
-
-Before switching repos, make sure the handoff includes:
-
-- Feature spec, plan, and tasks references
-- Affected service docs
-- API and event catalog references
-- Reminder to follow the target repo's `AGENTS.md` and `CLAUDE.md`
-
-## 9. Implement Backend
+## 8. Implement Backend
 
 Switch to the backend repo:
 
@@ -154,20 +154,22 @@ Switch to the backend repo:
 cd ../hivespace.microservice
 ```
 
-Read that repo's `AGENTS.md` and `CLAUDE.md`, then paste the backend handoff.
+Read that repo's `AGENTS.md` and `CLAUDE.md`, then use the current feature's
+`spec.md`, `plan.md`, `tasks.md`, owning/changed supporting service docs, and
+catalog references as the implementation scope.
 
-Typical backend story commands:
+Typical backend story commands, when provided by that repo:
 
-```text
-/start-story
-/done-story
-```
+| Agent | Commands |
+| --- | --- |
+| Codex | `$start-story`, `$done-story` |
+| Claude Code | `/start-story`, `/done-story` |
 
 Backend implementation should follow the repo rules: .NET 8, Clean Architecture,
 CQRS, Minimal APIs for new feature work, SQL Server, EF Core, MassTransit, and
 transactional outbox for outgoing integration messages.
 
-## 10. Implement Frontend
+## 9. Implement Frontend
 
 Switch to the frontend repo:
 
@@ -175,14 +177,16 @@ Switch to the frontend repo:
 cd ../hivespace.web
 ```
 
-Read that repo's `AGENTS.md` and `CLAUDE.md`, then paste the frontend handoff.
+Read that repo's `AGENTS.md` and `CLAUDE.md`, then use the current feature's
+`spec.md`, `plan.md`, `tasks.md`, affected frontend surface notes, and API
+catalog references as the implementation scope.
 
-Typical frontend story commands:
+Typical frontend story commands, when provided by that repo:
 
-```text
-/start-story
-/done-story
-```
+| Agent | Commands |
+| --- | --- |
+| Codex | `$start-story`, `$done-story` |
+| Claude Code | `/start-story`, `/done-story` |
 
 Frontend implementation should follow this order:
 
@@ -196,7 +200,7 @@ Frontend implementation should follow this order:
 
 Always inspect `packages/shared/src` before creating local frontend code.
 
-## 11. Wrap Up
+## 10. Wrap Up
 
 After the feature ships, return to this repo:
 
@@ -206,14 +210,15 @@ cd ../hivespace.spec
 
 Run:
 
-```text
-/wrap-up NNN-feature-name
-```
+| Agent | Command |
+| --- | --- |
+| Codex | `$wrap-up NNNN-feature-name` |
+| Claude Code | `/wrap-up NNNN-feature-name` |
 
 Wrap-up should:
 
 - Update affected `services/<service-name>/README.md` docs.
-- Verify `shared/api-catalog.md` and `shared/event-catalog.md`.
+- Update only owning service docs or supporting service docs whose contracts or behavior changed.
+- Verify `shared/api-catalog.md` and `shared/event-catalog.md`, but edit only new/changed contracts.
 - Mark the feature status as done.
-- Update `docs-backlog.md` when relevant.
 - Summarize changed files.

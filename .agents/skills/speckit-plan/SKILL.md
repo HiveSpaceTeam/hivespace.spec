@@ -59,6 +59,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 3. **Execute plan workflow**: Follow the structure in IMPL_PLAN template to:
    - Fill Technical Context (mark unknowns as "NEEDS CLARIFICATION")
    - Fill Constitution Check section from constitution
+   - Classify every mentioned service as owning service, changed supporting service, or reused supporting service
    - Evaluate gates (ERROR if violations unjustified)
    - Phase 0: Generate research.md (resolve all NEEDS CLARIFICATION)
    - Phase 1: Generate data-model.md, contracts/, quickstart.md
@@ -138,12 +139,14 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Skip if project is purely internal (build scripts, one-off tools, etc.)
 
 3. **Generate conditional design artifacts**:
-   - Create `saga-design.md` in the feature spec directory from `.specify/templates/saga-design-template.md` when the feature introduces or changes a multi-service async workflow, compensation path, timeout, or MassTransit state machine
+   - Create `saga-design.md` in the feature spec directory from `.specify/templates/saga-design-template.md` only when the feature introduces or changes a MassTransit saga state machine
+   - Do not create `saga-design.md` for ordinary cross-service events, direct-upload flows, simple async consumers, or REST workflows that do not add/change saga state
    - Create `architecture/decisions/ADR-[NNNN]-[short-slug].md` from `.specify/templates/architecture-decision-template.md` when the feature makes a non-obvious architecture, service-boundary, data-ownership, messaging, or cross-repo decision with meaningful alternatives
    - For ADR numbering, inspect `architecture/decisions/` for the highest existing ADR number and use the next sequential number
    - Reference generated `saga-design.md` and ADR files from `plan.md` when they affect implementation tasks
-   - Update `shared/event-catalog.md` for any new saga or integration messages identified during planning
-   - Update `shared/api-catalog.md` for any new public endpoints identified during planning
+   - Update `shared/event-catalog.md` only for new integration messages or actual changes to existing message ownership, semantics, or consumer sets
+   - Update `shared/api-catalog.md` only for new public endpoints or actual changes to existing endpoint path, method, auth, owner, request/response contract, or purpose
+   - Do not update reused supporting service docs or shared catalog rows when the feature only consumes existing common capabilities
 
 4. **Agent context update**:
    - Update the plan reference between the `<!-- SPECKIT START -->` and `<!-- SPECKIT END -->` markers in `AGENTS.md` to point to the plan file created in step 1 (the IMPL_PLAN path)
@@ -154,3 +157,4 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 - Use absolute paths for filesystem operations; use project-relative paths for references in documentation and agent context files
 - ERROR on gate failures or unresolved clarifications
+- Plans must explicitly say whether reused common contracts are unchanged and require no catalog update

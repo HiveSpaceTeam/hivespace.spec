@@ -17,8 +17,9 @@ Step 2 - Update event catalog
 - For each message:
   - Check whether a contract with the same name or equivalent meaning already exists.
   - If missing, add it to the correct section using the existing table shape for that section.
-  - Preserve existing contract names, owners, consumers, and descriptions.
-- Do not rename or remove existing events.
+  - If an existing contract changed in name, owner, payload semantics, or consumer set, update only the stale fields.
+  - Preserve existing contract names, owners, consumers, and descriptions when the feature only reuses that contract.
+- Do not rename, remove, or rewrite existing events just to mention one feature-specific use of a common message.
 
 Step 3 - Update API catalog
 - Read `shared/api-catalog.md`.
@@ -26,9 +27,10 @@ Step 3 - Update API catalog
 - For each endpoint:
   - Check whether the method and path already exist.
   - If missing, add it to the correct service section using the existing table shape.
-  - Preserve existing paths, auth policies, and purposes.
-- Do not remove existing endpoints.
+  - If an existing endpoint changed in path, method, auth, owner, request/response contract, or purpose, update only the stale fields.
+  - Preserve existing paths, auth policies, and purposes when the feature only reuses that endpoint.
+- Do not remove or rewrite existing endpoints just to mention one feature-specific use of a common API.
 
 Step 4 - Report
-- Summarize every catalog entry added.
+- Summarize every catalog entry added or updated.
 - If nothing changed, say `Catalogs are already up to date.`

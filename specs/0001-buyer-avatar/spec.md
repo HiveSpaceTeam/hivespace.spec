@@ -1,12 +1,20 @@
 # Feature Specification: Buyer Avatar
 
-**Feature Branch**: `001-buyer-avatar`
+**Feature Branch**: `0001-buyer-avatar`
 
 **Created**: 2026-05-17
 
-**Status**: Draft
+**Status**: Implemented
+**Implemented**: 2026-05-18
 
 **Input**: User description: "I want to add a new feature so user could change and upload their avatar in profile page of buyer app"
+
+## Clarifications
+
+### Session 2026-05-17
+
+- Q: Should avatar updates use a new endpoint or the existing profile update flow? -> A: Use the existing profile update flow; include avatar data only when the buyer changes their avatar.
+- Q: Should the avatar picker show the selected file name under the image section? -> A: No; the profile page should preview the image without displaying the selected file name below the avatar section.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -38,6 +46,7 @@ As an authenticated buyer, I want to preview the selected image before saving so
 
 1. **Given** an authenticated buyer is editing their avatar, **When** they select a valid image, **Then** the page displays a preview of how the avatar will appear before the buyer saves.
 2. **Given** an authenticated buyer sees a selected image preview, **When** they choose a different valid image before saving, **Then** the preview updates to the latest selected image.
+3. **Given** an authenticated buyer selects a valid image, **When** the preview is displayed, **Then** the page does not show the selected file name below the avatar section.
 
 ---
 
@@ -82,6 +91,7 @@ As an authenticated buyer, I want clear feedback when my avatar cannot be accept
 - **FR-011**: The system MUST prevent one buyer from changing another user's avatar.
 - **FR-012**: The system MUST show the latest successfully saved avatar when the buyer returns to the profile page.
 - **FR-013**: The system MUST continue showing a default avatar for buyers who have not saved a custom avatar.
+- **FR-014**: The avatar picker MUST NOT display the selected file name below the avatar preview section.
 
 ### Key Entities
 
@@ -94,10 +104,9 @@ As an authenticated buyer, I want clear feedback when my avatar cannot be accept
 ### Measurable Outcomes
 
 - **SC-001**: 90% of buyers who start with a valid image can complete the avatar change in under 2 minutes.
-- **SC-002**: 95% of successful avatar changes show the updated avatar on the buyer profile page within 5 seconds after confirmation.
+- **SC-002**: 95% of avatar changes whose media processing completes within 5 seconds after confirmation show the updated avatar on the buyer profile page without a manual refresh.
 - **SC-003**: 100% of unsupported or oversized files are rejected before replacing the buyer's saved avatar.
 - **SC-004**: In usability testing, at least 80% of participants can identify whether their avatar change was saved, failed, or still pending without assistance.
-- **SC-005**: Support reports related to "cannot change profile avatar" remain below 2% of active avatar-change attempts during the first release window.
 
 ## Assumptions
 
