@@ -31,7 +31,7 @@ git rev-parse --abbrev-ref HEAD
 
 The branch name must match one of these patterns:
 
-1. **Sequential**: `^[0-9]{3,}-` (e.g., `001-feature-name`, `042-fix-bug`, `1000-big-feature`)
+1. **Sequential**: `^[0-9]{4,}-` (e.g., `0001-feature-name`, `0042-fix-bug`, `1000-big-feature`)
 2. **Timestamp**: `^[0-9]{8}-[0-9]{6}-` (e.g., `20260319-143022-feature-name`)
 
 ## Execution
@@ -46,7 +46,7 @@ If on a feature branch (matches either pattern):
 
 If NOT on a feature branch:
 - Output: `✗ Not on a feature branch. Current branch: <branch-name>`
-- Output: `Feature branches should be named like: 001-feature-name or 20260319-143022-feature-name`
+- Output: `Feature branches should be named like: 0001-feature-name or 20260319-143022-feature-name`
 
 ## Graceful Degradation
 

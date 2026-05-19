@@ -184,7 +184,7 @@ Number ADRs sequentially based on the existing files in `architecture/decisions/
 
 During planning, create:
 
-- `specs/<feature>/saga-design.md` from `.specify/templates/saga-design-template.md` when a feature introduces or changes a multi-service async workflow, compensation path, timeout, retry-driven workflow, or MassTransit state machine.
+- `specs/<feature>/saga-design.md` from `.specify/templates/saga-design-template.md` only when a feature introduces or changes a MassTransit saga state machine. Do not create it for ordinary cross-service events, direct-upload flows, simple async consumers, or REST workflows that do not add/change saga state.
 - `architecture/decisions/ADR-[NNNN]-[short-slug].md` from `.specify/templates/architecture-decision-template.md` when an ADR is required by the ADR Rule.
 
 Plans and tasks must reference these artifacts when they exist.

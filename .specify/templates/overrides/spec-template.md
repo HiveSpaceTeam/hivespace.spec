@@ -1,7 +1,7 @@
 # Feature Spec: [FEATURE_NAME]
 
 **Status:** Draft | In Review | Approved | In Progress | Implemented
-**Branch:** [NNN-feature-name]
+**Branch:** [NNNN-feature-name]
 **Created:** [DATE]
 
 ---

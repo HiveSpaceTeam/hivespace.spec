@@ -7,7 +7,7 @@ Git repository initialization, feature branch creation, numbering (sequential/ti
 This extension provides Git operations as an optional, self-contained module. It manages:
 
 - **Repository initialization** with configurable commit messages
-- **Feature branch creation** with sequential (`001-feature-name`) or timestamp (`20260319-143022-feature-name`) numbering
+- **Feature branch creation** with sequential (`0001-feature-name`) or timestamp (`20260319-143022-feature-name`) numbering
 - **Branch validation** to ensure branches follow naming conventions
 - **Git remote detection** for GitHub integration (e.g., issue creation)
 - **Auto-commit** after core commands (configurable per-command with custom messages)

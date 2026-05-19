@@ -110,8 +110,8 @@ get_highest_from_specs() {
         for dir in "$specs_dir"/*; do
             [ -d "$dir" ] || continue
             dirname=$(basename "$dir")
-            # Match sequential prefixes (>=3 digits), but skip timestamp dirs.
-            if echo "$dirname" | grep -Eq '^[0-9]{3,}-' && ! echo "$dirname" | grep -Eq '^[0-9]{8}-[0-9]{6}-'; then
+            # Match sequential prefixes (>=4 digits), but skip timestamp dirs.
+            if echo "$dirname" | grep -Eq '^[0-9]{4,}-' && ! echo "$dirname" | grep -Eq '^[0-9]{8}-[0-9]{6}-'; then
                 number=$(echo "$dirname" | grep -Eo '^[0-9]+')
                 number=$((10#$number))
                 if [ "$number" -gt "$highest" ]; then
@@ -134,7 +134,7 @@ _extract_highest_number() {
     local highest=0
     while IFS= read -r name; do
         [ -z "$name" ] && continue
-        if echo "$name" | grep -Eq '^[0-9]{3,}-' && ! echo "$name" | grep -Eq '^[0-9]{8}-[0-9]{6}-'; then
+        if echo "$name" | grep -Eq '^[0-9]{4,}-' && ! echo "$name" | grep -Eq '^[0-9]{8}-[0-9]{6}-'; then
             number=$(echo "$name" | grep -Eo '^[0-9]+' || echo "0")
             number=$((10#$number))
             if [ "$number" -gt "$highest" ]; then
@@ -350,7 +350,7 @@ else
             fi
         fi
 
-        FEATURE_NUM=$(printf "%03d" "$((10#$BRANCH_NUMBER))")
+        FEATURE_NUM=$(printf "%04d" "$((10#$BRANCH_NUMBER))")
         BRANCH_NAME="${FEATURE_NUM}-${BRANCH_SUFFIX}"
     fi
 fi

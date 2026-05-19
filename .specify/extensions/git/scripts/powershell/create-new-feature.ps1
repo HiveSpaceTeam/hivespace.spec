@@ -54,7 +54,7 @@ function Get-HighestNumberFromSpecs {
     [long]$highest = 0
     if (Test-Path $SpecsDir) {
         Get-ChildItem -Path $SpecsDir -Directory | ForEach-Object {
-            if ($_.Name -match '^(\d{3,})-' -and $_.Name -notmatch '^\d{8}-\d{6}-') {
+            if ($_.Name -match '^(\d{4,})-' -and $_.Name -notmatch '^\d{8}-\d{6}-') {
                 [long]$num = 0
                 if ([long]::TryParse($matches[1], [ref]$num) -and $num -gt $highest) {
                     $highest = $num
@@ -70,7 +70,7 @@ function Get-HighestNumberFromNames {
 
     [long]$highest = 0
     foreach ($name in $Names) {
-        if ($name -match '^(\d{3,})-' -and $name -notmatch '^\d{8}-\d{6}-') {
+        if ($name -match '^(\d{4,})-' -and $name -notmatch '^\d{8}-\d{6}-') {
             [long]$num = 0
             if ([long]::TryParse($matches[1], [ref]$num) -and $num -gt $highest) {
                 $highest = $num
@@ -303,7 +303,7 @@ if ($env:GIT_BRANCH_NAME) {
             }
         }
 
-        $featureNum = ('{0:000}' -f $Number)
+        $featureNum = ('{0:0000}' -f $Number)
         $branchName = "$featureNum-$branchSuffix"
     }
 }

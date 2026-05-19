@@ -20,7 +20,7 @@ Use this repo to:
 - Turn feature ideas into clear product specs.
 - Clarify business requirements before implementation starts.
 - Plan service ownership, API contracts, events, sagas, and ADRs.
-- Generate implementation tasks and handoff prompts.
+- Generate ordered implementation tasks.
 - Keep service docs, API catalog, and event catalog current after shipping.
 
 Do not add runnable backend or frontend product code here.
@@ -38,9 +38,9 @@ Do not add runnable backend or frontend product code here.
 | `shared/event-catalog.md` | Cross-service event, command, saga, and projection catalog |
 | `shared/coding-conventions.md` | Backend and frontend coding conventions |
 | `shared/glossary.md` | Domain terminology |
-| `specs/NNN-feature-name/spec.md` | Feature requirements |
-| `specs/NNN-feature-name/plan.md` | Technical implementation plan |
-| `specs/NNN-feature-name/tasks.md` | Ordered implementation task list |
+| `specs/NNNN-feature-name/spec.md` | Feature requirements |
+| `specs/NNNN-feature-name/plan.md` | Technical implementation plan |
+| `specs/NNNN-feature-name/tasks.md` | Ordered implementation task list |
 | `.specify/feature.json` | Current active feature pointer |
 | `AGENTS.md` | Codex instructions |
 | `CLAUDE.md` | Claude Code instructions |
@@ -66,22 +66,23 @@ Then inspect the implementation source in `../hivespace.microservice` or
 ## Feature Workflow
 
 Follow [FEATURE-WORKFLOW.md](FEATURE-WORKFLOW.md) for the full feature process,
-from idea capture through spec, clarify, plan, tasks, implementation handoff,
+from idea capture through spec, clarify, plan, tasks, implementation,
 catalog updates, and wrap-up.
 
 ## Command Cheat Sheet
 
-| Command | Purpose |
-| --- | --- |
-| `/speckit-specify [idea]` | Create or update a feature spec |
-| `/speckit-clarify` | Clarify an existing active spec |
-| `/speckit-checklist` | Validate requirement completeness |
-| `/speckit-plan` | Create technical planning artifacts |
-| `/speckit-tasks` | Create ordered implementation tasks |
-| `/speckit-analyze` | Check consistency across spec, plan, and tasks |
-| `/update-catalog` | Update API and event catalogs |
-| `/handoff` | Generate implementation prompts |
-| `/wrap-up [NNN-name]` | Update docs after shipping |
+Command names are hyphenated. Use the prefix for the active agent.
+
+| Purpose | Codex | Claude Code |
+| --- | --- | --- |
+| Create or update a feature spec | `$speckit-specify [idea]` | `/speckit-specify [idea]` |
+| Clarify an existing active spec | `$speckit-clarify` | `/speckit-clarify` |
+| Validate requirement completeness | `$speckit-checklist` | `/speckit-checklist` |
+| Create technical planning artifacts | `$speckit-plan` | `/speckit-plan` |
+| Create ordered implementation tasks | `$speckit-tasks` | `/speckit-tasks` |
+| Check consistency across spec, plan, and tasks | `$speckit-analyze` | `/speckit-analyze` |
+| Update API and event catalogs | `$update-catalog` | `/update-catalog` |
+| Update docs after shipping | `$wrap-up [NNNN-name]` | `/wrap-up [NNNN-name]` |
 
 ## Architecture Rules To Remember
 

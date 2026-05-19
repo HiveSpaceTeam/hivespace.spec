@@ -2,7 +2,7 @@
 
 **Status**: Draft
 **Date**: [YYYY-MM-DD]
-**Feature**: `[###-feature-name or N/A]`
+**Feature**: `[NNNN-feature-name or N/A]`
 **Deciders**: [Names/roles or "Project maintainers"]
 
 ## Context

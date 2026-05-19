@@ -18,8 +18,10 @@ requires:
     # ``any: [...]`` schema -- it is NOT a closed set. The workflow runs
     # against any integration the project was initialized with, including
     # ones not listed below, as long as that integration provides the four
-    # core commands referenced in ``steps``.
+    # core commands referenced in ``steps``. Codex user-facing commands use
+    # ``$speckit-*`` while Claude Code uses ``/speckit-*``.
     any:
+      - "codex"
       - "claude"
       - "copilot"
       - "gemini"
@@ -33,7 +35,7 @@ inputs:
   integration:
     type: string
     default: "auto"
-    prompt: "Integration to use (e.g. claude, copilot, gemini; 'auto' uses the project's initialized integration)"
+    prompt: "Integration to use (e.g. codex, claude, copilot, gemini; 'auto' uses the project's initialized integration)"
   scope:
     type: string
     default: "full"
