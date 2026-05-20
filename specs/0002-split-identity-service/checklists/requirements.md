@@ -1,7 +1,7 @@
-# Specification Quality Checklist: Buyer Avatar
+# Specification Quality Checklist: Split Identity Service
 
 - **Purpose**: Validate specification completeness and quality before proceeding to planning
-- **Created**: 2026-05-17
+- **Created**: 2026-05-20
 - **Feature**: [spec.md](../spec.md)
 
 ## Content Quality
@@ -31,4 +31,5 @@
 
 ## Notes
 
-- Validation passed on first review. No clarification markers remain.
+- Validation passed after initial specification review.
+- The specification intentionally names `IdentityService` and `UserService` because the requested feature is a service-boundary migration.

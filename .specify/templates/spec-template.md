@@ -1,12 +1,9 @@
 # Feature Specification: [FEATURE NAME]
 
-**Feature Branch**: `[NNNN-feature-name]`
-
-**Created**: [DATE]
-
-**Status**: Draft
-
-**Input**: User description: "$ARGUMENTS"
+- **Feature Branch**: `[NNNN-feature-name]`
+- **Created**: [DATE]
+- **Status**: Draft
+- **Input**: User description: "$ARGUMENTS"
 
 ## User Scenarios & Testing *(mandatory)*
 

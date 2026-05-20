@@ -135,5 +135,5 @@ Before switching to `../hivespace.microservice` or `../hivespace.web`:
 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
-shell commands, and other important information, read `specs/0001-buyer-avatar/plan.md`.
+shell commands, and other important information, read `specs/0002-split-identity-service/plan.md`.
 <!-- SPECKIT END -->

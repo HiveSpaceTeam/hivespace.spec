@@ -1,10 +1,10 @@
 # Saga Design: [FEATURE / WORKFLOW NAME]
 
-**Feature**: `[NNNN-feature-name]`
-**Date**: [DATE]
-**Owner service**: [e.g., OrderService]
-**Saga type**: MassTransit StateMachine
-**Status**: Draft
+- **Feature**: `[NNNN-feature-name]`
+- **Date**: [DATE]
+- **Owner service**: [e.g., OrderService]
+- **Saga type**: MassTransit StateMachine
+- **Status**: Draft
 
 ## Purpose
 
