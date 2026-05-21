@@ -1,9 +1,9 @@
 # ADR-[NNNN]: [Title]
 
-**Status**: Draft
-**Date**: [YYYY-MM-DD]
-**Feature**: `[NNNN-feature-name or N/A]`
-**Deciders**: [Names/roles or "Project maintainers"]
+- **Status**: Draft
+- **Date**: [YYYY-MM-DD]
+- **Feature**: `[NNNN-feature-name or N/A]`
+- **Deciders**: [Names/roles or "Project maintainers"]
 
 ## Context
 

@@ -1,12 +1,9 @@
 # Tasks: Buyer Avatar
 
-**Input**: Design documents from `/specs/0001-buyer-avatar/`
-
-**Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/avatar-api.md, quickstart.md
-
-**Tests**: Automated test tasks are not generated because TDD/automated tests were not explicitly requested. Verification tasks use targeted builds, lint/type-check, and the manual quickstart flow.
-
-**Organization**: Tasks are grouped by user story to enable independent implementation and testing.
+- **Input**: Design documents from `/specs/0001-buyer-avatar/`
+- **Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/avatar-api.md, quickstart.md
+- **Tests**: Automated test tasks are not generated because TDD/automated tests were not explicitly requested. Verification tasks use targeted builds, lint/type-check, and the manual quickstart flow.
+- **Organization**: Tasks are grouped by user story to enable independent implementation and testing.
 
 ## Format: `[ID] [P?] [Story] Description`
 

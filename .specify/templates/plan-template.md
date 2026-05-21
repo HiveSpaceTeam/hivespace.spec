@@ -1,10 +1,10 @@
 # Implementation Plan: [FEATURE]
 
-**Branch**: `[NNNN-feature-name]` | **Date**: [DATE] | **Spec**: [link]
-
-**Input**: Feature specification from `/specs/[NNNN-feature-name]/spec.md`
-
-**Note**: This template is filled in by the `/speckit-plan` command. See `.specify/templates/plan-template.md` for the execution workflow.
+- **Branch**: `[NNNN-feature-name]`
+- **Date**: [DATE]
+- **Spec**: [link]
+- **Input**: Feature specification from `/specs/[NNNN-feature-name]/spec.md`
+- **Note**: This template is filled in by the `/speckit-plan` command. See `.specify/templates/plan-template.md` for the execution workflow.
 
 ## Summary
 

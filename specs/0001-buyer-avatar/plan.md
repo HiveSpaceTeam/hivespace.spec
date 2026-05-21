@@ -1,8 +1,8 @@
 # Implementation Plan: Buyer Avatar
 
-**Branch:** `001-buyer-avatar`
-**Date:** 2026-05-18
-**Spec:** [spec.md](spec.md)
+- **Branch:** `001-buyer-avatar`
+- **Date:** 2026-05-18
+- **Spec:** [spec.md](spec.md)
 
 > Constitution loaded from `.specify/memory/constitution.md` before planning.
 

@@ -1,13 +1,10 @@
 # Feature Specification: Buyer Avatar
 
-**Feature Branch**: `0001-buyer-avatar`
-
-**Created**: 2026-05-17
-
-**Status**: Implemented
-**Implemented**: 2026-05-18
-
-**Input**: User description: "I want to add a new feature so user could change and upload their avatar in profile page of buyer app"
+- **Feature Branch**: `0001-buyer-avatar`
+- **Created**: 2026-05-17
+- **Status**: Implemented
+- **Implemented**: 2026-05-18
+- **Input**: User description: "I want to add a new feature so user could change and upload their avatar in profile page of buyer app"
 
 ## Clarifications
 
