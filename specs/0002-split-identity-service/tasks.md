@@ -28,8 +28,7 @@
 |   |   |-- IdentityEndpoints.cs
 |   |   `-- AdminIdentityEndpoints.cs
 |   |-- Consumers/
-|   |   `-- Sync/
-|   |       `-- SellerRoleAssignmentRequestedConsumer.cs
+|   |   `-- SellerRoleAssignmentRequestedConsumer.cs
 |   |-- Extensions/
 |   |   |-- HostingExtensions.cs
 |   |   `-- ServiceCollectionExtensions.cs
@@ -108,7 +107,7 @@
 
 **Goal**: Platform users can register, sign in, receive tokens, and reach role-appropriate app areas through IdentityService.
 
-**Independent Test**: Sign in as buyer, seller, admin, and inactive/suspended account through `/api/v1/identity/**`; confirm correct access or denial without UserService profile reads.
+**Independent Test**: Sign in as buyer, seller, admin, and inactive/suspended account through IdentityServer public endpoints such as `/.well-known/**`, `/connect/**`, and `/Account/**`; confirm correct access or denial without UserService profile reads.
 
 ### Implementation for User Story 1
 
@@ -125,7 +124,7 @@
 - [ ] T038 [US1] Move admin identity account management into `../hivespace.microservice/src/HiveSpace.IdentityService/HiveSpace.IdentityService.Api/Endpoints/AdminIdentityEndpoints.cs`
 - [ ] T039 [US1] Publish `IdentityUserCreatedIntegrationEvent` after account creation in `../hivespace.microservice/src/HiveSpace.IdentityService/HiveSpace.IdentityService.Core/Features/Accounts/Commands/CreateAccount/CreateAccountCommandHandler.cs`
 - [ ] T040 [US1] Publish identity-owned email verification events in `../hivespace.microservice/src/HiveSpace.IdentityService/HiveSpace.IdentityService.Core/Features/EmailVerification/`
-- [ ] T041 [US1] Remove `/identity/**` route and add `/api/v1/identity/**` route to IdentityService cluster in `../hivespace.microservice/src/HiveSpace.ApiGateway/HiveSpace.YarpApiGateway/appsettings.json`
+- [ ] T041 [US1] Remove `/identity/**` route and route IdentityServer public endpoints such as `/.well-known/**`, `/connect/**`, and `/Account/**` to the IdentityService cluster in `../hivespace.microservice/src/HiveSpace.ApiGateway/HiveSpace.YarpApiGateway/appsettings.json`
 - [ ] T042 [US1] Add IdentityService cluster destination in `../hivespace.microservice/src/HiveSpace.ApiGateway/HiveSpace.YarpApiGateway/appsettings.json`
 - [ ] T043 [US1] Update JWT issuer/audience configuration for IdentityService-issued tokens in `../hivespace.microservice/src/HiveSpace.ApiGateway/HiveSpace.YarpApiGateway/appsettings.json`
 - [ ] T044 [US1] Update shared frontend auth refresh service route usage in `../hivespace.web/packages/shared/src/features/auth/refresh.service.ts`
@@ -228,7 +227,7 @@
 - [ ] T093 [P] Update UserService docs to remove identity ownership in `services/user-service/README.md`, `services/user-service/api.md`, `services/user-service/domain.md`, and `services/user-service/data-and-events.md`
 - [ ] T094 [P] Update ApiGateway docs for route ownership in `services/api-gateway/README.md` and `services/api-gateway/api.md`
 - [ ] T095 [P] Update NotificationService event ownership notes in `services/notification-service/data-and-events.md`
-- [ ] T096 Update public API catalog for `/api/v1/identity/**`, removed `/identity/**`, split admin routes, and retained UserService profile/store routes in `shared/api-catalog.md`
+- [ ] T096 Update public API catalog for IdentityServer public endpoints, removed `/identity/**` and `/api/v1/identity/**`, split admin routes, retained `/api/v1/accounts/**` account REST ownership, and retained UserService profile/store routes in `shared/api-catalog.md`
 - [ ] T097 Update event catalog for `IdentityUserCreatedIntegrationEvent`, `SellerRoleAssignmentRequestedIntegrationEvent`, and IdentityService-owned email verification events in `shared/event-catalog.md`
 - [ ] T098 Update architecture overview service table and auth flow in `architecture/overview.md`
 - [ ] T099 Update service inventory to include IdentityService in `services/_inventory.md`
@@ -306,7 +305,7 @@ Task: "Create UserService EF migration for profiles, settings, addresses, and st
 
 1. Complete Setup and Foundational tasks.
 2. Implement IdentityService LiteService authentication boundary.
-3. Remove `/identity/**` and expose identity through `/api/v1/identity/**`.
+3. Remove `/identity/**` and expose IdentityServer public endpoints such as `/.well-known/**`, `/connect/**`, and `/Account/**`.
 4. Validate sign-in, role checks, lockout, and suspended/inactive account behavior.
 
 ### Incremental Delivery
@@ -323,4 +322,4 @@ Task: "Create UserService EF migration for profiles, settings, addresses, and st
 - Each source-code task must follow the target repo's GitNexus impact-analysis rules before editing symbols.
 - Catalog updates are intentionally in the final phase and must be completed after task generation.
 - Avoid adding `ProfileStatus`; UserService has no separate user/profile status for account availability.
-- Do not keep `/identity/**` in the target route set.
+- Do not keep `/identity/**` or add `/api/v1/identity/**` in the target route set.

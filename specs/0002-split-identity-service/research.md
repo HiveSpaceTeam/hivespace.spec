@@ -28,17 +28,18 @@ IdentityService owns temporary account lockout fields inherited from ASP.NET Ide
 | Move status to UserService | Would make identity authorization depend on profile-owned data. |
 | Treat lockout and suspension as the same state | Lockout is temporary failed-login protection; suspension/deactivation is admin/business account status. |
 
-## Decision: Do not keep `/identity/**`
+## Decision: Use IdentityServer public endpoints, not `/identity/**` or `/api/v1/identity/**`
 
-Browser-facing identity traffic will use versioned IdentityService API routes, planned as `/api/v1/identity/**`. The split will not preserve or move the old `/identity/**` route.
+OIDC protocol traffic will use the public endpoints exposed by IdentityServer, including discovery, `/connect/**`, and interactive account Razor Pages such as `/Account/**`. Account REST routes that remain necessary stay under account/admin route families owned by IdentityService, such as `/api/v1/accounts/**` and identity-affecting admin routes. The split will not preserve or move the old `/identity/**` route, and it will not introduce `/api/v1/identity/**`.
 
-**Rationale**: Route changes are accepted for this development-phase split. Keeping identity routes under the versioned API namespace simplifies gateway ownership and frontend client configuration.
+**Rationale**: Route changes are accepted for this development-phase split. IdentityServer protocol endpoints should not be hidden under an application API prefix because OIDC discovery and client libraries expect the issuer's standard public endpoint layout.
 
 **Alternatives considered**:
 
 | Alternative | Reason rejected |
 |---|---|
 | Move `/identity/**` to IdentityService | User clarified there should be no `/identity/**` route. |
+| Create `/api/v1/identity/**` for OIDC | Conflicts with normal IdentityServer public endpoint behavior and OIDC client expectations. |
 | Keep both old and new route families | Adds compatibility surface that is unnecessary during breaking development migration. |
 
 ## Decision: Keep UserService for profile, settings, addresses, and stores

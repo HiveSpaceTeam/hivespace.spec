@@ -32,7 +32,7 @@
 
 - Identity/User data ownership after service split: resolved in [research.md](research.md).
 - Cross-service profile creation and seller role propagation: resolved in [research.md](research.md).
-- Public route ownership after accepting route changes, including removal of `/identity/**`: resolved in [contracts/api-routes.md](contracts/api-routes.md).
+- Public route ownership after accepting route changes, including removal of `/identity/**` and rejection of `/api/v1/identity/**`: resolved in [contracts/api-routes.md](contracts/api-routes.md).
 - IdentityService service shape: resolved as LiteService in [research.md](research.md).
 - Account lockout and suspension ownership: resolved as IdentityService-owned in [data-model.md](data-model.md).
 - Breaking development migration/reset path: resolved in [quickstart.md](quickstart.md).
@@ -63,7 +63,7 @@ The selected design creates a deployable LiteService `IdentityService` for ident
 | Capability | Owner after split | Notes |
 |---|---|---|
 | Credentials, password hash, login/logout | IdentityService | No UserService direct database access. |
-| OIDC clients, grants, refresh tokens | IdentityService | Browser-facing routes use versioned IdentityService API routes; no `/identity/**` route is planned. |
+| OIDC clients, grants, refresh tokens | IdentityService | IdentityServer protocol traffic uses standard public IdentityServer endpoints; no `/identity/**` or `/api/v1/identity/**` route is planned. |
 | Roles, claims, authorization account status | IdentityService | Seller access depends on IdentityService role/claims. |
 | Temporary lockout after failed sign-in | IdentityService | Keep ASP.NET Identity lockout fields and login behavior. |
 | Suspend/deactivate account status | IdentityService | Map current `UserStatus.Active/Inactive` behavior into identity-owned account status. |
@@ -110,8 +110,8 @@ See [contracts/api-routes.md](contracts/api-routes.md).
 
 | Area | Target owner | Route direction |
 |---|---|---|
-| Identity/OIDC | IdentityService | Use `/api/v1/identity/**`; do not keep `/identity/**`. |
-| Account registration/login/email verification | IdentityService | Move from `/api/v1/accounts/**` to identity-owned `/api/v1/identity/**` routes. |
+| Identity/OIDC | IdentityService | Use IdentityServer standard public endpoints such as `/.well-known/**`, `/connect/**`, and `/Account/**`; do not keep `/identity/**` or create `/api/v1/identity/**`. |
+| Account registration/login/email verification | IdentityService | IdentityServer UI uses `/Account/**`; account REST routes that remain necessary stay IdentityService-owned under `/api/v1/accounts/**`. |
 | Admin identity/account management | IdentityService | Move identity-affecting admin actions to identity-owned admin routes. |
 | Profile/settings/address | UserService | Keep user-owned routes under `/api/v1/users/**` where practical. |
 | Stores | UserService | Keep `/api/v1/stores/**`. |
@@ -163,7 +163,7 @@ Target folder structure:
 ../hivespace.microservice/src/HiveSpace.IdentityService/
 |-- HiveSpace.IdentityService.Api/
 |   |-- Endpoints/
-|   |-- Consumers/Sync/
+|   |-- Consumers/
 |   |-- Extensions/
 |   |-- Pages/Account/              # IdentityServer interactive UI only
 |   |-- wwwroot/localization/

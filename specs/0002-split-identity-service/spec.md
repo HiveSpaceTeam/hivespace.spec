@@ -14,6 +14,7 @@
 - Q: Which service should own email verification after the split? -> A: IdentityService owns email verification.
 - Q: Should UserService profile records use the same public user ID as IdentityService, or have separate profile IDs linked to identity IDs? -> A: Same public user ID across IdentityService and UserService.
 - Q: Should the split keep a `/identity/**` route and what service shape should IdentityService use? -> A: No `/identity/**` route; create IdentityService as a LiteService.
+- Q: Should IdentityService expose identity traffic through `/api/v1/identity/**`? -> A: No; use the public endpoints exposed by IdentityServer, such as `/.well-known/**`, `/connect/**`, and `/Account/**`, while account REST routes remain in account/admin route families where needed.
 - Q: Which service should own temporary lockout and suspended/inactive account status? -> A: IdentityService owns both lockout and suspended/inactive account status.
 
 ## User Scenarios & Testing *(mandatory)*
@@ -141,7 +142,7 @@ Developers can reset or migrate development data into the split ownership model 
 
 - The target shape is two deployable backend services: `IdentityService` and `UserService`.
 - Route changes are acceptable, provided the gateway, frontend clients, and catalogs are updated together.
-- The planned identity route family does not include `/identity/**`; browser-facing identity routes should use versioned API routes.
+- The planned identity route family does not include `/identity/**` or `/api/v1/identity/**`; browser-facing OIDC identity traffic should use the public endpoints exposed by IdentityServer.
 - The migration may be breaking because the project is still in development.
 - Store registration remains owned by UserService, while seller authorization remains owned by IdentityService.
 - Role propagation after store registration is asynchronous and requires the user's authorization state to refresh before seller-only access is available.

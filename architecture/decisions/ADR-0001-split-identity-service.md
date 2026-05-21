@@ -25,7 +25,7 @@ Use asynchronous messages for cross-boundary workflows:
 
 No saga is introduced for this split.
 
-Do not keep or move the old `/identity/**` route. IdentityService browser-facing routes use the versioned API namespace, planned as `/api/v1/identity/**`.
+Do not keep or move the old `/identity/**` route. IdentityService exposes IdentityServer protocol traffic through standard public IdentityServer endpoints such as `/.well-known/**`, `/connect/**`, and interactive Razor Pages such as `/Account/**`. IdentityService-owned account REST endpoints stay in account/admin route families where needed, such as `/api/v1/accounts/**`; do not create `/api/v1/identity/**`.
 
 ## Consequences
 
@@ -40,7 +40,7 @@ Do not keep or move the old `/identity/**` route. IdentityService browser-facing
 ### Negative / Trade-offs
 
 - Gateway routes, frontend clients, service docs, API catalog, and event catalog must all change together.
-- Removing `/identity/**` means existing auth clients must be updated during the same development migration.
+- Removing `/identity/**` means existing auth clients must be updated during the same development migration to use the IdentityServer issuer/public endpoint layout.
 - Eventual consistency is introduced for profile creation and seller-role propagation.
 - Development data reset or migration must split existing UserService data into two ownership models.
 
@@ -62,6 +62,7 @@ Do not keep or move the old `/identity/**` route. IdentityService browser-facing
 | Use synchronous service calls for seller role assignment | Couples store registration success to IdentityService write availability and encourages cross-boundary orchestration in request flow. |
 | Add a MassTransit saga | The workflows are simple owner transaction plus async message, with no compensating multi-service state machine required. |
 | Preserve `/identity/**` | User clarified there should be no `/identity/**` route. |
+| Create `/api/v1/identity/**` for IdentityServer endpoints | IdentityServer should expose standard public OIDC endpoints rather than app-versioned API routes. |
 
 ## Follow-Up
 

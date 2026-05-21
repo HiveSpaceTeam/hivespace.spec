@@ -24,7 +24,7 @@ Minimum repeatable outcome:
 
 1. IdentityService database contains identity users, credentials, roles, claims, account status, email verification, OIDC clients, and operational grants.
 2. UserService database contains profiles, settings, addresses, and stores keyed by the same public user IDs.
-3. ApiGateway routes versioned identity traffic to IdentityService and profile/store traffic to UserService; `/identity/**` is not present.
+3. ApiGateway exposes IdentityServer public endpoints from IdentityService, including `/.well-known/**`, `/connect/**`, and `/Account/**`; `/identity/**` and `/api/v1/identity/**` are not present.
 4. Message bus handles account-created and seller-role assignment messages with observable failures.
 
 ## Validation Flow

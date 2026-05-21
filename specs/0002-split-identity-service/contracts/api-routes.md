@@ -4,21 +4,23 @@
 
 | Gateway path | Target owner | Change |
 |---|---|---|
-| `/api/v1/identity/**` | IdentityService | New versioned identity/account route family for browser REST and OIDC-adjacent calls. |
-| `/api/v1/accounts/**` | IdentityService | Existing account routes are replaced by `/api/v1/identity/**` unless tasks retain a compatibility alias. |
+| `/.well-known/**` | IdentityService | IdentityServer discovery endpoints remain standard public OIDC endpoints. |
+| `/connect/**` | IdentityService | IdentityServer authorize, token, refresh, userinfo, revocation, introspection, device, callback, and sign-out endpoints remain standard public OIDC endpoints. |
+| `/Account/**` | IdentityService | IdentityServer interactive Razor Pages for login, registration, consent, external login, device flow, diagnostics, and access denied move to IdentityService without an `/api/v1/identity` prefix. |
+| `/api/v1/accounts/**` | IdentityService | Existing account REST routes move to IdentityService ownership where still needed for registration, email verification, and account actions. |
 | `/api/v1/admins/**` | IdentityService and UserService split by action | Identity-affecting admin actions move to IdentityService; profile/store review actions stay or move to UserService-owned routes. |
 | `/api/v1/users/**` | UserService | Profile, settings, and address routes remain UserService-owned. |
 | `/api/v1/stores/**` | UserService | Store registration and store lifecycle remain UserService-owned. |
 
-`/identity/**` is intentionally not part of the target route contract.
+`/identity/**` and `/api/v1/identity/**` are intentionally not part of the target route contract.
 
 ## IdentityService-Owned Public Capabilities
 
 | Capability | Auth | Notes |
 |---|---|---|
-| OIDC authorize/login/callback/logout/token/refresh | Anonymous or authenticated per OIDC flow | Exposed through the versioned IdentityService route family; do not keep `/identity/**`. |
-| Account registration | Anonymous | Publishes account-created fact after success. |
-| Email verification request | Authenticated user/admin as applicable | Producer becomes IdentityService. |
+| OIDC authorize/login/callback/logout/token/refresh | Anonymous or authenticated per OIDC flow | Exposed through IdentityServer's standard public endpoints such as `/.well-known/**`, `/connect/**`, and `/Account/**`; do not keep `/identity/**` or create `/api/v1/identity/**`. |
+| Account registration | Anonymous | Served by IdentityService using existing IdentityServer/account UI or account REST routes; publishes account-created fact after success. |
+| Email verification request | Authenticated user/admin as applicable | Producer becomes IdentityService; keep route naming aligned with account REST/UI conventions rather than `/api/v1/identity/**`. |
 | Email verification confirm | Anonymous | IdentityService owns verification state. |
 | Admin create/list/suspend/deactivate identity accounts | Admin policies | Account status and lockout state are identity-owned. |
 
