@@ -9,7 +9,8 @@ This is the service index for feature planning. Each service folder contains the
 | Service | Folder | Source path | Owns |
 |---|---|---|---|
 | ApiGateway | `services/api-gateway/` | `../hivespace.microservice/src/HiveSpace.ApiGateway/HiveSpace.YarpApiGateway` | External routing and reverse proxy config |
-| UserService | `services/user-service/` | `../hivespace.microservice/src/HiveSpace.UserService` | Identity, users, roles, settings, addresses, stores |
+| IdentityService | `services/identity-service/` | `../hivespace.microservice/src/HiveSpace.IdentityService` | Credentials, authentication, authorization, roles, claims, account status, lockout, email verification, IdentityServer |
+| UserService | `services/user-service/` | `../hivespace.microservice/src/HiveSpace.UserService` | Profiles, settings, addresses, stores |
 | CatalogService | `services/catalog-service/` | `../hivespace.microservice/src/HiveSpace.CatalogService` | Products, SKUs, categories, attributes, catalog projections |
 | MediaService | `services/media-service/` | `../hivespace.microservice/src/HiveSpace.MediaService` | Media assets, upload URLs, processing state |
 | OrderService | `services/order-service/` | `../hivespace.microservice/src/HiveSpace.OrderService` | Cart, checkout, orders, coupons, sagas |

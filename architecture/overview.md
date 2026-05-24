@@ -39,9 +39,9 @@ Admin app      Seller app      Buyer app
                    |
     +--------------+--------------+----------------+----------------+
     |              |              |                |                |
-UserService  CatalogService  OrderService  PaymentService  NotificationService
-                                                    |                |
-                                               MediaService      SignalR hub
+IdentityService UserService  CatalogService  OrderService  PaymentService  NotificationService
+                                                         |                |
+                                                    MediaService      SignalR hub
 
 Backend services communicate through MassTransit/RabbitMQ for async workflows.
 Each business service owns its own SQL Server database.
@@ -84,7 +84,8 @@ Shared frontend capabilities live under `../hivespace.web/packages/shared/src`:
 | Service | Source path | Responsibility | Port |
 |---|---|---|---:|
 | ApiGateway | `src/HiveSpace.ApiGateway/HiveSpace.YarpApiGateway` | Reverse proxy and external route entry point | 5000 / 7001 |
-| UserService | `src/HiveSpace.UserService` | Identity, OIDC, users, roles, addresses, stores | 5001 |
+| IdentityService | `src/HiveSpace.IdentityService` | Identity, OIDC, credentials, roles, claims, account status, email verification | 5001 |
+| UserService | `src/HiveSpace.UserService` | Profiles, settings, addresses, stores | 5007 |
 | CatalogService | `src/HiveSpace.CatalogService` | Products, SKUs, categories, attributes, inventory-facing data | 5002 |
 | MediaService | `src/HiveSpace.MediaService` | Upload URLs, media records, image processing | 5003 |
 | OrderService | `src/HiveSpace.OrderService` | Cart, checkout, orders, coupons, fulfillment | 5004 |
@@ -138,7 +139,7 @@ Lite services still use CQRS and Minimal API entrypoints where implemented, but 
 
 ```text
 Browser app
-  -> UserService IdentityServer authorize endpoint
+  -> IdentityService IdentityServer authorize endpoint
   -> OIDC login + callback
   -> access token + refresh token
   -> ApiService attaches Authorization: Bearer <token>
@@ -186,7 +187,8 @@ Each service owns its own database and migrations. No feature may introduce shar
 
 | Service | Owns | Must not own |
 |---|---|---|
-| UserService | Accounts, OIDC clients/grants, roles, user settings, addresses, stores | Orders, catalog, payment, notification delivery |
+| IdentityService | Accounts, OIDC clients/grants, roles, claims, lockout, account status, email verification | Profiles, stores, addresses, orders, catalog, payment, notification delivery |
+| UserService | User profiles, user settings, addresses, stores | Credentials, roles, claims, lockout, account status, email verification, orders, catalog, payment, notification delivery |
 | CatalogService | Categories, products, SKUs, product attributes, catalog projections | Checkout, payment, user identity |
 | OrderService | Cart, checkout, orders, coupons, saga state, order projections | Payment gateway processing, catalog management, identity |
 | PaymentService | Payment aggregate, gateway transactions, wallets, wallet transactions | Order lifecycle, catalog, notifications |

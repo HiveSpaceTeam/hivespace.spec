@@ -17,7 +17,7 @@ NotificationService owns:
 |---|---|
 | `UserCreatedIntegrationEvent` | Create user delivery reference |
 | `UserUpdatedIntegrationEvent` | Refresh user delivery reference |
-| `UserEmailVerificationRequestedIntegrationEvent` | Send verification email/notification |
+| `UserEmailVerificationRequestedIntegrationEvent` | Send verification email/notification for IdentityService-owned verification state |
 | `NotifySellerNewOrder` | Notify seller of a new order |
 | `NotifyBuyerOrderConfirmed` | Notify buyer that order was confirmed |
 | `NotifyBuyerOrderCancelled` | Notify buyer that order was cancelled |
@@ -36,3 +36,4 @@ NotificationService owns:
 - User preferences apply per channel and event group.
 - In-app notifications may be pushed through SignalR and persisted.
 - Email notifications use templates and provider integration.
+- IdentityService owns email verification state; NotificationService only owns delivery and delivery observability.

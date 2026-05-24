@@ -114,8 +114,24 @@ Run:
 | Codex | `$speckit-tasks` |
 | Claude Code | `/speckit-tasks` |
 
-Review `tasks.md`. It is the implementation blueprint and should be ordered by
-dependency, with parallelizable tasks marked clearly.
+Review `tasks.md` as the implementation entrypoint, dependency order, and story
+traceability index. Detailed executable tasks live under:
+
+```text
+specs/NNNN-feature-name/tasks/
+```
+
+Review the detailed files generated for the feature, typically:
+
+- `tasks/backend.md`
+- `tasks/frontend.md`
+- `tasks/config.md`
+- `tasks/docs-catalog.md`
+- `tasks/verification.md`
+
+Detailed tasks are grouped by implementation ownership, then service, app,
+package, config, or docs area. User-story labels are kept for traceability, but
+the detailed files are not primarily ordered by user story.
 
 Recommended quality gate:
 
@@ -124,8 +140,8 @@ Recommended quality gate:
 | Codex | `$speckit-analyze` |
 | Claude Code | `/speckit-analyze` |
 
-Use the analysis output to fix inconsistencies across `spec.md`, `plan.md`, and
-`tasks.md` before handing work to implementation.
+Use the analysis output to fix inconsistencies across `spec.md`, `plan.md`,
+`tasks.md`, and detailed `tasks/` files before handing work to implementation.
 
 ## 7. Update Catalogs
 
@@ -146,7 +162,22 @@ descriptions just because a feature reuses them.
 
 Do not create duplicate endpoints or duplicate events with different names.
 
-## 8. Implement Backend
+## 8. Implement In Source Repos
+
+Implementation normally happens in the source repos using their repo-specific
+story commands. Use the current feature's `spec.md`, `plan.md`, `tasks.md`, and
+detailed `tasks/` files as the implementation scope.
+
+Work by one coherent story or task group at a time. Follow the dependency order
+from `tasks.md`; backend, frontend, config, docs/catalog, and verification work
+may be interleaved when the detailed tasks require it.
+
+`$speckit-implement` in Codex or `/speckit-implement` in Claude Code is available
+from this spec repo when you want Spec Kit to process the detailed task files
+directly, but prefer the source-repo `start-story` and `done-story` workflow when
+those commands are available.
+
+## 9. Backend Implementation Notes
 
 Switch to the backend repo:
 
@@ -155,8 +186,8 @@ cd ../hivespace.microservice
 ```
 
 Read that repo's `AGENTS.md` and `CLAUDE.md`, then use the current feature's
-`spec.md`, `plan.md`, `tasks.md`, owning/changed supporting service docs, and
-catalog references as the implementation scope.
+`spec.md`, `plan.md`, `tasks.md`, detailed `tasks/` files, owning/changed
+supporting service docs, and catalog references as the implementation scope.
 
 Typical backend story commands, when provided by that repo:
 
@@ -169,7 +200,10 @@ Backend implementation should follow the repo rules: .NET 8, Clean Architecture,
 CQRS, Minimal APIs for new feature work, SQL Server, EF Core, MassTransit, and
 transactional outbox for outgoing integration messages.
 
-## 9. Implement Frontend
+Use `tasks/backend.md`, relevant `tasks/config.md`, `tasks/docs-catalog.md`, and
+`tasks/verification.md` entries as the backend story scope.
+
+## 10. Frontend Implementation Notes
 
 Switch to the frontend repo:
 
@@ -178,8 +212,8 @@ cd ../hivespace.web
 ```
 
 Read that repo's `AGENTS.md` and `CLAUDE.md`, then use the current feature's
-`spec.md`, `plan.md`, `tasks.md`, affected frontend surface notes, and API
-catalog references as the implementation scope.
+`spec.md`, `plan.md`, `tasks.md`, detailed `tasks/` files, affected frontend
+surface notes, and API catalog references as the implementation scope.
 
 Typical frontend story commands, when provided by that repo:
 
@@ -200,7 +234,10 @@ Frontend implementation should follow this order:
 
 Always inspect `packages/shared/src` before creating local frontend code.
 
-## 10. Wrap Up
+Use `tasks/frontend.md`, relevant `tasks/config.md`, and
+`tasks/verification.md` entries as the frontend story scope.
+
+## 11. Wrap Up
 
 After the feature ships, return to this repo:
 
@@ -217,7 +254,7 @@ Run:
 
 Wrap-up should:
 
-- Update affected `services/<service-name>/README.md` docs.
+- Update affected `services/<service-name>/` docs.
 - Update only owning service docs or supporting service docs whose contracts or behavior changed.
 - Verify `shared/api-catalog.md` and `shared/event-catalog.md`, but edit only new/changed contracts.
 - Mark the feature status as done.

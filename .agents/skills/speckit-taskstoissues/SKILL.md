@@ -53,7 +53,9 @@ You **MUST** consider the user input before proceeding (if not empty).
 ## Outline
 
 1. Run `.specify/scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks` from repo root and parse FEATURE_DIR and AVAILABLE_DOCS list. All paths must be absolute. For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
-1. From the executed script, extract the path to **tasks**.
+1. From the executed script, extract `FEATURE_DIR`.
+1. Read `FEATURE_DIR/tasks.md` as the task index. If `FEATURE_DIR/tasks/` exists, read every markdown file in that folder and treat those detailed tasks as the source for issues. If no `tasks/` folder exists, fall back to tasks listed directly in `tasks.md`.
+1. Extract only executable checkbox tasks from detailed files. Preserve task ID, story label, area file, service/app/package/lib heading, action heading, exact file path/file set, implementation details, forbidden behavior, dependencies/callers, and acceptance check in the issue body.
 1. Get the Git remote by running:
 
 ```bash
@@ -63,7 +65,7 @@ git config --get remote.origin.url
 > [!CAUTION]
 > ONLY PROCEED TO NEXT STEPS IF THE REMOTE IS A GITHUB URL
 
-1. For each task in the list, use the GitHub MCP server to create a new issue in the repository that is representative of the Git remote.
+1. For each detailed task in the list, use the GitHub MCP server to create a new issue in the repository that is representative of the Git remote. Use the task ID and action target in the issue title, and include the detailed bullets plus a backlink to the feature task file.
 
 > [!CAUTION]
 > UNDER NO CIRCUMSTANCES EVER CREATE ISSUES IN REPOSITORIES THAT DO NOT MATCH THE REMOTE URL

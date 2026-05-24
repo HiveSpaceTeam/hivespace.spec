@@ -28,14 +28,16 @@ Local gateway defaults:
 | `RequireSystemAdmin` | System admin |
 | `RequireAdminOrUser` | Admin or normal authenticated user |
 
-## Gateway Route Ownership
+## Public Route Ownership
 
 | Gateway path | Owner |
 |---|---|
-| `/identity/**` | UserService |
+| `/.well-known/**` | IdentityService direct authority endpoint, not routed through ApiGateway |
+| `/connect/**` | IdentityService direct authority endpoint, not routed through ApiGateway |
+| `/Account/**` | IdentityService direct authority endpoint, not routed through ApiGateway |
+| `/api/v1/accounts/**` | IdentityService |
+| `/api/v1/admins/**` | IdentityService and UserService split by action |
 | `/api/v1/users/**` | UserService |
-| `/api/v1/accounts/**` | UserService |
-| `/api/v1/admins/**` | UserService |
 | `/api/v1/stores/**` | UserService |
 | `/api/v1/categories/**` | CatalogService |
 | `/api/v1/products/**` | CatalogService |
@@ -49,6 +51,26 @@ Local gateway defaults:
 | `/api/v1/notification-preferences/**` | NotificationService |
 | `/hubs/notifications/**` | NotificationService |
 
+## IdentityService
+
+IdentityServer public OIDC protocol/page endpoints are served directly by IdentityService on `http://localhost:5001`: `/.well-known/**`, `/connect/**`, and `/Account/**`. ApiGateway does not forward these endpoints. `/identity/**` and `/api/v1/identity/**` are intentionally not part of the target contract.
+
+### Account and Email Verification
+
+| Method | Path | Auth | Purpose |
+|---|---|---|---|
+| POST | `/api/v1/accounts/email-verification` | `RequireAdminOrUser` | Send verification email |
+| POST | `/api/v1/accounts/email-verification/verify` | Anonymous | Verify email token |
+
+### Admin Identity Management
+
+| Method | Path | Auth | Purpose |
+|---|---|---|---|
+| POST | `/api/v1/admins` | `RequireAdmin` | Create admin account |
+| GET | `/api/v1/admins` | `RequireAdmin` | List admin accounts |
+| PUT | `/api/v1/admins/users/status` | `RequireAdmin` | Update identity-owned user/admin account status |
+| DELETE | `/api/v1/admins/users/{userId}` | `RequireAdmin` | Delete or deactivate identity-owned account access |
+
 ## UserService
 
 ### Profile and Settings
@@ -59,13 +81,6 @@ Local gateway defaults:
 | PUT | `/api/v1/users/me` | `RequireAdminOrUser` | Update authenticated user profile, including optional avatar file ID |
 | GET | `/api/v1/users/settings` | `RequireAdminOrUser` | Get locale/theme/user settings |
 | PUT | `/api/v1/users/settings` | `RequireAdminOrUser` | Update locale/theme/user settings |
-
-### Account and Email Verification
-
-| Method | Path | Auth | Purpose |
-|---|---|---|---|
-| POST | `/api/v1/accounts/email-verification` | `RequireAdminOrUser` | Send verification email |
-| POST | `/api/v1/accounts/email-verification/verify` | Anonymous | Verify email token |
 
 ### Addresses
 
@@ -79,16 +94,13 @@ Local gateway defaults:
 | DELETE | `/api/v1/users/address/{id}` | `Authorize` | Delete address |
 | PUT | `/api/v1/users/address/{id}/default` | `Authorize` | Set default address |
 
-### Stores and Admin
+### Stores
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
 | POST | `/api/v1/stores` | `RequireUser` | Register seller store |
-| POST | `/api/v1/admins` | `RequireAdmin` | Create admin account |
-| GET | `/api/v1/admins` | `RequireAdmin` | List admin accounts |
-| GET | `/api/v1/admins/users` | `RequireAdmin` | List user accounts for admin review |
-| PUT | `/api/v1/admins/users/status` | `RequireAdmin` | Update user/admin status |
-| DELETE | `/api/v1/admins/users/{userId}` | `RequireAdmin` | Delete or deactivate user account |
+
+Admin profile/store review APIs that do not change credentials, roles, lockout, email verification, or account status remain UserService-owned.
 
 ## CatalogService
 

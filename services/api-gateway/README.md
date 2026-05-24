@@ -38,6 +38,8 @@ Source path:
 - New public HTTP APIs normally require a gateway route only when they introduce a new path prefix or downstream service.
 - Existing prefixes should remain owned by their current service.
 - Gateway changes must be coordinated with frontend `VITE_GATEWAY_BASE_URL` and API version assumptions.
+- IdentityServer public authority endpoints are served directly by IdentityService on `http://localhost:5001`; ApiGateway does not forward `/.well-known/**`, `/connect/**`, or `/Account/**`.
+- UserService profile/store routes target UserService on `http://localhost:5007`.
 - Keep gateway behavior thin; service authorization and domain validation belong downstream.
 
 ## Detail

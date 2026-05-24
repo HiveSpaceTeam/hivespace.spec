@@ -10,7 +10,7 @@
 # OPTIONS:
 #   -Json               Output in JSON format
 #   -RequireTasks       Require tasks.md to exist (for implementation phase)
-#   -IncludeTasks       Include tasks.md in AVAILABLE_DOCS list
+#   -IncludeTasks       Include tasks.md and tasks/ in AVAILABLE_DOCS list
 #   -PathsOnly          Only output path variables (no validation)
 #   -Help, -h           Show help message
 
@@ -35,7 +35,7 @@ Consolidated prerequisite checking for Spec-Driven Development workflow.
 OPTIONS:
   -Json               Output in JSON format
   -RequireTasks       Require tasks.md to exist (for implementation phase)
-  -IncludeTasks       Include tasks.md in AVAILABLE_DOCS list
+  -IncludeTasks       Include tasks.md and tasks/ in AVAILABLE_DOCS list
   -PathsOnly          Only output path variables (no prerequisite validation)
   -Help, -h           Show this help message
 
@@ -58,6 +58,7 @@ EXAMPLES:
 
 # Get feature paths and validate branch
 $paths = Get-FeaturePathsEnv
+$tasksDir = Join-Path $paths.FEATURE_DIR 'tasks'
 
 if (-not (Test-FeatureBranch -Branch $paths.CURRENT_BRANCH -HasGit:$paths.HAS_GIT)) { 
     exit 1 
@@ -73,6 +74,7 @@ if ($PathsOnly) {
             FEATURE_SPEC = $paths.FEATURE_SPEC
             IMPL_PLAN    = $paths.IMPL_PLAN
             TASKS        = $paths.TASKS
+            TASKS_DIR    = $tasksDir
         } | ConvertTo-Json -Compress
     } else {
         Write-Output "REPO_ROOT: $($paths.REPO_ROOT)"
@@ -81,6 +83,7 @@ if ($PathsOnly) {
         Write-Output "FEATURE_SPEC: $($paths.FEATURE_SPEC)"
         Write-Output "IMPL_PLAN: $($paths.IMPL_PLAN)"
         Write-Output "TASKS: $($paths.TASKS)"
+        Write-Output "TASKS_DIR: $tasksDir"
     }
     exit 0
 }
@@ -119,9 +122,12 @@ if ((Test-Path $paths.CONTRACTS_DIR) -and (Get-ChildItem -Path $paths.CONTRACTS_
 
 if (Test-Path $paths.QUICKSTART) { $docs += 'quickstart.md' }
 
-# Include tasks.md if requested and it exists
+# Include tasks.md and detailed tasks/ if requested and present
 if ($IncludeTasks -and (Test-Path $paths.TASKS)) { 
     $docs += 'tasks.md' 
+}
+if ($IncludeTasks -and (Test-Path $tasksDir -PathType Container) -and (Get-ChildItem -Path $tasksDir -Filter '*.md' -ErrorAction SilentlyContinue | Select-Object -First 1)) {
+    $docs += 'tasks/'
 }
 
 # Output results
@@ -144,5 +150,6 @@ if ($Json) {
     
     if ($IncludeTasks) {
         Test-FileExists -Path $paths.TASKS -Description 'tasks.md' | Out-Null
+        Test-DirHasFiles -Path $tasksDir -Description 'tasks/' | Out-Null
     }
 }

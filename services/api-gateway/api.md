@@ -4,10 +4,9 @@
 
 | Path | Downstream service |
 |---|---|
-| `/identity/**` | UserService |
 | `/api/v1/users/**` | UserService |
-| `/api/v1/accounts/**` | UserService |
-| `/api/v1/admins/**` | UserService |
+| `/api/v1/accounts/**` | IdentityService |
+| `/api/v1/admins/**` | IdentityService and UserService split by action |
 | `/api/v1/stores/**` | UserService |
 | `/api/v1/categories/**` | CatalogService |
 | `/api/v1/products/**` | CatalogService |
@@ -27,3 +26,5 @@
 - Prefer versioned `/api/v1/...` REST routes.
 - Preserve `/hubs/notifications` for SignalR.
 - Do not route browser traffic directly to internal service implementation paths.
+- Do not route IdentityServer public authority endpoints through ApiGateway. Frontend OIDC clients use IdentityService directly for `/.well-known/**`, `/connect/**`, and `/Account/**`.
+- Do not reintroduce `/identity/**` or add `/api/v1/identity/**`.

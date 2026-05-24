@@ -39,7 +39,8 @@ Before implementing in a source repo, also read that repo's `AGENTS.md`:
 | Service | Owns | Must not own |
 |---|---|---|
 | ApiGateway | External routing, reverse proxy config | Business logic, domain data |
-| UserService | Accounts, OIDC, roles, settings, addresses, stores | Orders, catalog, payments, notification delivery |
+| IdentityService | Accounts, credentials, OIDC, roles, claims, lockout, account status, email verification | Profiles, addresses, stores, orders, catalog, payments, notification delivery |
+| UserService | Profiles, settings, addresses, stores | Credentials, roles, claims, lockout, account status, email verification, orders, catalog, payments, notification delivery |
 | CatalogService | Products, SKUs, categories, attributes, catalog projections | Orders, payments, user identity |
 | MediaService | Upload URLs, media assets, processing state | Product/order/user business data |
 | OrderService | Cart, checkout, orders, coupons, sagas | Catalog truth, payment gateway truth, notification delivery |
@@ -51,7 +52,7 @@ Before implementing in a source repo, also read that repo's `AGENTS.md`:
 ### Architecture
 
 - New backend feature work uses CQRS plus Minimal API endpoints.
-- UserService legacy controller/service code may be maintained only where existing identity implementation requires it.
+- IdentityService may maintain controller/Razor Page/service code where ASP.NET Identity and Duende IdentityServer require it.
 - Standard service layering is `Domain -> Application -> Infrastructure -> Api`.
 - Business rules belong in domain/application code, not endpoint handlers.
 - A new service responsibility must be documented under `services/<service-name>/`.
@@ -219,3 +220,4 @@ Generated or temporary documentation folders must not be required for future pla
 | Date | Article | Change | Reason |
 |---|---|---|---|
 | 2026-05-17 | All | Replaced generated-doc dependencies with durable `architecture/`, `services/`, and `shared/` source-of-truth references | Allow future deletion of generated documentation without losing planning context |
+| 2026-05-24 | I, II | Added IdentityService boundary and narrowed UserService to profile/settings/address/store ownership | Reflect shipped split of identity ownership from UserService |

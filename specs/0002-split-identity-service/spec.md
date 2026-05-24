@@ -2,7 +2,8 @@
 
 - **Feature Branch**: `0002-split-identity-service`
 - **Created**: 2026-05-20
-- **Status**: Draft
+- **Status**: Implemented
+- **Implemented**: 2026-05-24
 - **Input**: User description: "Split UserService into two services: IdentityService for credentials, authentication, authorization, roles, IdentityServer, MS Identity, Identity User; remaining UserService focuses on profile, address, settings, and stores. Route changes are acceptable. Store registration publishes an event from UserService to IdentityService for role propagation. Breaking migration is acceptable during development."
 
 ## Clarifications
@@ -14,7 +15,7 @@
 - Q: Which service should own email verification after the split? -> A: IdentityService owns email verification.
 - Q: Should UserService profile records use the same public user ID as IdentityService, or have separate profile IDs linked to identity IDs? -> A: Same public user ID across IdentityService and UserService.
 - Q: Should the split keep a `/identity/**` route and what service shape should IdentityService use? -> A: No `/identity/**` route; create IdentityService as a LiteService.
-- Q: Should IdentityService expose identity traffic through `/api/v1/identity/**`? -> A: No; use the public endpoints exposed by IdentityServer, such as `/.well-known/**`, `/connect/**`, and `/Account/**`, while account REST routes remain in account/admin route families where needed.
+- Q: Should IdentityService expose identity traffic through `/api/v1/identity/**`? -> A: No; frontend OIDC clients use the IdentityService authority URL directly for IdentityServer endpoints such as `/.well-known/**`, `/connect/**`, and `/Account/**`. ApiGateway does not need to forward these protocol/page endpoints. Account REST routes remain in account/admin route families where needed.
 - Q: Which service should own temporary lockout and suspended/inactive account status? -> A: IdentityService owns both lockout and suspended/inactive account status.
 
 ## User Scenarios & Testing *(mandatory)*
@@ -61,7 +62,7 @@ After a user registers a store, the platform grants seller access through identi
 
 **Acceptance Scenarios**:
 
-1. **Given** a buyer without seller access, **When** store registration succeeds, **Then** the system records the store and requests seller-role assignment from the identity boundary.
+1. **Given** a buyer without seller access, **When** store registration succeeds, **Then** the system records the store, publishes a store-created fact, and the identity boundary uses that fact to assign seller access.
 2. **Given** a successful store registration, **When** role propagation completes, **Then** the user can refresh authorization state and access seller workflows.
 3. **Given** role propagation cannot complete, **When** the user attempts seller-only access, **Then** access remains denied and the failed propagation is observable for remediation.
 
@@ -98,9 +99,9 @@ Developers can reset or migrate development data into the split ownership model 
 - **FR-003**: Identity-owned data MUST be separated from profile/store-owned data so each boundary has one authoritative owner for its records.
 - **FR-004**: Users MUST be able to authenticate and receive role-appropriate access after the split.
 - **FR-005**: Authenticated users MUST be able to view and update profile data, settings, addresses, and store data through the user boundary after the split.
-- **FR-006**: Store registration MUST request seller-role assignment from the identity boundary through an asynchronous cross-boundary message after the store is successfully created.
+- **FR-006**: Store registration MUST publish a store-created fact after the store is successfully created, and IdentityService MUST consume that fact to assign seller access.
 - **FR-007**: Seller-only access MUST depend on authorization state owned by the identity boundary, not on direct reads of store data by authorization checks.
-- **FR-008**: The system MUST make role propagation failures observable so developers or operators can diagnose and retry or repair failed seller-role assignment.
+- **FR-008**: The system MUST make role propagation failures observable so developers or operators can diagnose and retry or repair failed seller access assignment from the store-created event.
 - **FR-009**: Public client routes MAY change as part of the split, but all changed routes MUST be documented and all affected clients MUST be updated together.
 - **FR-010**: The migration path MAY be breaking for development environments, but it MUST leave a clear way to recreate or migrate development accounts, roles, profiles, addresses, settings, and stores.
 - **FR-011**: Existing downstream user and store reference consumers MUST continue to receive the user/store facts they need after the split, unless planning explicitly replaces those contracts.
@@ -124,7 +125,7 @@ Developers can reset or migrate development data into the split ownership model 
 - **User Settings**: User-owned preferences such as language, theme, and other account experience settings.
 - **Address**: User-owned delivery or contact address associated with a profile.
 - **Store**: User-owned seller store record created through store registration and linked to the account that owns it.
-- **Role Assignment Request**: A cross-boundary request that asks identity ownership to grant or update a user's role after a user-owned workflow succeeds.
+- **Store-Created Seller Assignment**: IdentityService consumption of the UserService-owned store-created fact to grant seller access to the store owner after store registration succeeds.
 - **Account Created Fact**: A cross-boundary fact emitted after identity account creation so user ownership can create the corresponding profile record.
 
 ## Success Criteria *(mandatory)*
@@ -142,7 +143,7 @@ Developers can reset or migrate development data into the split ownership model 
 
 - The target shape is two deployable backend services: `IdentityService` and `UserService`.
 - Route changes are acceptable, provided the gateway, frontend clients, and catalogs are updated together.
-- The planned identity route family does not include `/identity/**` or `/api/v1/identity/**`; browser-facing OIDC identity traffic should use the public endpoints exposed by IdentityServer.
+- The planned identity route family does not include `/identity/**` or `/api/v1/identity/**`; browser-facing OIDC identity traffic should use the IdentityService authority URL directly for IdentityServer public endpoints.
 - The migration may be breaking because the project is still in development.
 - Store registration remains owned by UserService, while seller authorization remains owned by IdentityService.
 - Role propagation after store registration is asynchronous and requires the user's authorization state to refresh before seller-only access is available.

@@ -73,6 +73,7 @@ Run `.specify/scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -In
 - SPEC = FEATURE_DIR/spec.md
 - PLAN = FEATURE_DIR/plan.md
 - TASKS = FEATURE_DIR/tasks.md
+- DETAILED_TASKS_DIR = FEATURE_DIR/tasks/ (optional; load when present)
 
 Abort with an error message if any required file is missing (instruct the user to run missing prerequisite command).
 For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
@@ -96,13 +97,14 @@ Load only the minimal necessary context from each artifact:
 - Phases
 - Technical constraints
 
-**From tasks.md:**
+**From tasks.md and tasks/*.md when present:**
 
 - Task IDs
 - Descriptions
-- Phase grouping
-- Parallel markers [P]
-- Referenced file paths
+- Task index, dependency order, and story traceability from tasks.md
+- Detailed task grouping by backend/frontend/config/docs/verification, service/app/package/lib, and action heading
+- Referenced file paths or file sets
+- Exact implementation details, forbidden behavior, dependencies/callers, and acceptance checks from detailed tasks
 
 **From constitution:**
 

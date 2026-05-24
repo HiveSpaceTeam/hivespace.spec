@@ -46,7 +46,8 @@ Do this silently before responding:
 | Project principles | `.specify/memory/constitution.md` |
 | Per-feature specs | `specs/NNNN-feature-name/spec.md` |
 | Per-feature technical plans | `specs/NNNN-feature-name/plan.md` |
-| Per-feature task lists | `specs/NNNN-feature-name/tasks.md` |
+| Per-feature task index | `specs/NNNN-feature-name/tasks.md` |
+| Per-feature detailed task lists | `specs/NNNN-feature-name/tasks/` |
 | Current feature pointer | `.specify/feature.json` |
 | Architecture decisions | `architecture/decisions/` |
 | Service documentation | `services/<name>/README.md` |
@@ -128,7 +129,7 @@ Example: if UserService stores a buyer avatar reference and consumes existing Me
 
 Before switching to `../hivespace.microservice` or `../hivespace.web`:
 
-1. Use the current feature's `spec.md`, `plan.md`, and `tasks.md` as the implementation scope.
+1. Use the current feature's `spec.md`, `plan.md`, `tasks.md`, and detailed `tasks/` files as the implementation scope.
 2. Include owning service docs, changed supporting service docs, and relevant catalog references in the implementation context.
 3. Keep backend and frontend work scoped to one coherent story or task group.
 4. Follow the target repo's own agent instruction files.

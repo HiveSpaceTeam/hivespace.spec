@@ -24,7 +24,7 @@ Before editing code, read the relevant source repo instructions:
 ### Architecture
 
 - New feature work uses CQRS plus Minimal API endpoints.
-- UserService legacy controller/service code may be maintained only when the existing implementation requires it.
+- IdentityService may maintain controller/Razor Page/service code where ASP.NET Identity and Duende IdentityServer require it.
 - Standard services follow `Domain -> Application -> Infrastructure -> Api`.
 - Keep business rules in domain/application code, not endpoint handlers.
 - Use MassTransit sagas only for multi-service workflows that need async coordination, timeout, or compensation.

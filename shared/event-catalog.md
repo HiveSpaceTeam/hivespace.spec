@@ -28,15 +28,16 @@ Rules:
 | `Failed` event | Step failure that the orchestrating saga must handle |
 | `Expired` or `Timeout` event | Time-based transition signal |
 
-## User and Store Events
+## Identity, User, and Store Events
 
 | Contract | Owner | Consumers / Purpose |
 |---|---|---|
-| `UserCreatedIntegrationEvent` | UserService | Build user projections in downstream services |
-| `UserUpdatedIntegrationEvent` | UserService | Refresh user projections |
-| `UserEmailVerificationRequestedIntegrationEvent` | UserService | Notification/email delivery |
-| `UserEmailVerifiedIntegrationEvent` | UserService | Update email-verification projections or notification state |
-| `StoreCreatedIntegrationEvent` | UserService | Catalog/Order store reference projection; seller onboarding |
+| `IdentityUserCreatedIntegrationEvent` | IdentityService | UserService creates the matching profile with the same public user ID |
+| `UserCreatedIntegrationEvent` | UserService | Build profile/display user projections in downstream services after profile creation |
+| `UserUpdatedIntegrationEvent` | UserService | Refresh profile/display user projections |
+| `UserEmailVerificationRequestedIntegrationEvent` | IdentityService | Notification/email delivery |
+| `UserEmailVerifiedIntegrationEvent` | IdentityService | Update email-verification projections or notification state |
+| `StoreCreatedIntegrationEvent` | UserService | Catalog/Order/Notification store reference projection; IdentityService seller onboarding |
 | `StoreUpdatedIntegrationEvent` | UserService | Refresh store reference projections |
 
 ## Product and Media Events
@@ -124,7 +125,7 @@ Use projection events to copy minimal reference data into another service. Do no
 
 | Projection | Source event examples | Owned by |
 |---|---|---|
-| `store_refs` | `StoreCreatedIntegrationEvent`, `StoreUpdatedIntegrationEvent` | CatalogService, OrderService |
+| `store_refs` | `StoreCreatedIntegrationEvent`, `StoreUpdatedIntegrationEvent` | CatalogService, OrderService, NotificationService |
 | `product_refs` | `ProductCreatedIntegrationEvent`, `ProductUpdatedIntegrationEvent`, `ProductDeletedIntegrationEvent` | OrderService |
 | `sku_refs` | `ProductSkuUpdatedIntegrationEvent` | OrderService |
 | `user_refs` | `UserCreatedIntegrationEvent`, `UserUpdatedIntegrationEvent` | NotificationService |

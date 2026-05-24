@@ -16,13 +16,6 @@
 - UserService stores `AvatarFileId` immediately and keeps the previous `AvatarUrl` until MediaService processing publishes the replacement URL.
 - `GET /api/v1/users/me` returns the latest resolved `avatarUrl` after the media processing event is consumed.
 
-## Email Verification
-
-| Method | Path | Auth | Purpose |
-|---|---|---|---|
-| POST | `/api/v1/accounts/email-verification` | `RequireAdminOrUser` | Send verification email |
-| POST | `/api/v1/accounts/email-verification/verify` | Anonymous | Verify email token |
-
 ## Addresses
 
 | Method | Path | Auth | Purpose |
@@ -41,12 +34,6 @@
 |---|---|---|---|
 | POST | `/api/v1/stores` | `RequireUser` | Register seller store |
 
-## Admin
+## Admin Profile And Store Review
 
-| Method | Path | Auth | Purpose |
-|---|---|---|---|
-| POST | `/api/v1/admins` | `RequireAdmin` | Create admin account |
-| GET | `/api/v1/admins` | `RequireAdmin` | List admin accounts |
-| GET | `/api/v1/admins/users` | `RequireAdmin` | List user accounts |
-| PUT | `/api/v1/admins/users/status` | `RequireAdmin` | Update user/admin status |
-| DELETE | `/api/v1/admins/users/{userId}` | `RequireAdmin` | Delete or deactivate user |
+Admin workflows that read or update profile/store data remain UserService-owned when they do not change identity-owned credentials, roles, lockout, email verification, or account status. Identity-affecting admin account management is owned by IdentityService.

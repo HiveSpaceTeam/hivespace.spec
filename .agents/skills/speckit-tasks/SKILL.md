@@ -1,6 +1,6 @@
 ---
 name: "speckit-tasks"
-description: "Generate an actionable, dependency-ordered tasks.md for the feature based on available design artifacts."
+description: "Generate an actionable, dependency-ordered task index and detailed task files for the feature based on available design artifacts."
 compatibility: "Requires spec-kit project structure with .specify/ directory"
 metadata:
   author: "github-spec-kit"
@@ -60,43 +60,38 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Note: Not all projects have all documents. Generate tasks based on what's available.
 
 3. **Execute task generation workflow**:
-   - Load plan.md and extract tech stack, libraries, project structure
-   - Load spec.md and extract user stories with their priorities (P1, P2, P3, etc.)
-   - If data-model.md exists: Extract entities and map to user stories
-   - If contracts/ exists: Map interface contracts to user stories
-   - If research.md exists: Extract decisions for setup tasks
-   - If saga-design.md exists: Generate tasks for saga state, messages, consumers, compensation, timeout/idempotency handling, observability, and event catalog updates
-   - If plan.md links ADRs: Generate tasks that honor the accepted/draft architectural decisions and include any required follow-up docs/catalog updates
+   - Load plan.md and extract tech stack, libraries, project structure, source repositories, services, apps, packages, and verification commands
+   - Load spec.md and extract user stories with their priorities (P1, P2, P3, etc.) for traceability labels
+   - If data-model.md exists: Extract entities and map them to owning services/libs and user story labels
+   - If contracts/ exists: Map interface contracts to owning services/apps and user story labels
+   - If research.md exists: Extract decisions that affect setup, implementation constraints, or verification
+   - If saga-design.md exists: Generate detailed backend, docs/catalog, and verification tasks for saga state, messages, consumers, compensation, timeout/idempotency handling, observability, and event catalog updates
+   - If plan.md links ADRs: Generate tasks that honor the accepted/draft architectural decisions and include required follow-up docs/catalog updates
    - Generate docs/catalog update tasks only for owning services, changed supporting services, new contracts, or changed contracts
    - Generate verification-only tasks for reused supporting services and unchanged common API/event contracts
-   - Generate tasks organized by user story (see Task Generation Rules below)
-   - Generate dependency graph showing user story completion order
-   - Create parallel execution examples per user story
-   - Validate task completeness (each user story has all needed tasks, independently testable)
+   - Generate detailed tasks under `FEATURE_DIR/tasks/`, grouped by implementation ownership, then service/app/package/lib, then action (see Task Generation Rules below)
+   - Use user-story labels only for traceability, not as the primary grouping
+   - Generate dependency order showing implementation group sequencing and story traceability
+   - Validate task completeness: each task has exact file path/file set, intended change detail, forbidden behavior, dependencies/callers where relevant, and acceptance
 
-4. **Generate tasks.md**: Read the tasks template from TASKS_TEMPLATE (from the JSON output above) and use it as structure. If TASKS_TEMPLATE is empty, fall back to `.specify/templates/tasks-template.md`. Fill with:
+4. **Generate task artifacts**: Read the tasks template from TASKS_TEMPLATE and use it as the structure for `tasks.md`. If TASKS_TEMPLATE is empty, fall back to `.specify/templates/tasks-template.md`. Fill with:
    - Correct feature name from plan.md
-   - Phase 1: Setup tasks (project initialization)
-   - Phase 2: Foundational tasks (blocking prerequisites for all user stories)
-   - Phase 3+: One phase per user story (in priority order from spec.md)
-   - Each phase includes: story goal, independent test criteria, tests (if requested), implementation tasks
-   - Final Phase: Polish & cross-cutting concerns
-   - All tasks must follow the strict checklist format (see Task Generation Rules below)
-   - Clear file paths for each task
-   - Dependencies section showing story completion order
-   - Parallel execution examples per story
-   - Implementation strategy section (MVP first, incremental delivery)
+   - `tasks.md` as the compatibility entrypoint, summary, task-file index, dependency order, story traceability table, and completion checklist
+   - Detailed task files under `FEATURE_DIR/tasks/` as needed: `backend.md`, `frontend.md`, `config.md`, `docs-catalog.md`, and `verification.md`
+   - Detailed tasks grouped by service/app/package/lib and then action headings: Create, Update, Remove, Move/Rename, Verify
+   - Detailed tasks with stable prefixes: B### backend, F### frontend, C### config, D### docs/catalog, V### verification
+   - Tests only if requested, placed in the relevant detailed file or `verification.md` depending on whether they create test code or run checks
    - Documentation/catalog scope that says which service docs and catalog entries are editable, and which supporting services are verification-only
 
-5. **Report**: Output path to generated tasks.md and summary:
-   - Total task count
-   - Task count per user story
-   - Parallel opportunities identified
+5. **Report**: Output path to generated `tasks.md` and generated detailed task files, plus summary:
+   - Total task count across all detailed files
+   - Task count by detailed file and by user story label
+   - Implementation groups and dependency order
    - Independent test criteria for each story
-   - Suggested MVP scope (typically just User Story 1)
-   - Format validation: Confirm ALL tasks follow the checklist format (checkbox, ID, labels, file paths)
+   - Suggested MVP scope (typically the minimal backend/frontend/config/docs/verification groups needed for User Story 1)
+   - Format validation: Confirm ALL detailed tasks follow the detailed checkbox format with IDs, story labels where applicable, file paths/file sets, exact change details, and acceptance checks
 
-6. **Check for extension hooks**: After tasks.md is generated, check if `.specify/extensions.yml` exists in the project root.
+6. **Check for extension hooks**: After tasks are generated, check if `.specify/extensions.yml` exists in the project root.
    - If it exists, read it and look for entries under the `hooks.after_tasks` key
    - If the YAML cannot be parsed or is invalid, skip hook checking silently and continue normally
    - Filter out hooks where `enabled` is explicitly `false`. Treat hooks without an `enabled` field as enabled by default.
@@ -127,70 +122,75 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 Context for task generation: $ARGUMENTS
 
-The tasks.md should be immediately executable - each task must be specific enough that an LLM can complete it without additional context.
+The generated task set should be immediately executable. `tasks.md` is the entrypoint and detailed tasks under `tasks/` must be specific enough that an LLM can complete each task without additional context.
 
 ## Task Generation Rules
 
-**CRITICAL**: Tasks MUST be organized by user story to enable independent implementation and testing.
+**CRITICAL**: Detailed tasks MUST be organized by implementation ownership, not primarily by user story. Preserve user-story labels (`[US1]`, `[US2]`, etc.) for traceability and independent acceptance.
 
 **Tests are OPTIONAL**: Only generate test tasks if explicitly requested in the feature specification or if user requests TDD approach.
 
-### Checklist Format (REQUIRED)
+### Task Files (REQUIRED)
 
-Every task MUST strictly follow this format:
+Keep `tasks.md` as the compatibility entrypoint and high-level tracker. Generate detailed files under `FEATURE_DIR/tasks/` only when that area has work:
+
+- `backend.md` for backend services, APIs, domain/application/infrastructure code, shared backend libs, migrations
+- `frontend.md` for frontend apps, shared package, services, stores, components, pages, routes, i18n
+- `config.md` for Docker, appsettings source config, environment sync, local/cloud infrastructure config
+- `docs-catalog.md` for service docs, API catalog, event catalog, ADRs, architecture docs
+- `verification.md` for builds, tests, lint/type-check, quickstart/manual validation, final searches
+
+### Detailed Checklist Format (REQUIRED)
+
+Every detailed task MUST strictly follow this format:
 
 ```text
-- [ ] [TaskID] [P?] [Story?] Description with file path
+- [ ] [TaskID] [Story?] Action `PrimaryTarget`
+  - File: `exact/path/or/file-set`
+  - [Detail bullets describing exact implementation]
+  - Acceptance: [verifiable completion check]
 ```
 
 **Format Components**:
 
 1. **Checkbox**: ALWAYS start with `- [ ]` (markdown checkbox)
-2. **Task ID**: Sequential number (T001, T002, T003...) in execution order
-3. **[P] marker**: Include ONLY if task is parallelizable (different files, no dependencies on incomplete tasks)
-4. **[Story] label**: REQUIRED for user story phase tasks only
+2. **Task ID**: Unique ID across all detailed files using area prefixes: B###, F###, C###, D###, V###
+3. **[Story] label**: REQUIRED for feature work that maps to a user story
    - Format: [US1], [US2], [US3], etc. (maps to user stories from spec.md)
-   - Setup phase: NO story label
-   - Foundational phase: NO story label  
-   - User Story phases: MUST have story label
-   - Polish phase: NO story label
-5. **Description**: Clear action with exact file path
+   - Cross-cutting setup, docs, and verification tasks may omit story labels only when they do not map to a single story
+4. **Action and primary target**: Start with Create, Update, Remove, Move/Rename, or Verify
+5. **Detail bullets**: Include target file path or explicit file set, exact fields/types/methods/routes/events/config keys/docs sections to create/update/remove/move, forbidden behavior, affected callers/dependencies when relevant, and acceptance
 
 **Examples**:
 
-- ✅ CORRECT: `- [ ] T001 Create project structure per implementation plan`
-- ✅ CORRECT: `- [ ] T005 [P] Implement authentication middleware in src/middleware/auth.py`
-- ✅ CORRECT: `- [ ] T012 [P] [US1] Create User model in src/models/user.py`
-- ✅ CORRECT: `- [ ] T014 [US1] Implement UserService in src/services/user_service.py`
-- ❌ WRONG: `- [ ] Create User model` (missing ID and Story label)
-- ❌ WRONG: `T001 [US1] Create model` (missing checkbox)
-- ❌ WRONG: `- [ ] [US1] Create User model` (missing Task ID)
-- ❌ WRONG: `- [ ] T001 [US1] Create model` (missing file path)
+- CORRECT: `- [ ] B001 [US1] Create ApplicationUser.cs` followed by File, Include fields, Add/update methods, Do not include, and Acceptance bullets
+- CORRECT: `- [ ] F003 [US1] Update buyer OIDC authority config` followed by File, Change, Keep, Verify affected callers, and Acceptance bullets
+- WRONG: `- [ ] Create User model` (missing ID, story label, file path, and implementation detail)
+- WRONG: `- [ ] B001 [US1] Create ApplicationUser` with no detail bullets
+- WRONG: `- [ ] T001 [US1] Create model` (wrong ID prefix and missing file path/detail)
 
 ### Task Organization
 
-1. **From User Stories (spec.md)** - PRIMARY ORGANIZATION:
-   - Each user story (P1, P2, P3...) gets its own phase
-   - Map all related components to their story:
-     - Models needed for that story
-     - Services needed for that story
-     - Interfaces/UI needed for that story
-     - If tests requested: Tests specific to that story
-   - Mark story dependencies (most stories should be independent)
+1. **From Implementation Ownership** - PRIMARY ORGANIZATION:
+   - Group by detailed file: backend, frontend, config, docs/catalog, verification
+   - Inside each file, group by service/app/package/lib/config/docs area
+   - Inside each area, group by action: Create, Update, Remove, Move/Rename, Verify
+   - Use user-story labels for traceability only
 
 2. **From Contracts**:
-   - Map each interface contract → to the user story it serves
-   - If tests requested: Each interface contract → contract test task [P] before implementation in that story's phase
+   - Map each interface contract to the owning implementation area and the user story it serves
+   - If tests requested: create test-code tasks in the relevant backend/frontend group before implementation tasks, and run-test tasks in `verification.md`
 
 3. **From Data Model**:
-   - Map each entity to the user story(ies) that need it
-   - If entity serves multiple stories: Put in earliest story or Setup phase
-   - Relationships → service layer tasks in appropriate story phase
+   - Map each entity to the owning service/lib and user story labels
+   - If an entity serves multiple stories, place it in the owning service group and list all relevant story labels or note shared dependency in the detail bullets
+   - Relationships become exact field/method/mapping details in the relevant task bullets
 
 4. **From Setup/Infrastructure**:
-   - Shared infrastructure → Setup phase (Phase 1)
-   - Foundational/blocking tasks → Foundational phase (Phase 2)
-   - Story-specific setup → within that story's phase
+   - Backend setup goes in `backend.md`
+   - Frontend setup goes in `frontend.md`
+   - Docker/appsettings/env sync goes in `config.md`
+   - Cross-cutting verification goes in `verification.md`
 
 5. **From Documentation/Catalog Scope**:
    - Owning service docs: doc update tasks when the shipped feature changes that service
@@ -198,11 +198,9 @@ Every task MUST strictly follow this format:
    - Reused supporting services: verification-only tasks; do not generate doc edit tasks
    - Existing shared API/event catalog rows: verification-only tasks unless the contract itself changed
 
-### Phase Structure
+### Dependency Structure
 
-- **Phase 1**: Setup (project initialization)
-- **Phase 2**: Foundational (blocking prerequisites - MUST complete before user stories)
-- **Phase 3+**: User Stories in priority order (P1, P2, P3...)
-  - Within each story: Tests (if requested) → Models → Services → Endpoints → Integration
-  - Each phase should be a complete, independently testable increment
-- **Final Phase**: Polish & Cross-Cutting Concerns
+- `tasks.md` must include the overall dependency order across detailed files.
+- Detailed tasks should avoid vague "implement feature" wording. Split tasks when a file needs unrelated actions or when acceptance would be hard to verify.
+- Tasks that affect the same file must make sequencing clear in the detail bullets or dependency order.
+- Keep each user story independently verifiable through acceptance criteria and `verification.md`, even though tasks are grouped by implementation ownership.
