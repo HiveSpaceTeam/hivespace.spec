@@ -50,6 +50,6 @@ Implementation source:
 
 - NotificationService consumes user and store events to maintain `UserRef`.
 - NotificationService consumes notification intent commands such as `NotifySellerNewOrder`, `NotifyBuyerOrderConfirmed`, and `NotifyBuyerOrderCancelled`.
-- NotificationService publishes saga continuation events such as `SellerNewOrderNotified` and `BuyerNotified`.
+- NotificationService publishes saga continuation events such as `SellerNewOrderNotifiedIntegrationEvent` and `BuyerNotifiedIntegrationEvent`.
 - Source services decide that a business event happened; NotificationService decides delivery mechanics, templates, preference filtering, attempts, and realtime push.
 - NotificationService does not own order, payment, catalog, or identity source-of-truth data.

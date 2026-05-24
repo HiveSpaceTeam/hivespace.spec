@@ -51,7 +51,7 @@ Implementation source:
 ## Cross-Service Facts
 
 - PaymentService consumes `InitiatePayment` from the checkout saga to create a payment and gateway URL.
-- PaymentService publishes `PaymentInitiated` or `PaymentInitiationFailed` for saga progression.
+- PaymentService publishes `PaymentInitiatedIntegrationEvent` or `PaymentInitiationFailedIntegrationEvent` for saga progression.
 - PaymentService publishes `PaymentSucceededIntegrationEvent` and `PaymentFailedIntegrationEvent` after gateway/IPN outcomes.
 - OrderService owns order lifecycle and reacts to payment events; PaymentService does not mutate order state directly.
 - PaymentService owns gateway identifiers and idempotency; other services must not infer payment state from order state alone.

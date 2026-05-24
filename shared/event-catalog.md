@@ -24,9 +24,8 @@ Rules:
 |---|---|
 | `Command` or command-like imperative name | Requests another service or saga participant to perform work |
 | `IntegrationEvent` | Cross-service fact published after a domain change |
-| Saga event without suffix | Message used by checkout/fulfillment state machines |
-| `Failed` event | Step failure that the orchestrating saga must handle |
-| `Expired` or `Timeout` event | Time-based transition signal |
+| `*FailedIntegrationEvent` | Step failure fact that the orchestrating saga must handle |
+| `*ExpiredIntegrationEvent` or `*TimeoutIntegrationEvent` | Time-based transition fact |
 
 ## Identity, User, and Store Events
 
@@ -67,57 +66,81 @@ These contracts coordinate the checkout workflow. OrderService owns the saga, bu
 | `CreateOrder` | Create order records for checkout | OrderService |
 | `ReserveInventory` | Reserve SKU inventory | CatalogService |
 | `ReleaseInventory` | Release reserved inventory during compensation | CatalogService |
-| `ConfirmInventory` | Finalize inventory after seller confirmation | CatalogService |
 | `InitiatePayment` | Create payment and redirect URL | PaymentService |
 | `MarkOrderAsPaid` | Mark order payment status paid | OrderService |
 | `MarkOrderAsCOD` | Mark order as cash-on-delivery path | OrderService |
 | `CommitCouponUsage` | Commit coupon usage after payment/order success | OrderService |
 | `CancelOrder` | Cancel order during compensation | OrderService |
-| `NotifySellerNewOrder` | Notify seller of new order | NotificationService |
-| `NotifyBuyerOrderConfirmed` | Notify buyer order confirmed | NotificationService |
-| `NotifyBuyerOrderCancelled` | Notify buyer order cancelled | NotificationService |
 
 ## Checkout Saga Success Events
 
 | Contract | Meaning |
 |---|---|
-| `OrderCreated` | Order records were created |
-| `InventoryReserved` | Inventory reservation succeeded |
-| `InventoryReleased` | Inventory was released during compensation |
-| `InventoryConfirmed` | Inventory was finalized |
-| `PaymentInitiated` | Payment record/link was created |
-| `OrderMarkedAsPaid` | Order payment status was marked paid |
-| `OrderMarkedAsCOD` | Order was marked for COD processing |
-| `CouponUsageCommitted` | Coupon usage was committed |
-| `OrderCancelled` | Order cancellation completed |
-| `OrderReadyForFulfillment` | Checkout completed and fulfillment can begin |
-| `SellerNewOrderNotified` | Seller notification was sent |
-| `BuyerNotified` | Buyer notification was sent |
-| `OrderConfirmedBySeller` | Seller accepted fulfillment |
-| `OrderRejectedBySeller` | Seller rejected fulfillment |
+| `OrderCreatedIntegrationEvent` | Order records were created |
+| `InventoryReservedIntegrationEvent` | Inventory reservation succeeded |
+| `InventoryReleasedIntegrationEvent` | Inventory was released during compensation |
+| `PaymentInitiatedIntegrationEvent` | Payment record/link was created |
+| `OrderMarkedAsPaidIntegrationEvent` | Order payment status was marked paid |
+| `OrderMarkedAsCODIntegrationEvent` | Order was marked for COD processing |
+| `CouponUsageCommittedIntegrationEvent` | Coupon usage was committed |
+| `OrderCancelledIntegrationEvent` | Order cancellation completed |
 
 ## Checkout Saga Failure and Timeout Events
 
 | Contract | Meaning |
 |---|---|
-| `OrderCreationFailed` | Order creation failed |
-| `InventoryReservationFailed` | Inventory could not be reserved |
-| `InventoryConfirmationFailed` | Final inventory confirmation failed |
-| `PaymentInitiationFailed` | Payment initiation failed |
-| `MarkOrderAsPaidFailed` | Mark-paid step failed |
-| `MarkOrderAsCODFailed` | COD marking failed |
-| `CommitCouponUsageFailed` | Coupon usage commit failed |
-| `PaymentTimeout` | Buyer did not complete payment in time |
-| `SellerConfirmationExpired` | Seller confirmation window expired |
-| `SagaStepExpired` | A saga request step timed out |
+| `OrderCreationFailedIntegrationEvent` | Order creation failed |
+| `InventoryReservationFailedIntegrationEvent` | Inventory could not be reserved |
+| `PaymentInitiationFailedIntegrationEvent` | Payment initiation failed |
+| `MarkOrderAsPaidFailedIntegrationEvent` | Mark-paid step failed |
+| `MarkOrderAsCODFailedIntegrationEvent` | COD marking failed |
+| `CommitCouponUsageFailedIntegrationEvent` | Coupon usage commit failed |
+| `PaymentTimeoutIntegrationEvent` | Buyer did not complete payment in time |
+| `SagaStepExpiredIntegrationEvent` | A saga request step timed out |
 
-## Checkout Data Transfer Objects
+## Shared Workflow Handoff Events
+
+| Contract | Producer | Consumer | Meaning |
+|---|---|---|---|
+| `OrderReadyForFulfillmentIntegrationEvent` | OrderService checkout saga | OrderService fulfillment saga | Checkout completed and fulfillment can begin |
+
+## Fulfillment Saga Commands
+
+These contracts coordinate fulfillment after checkout has handed off a ready order.
+
+| Contract | Requested action | Expected responder |
+|---|---|---|
+| `NotifySellerNewOrder` | Notify seller of new order | NotificationService |
+| `NotifyBuyerOrderConfirmed` | Notify buyer order confirmed | NotificationService |
+| `NotifyBuyerOrderCancelled` | Notify buyer order cancelled | NotificationService |
+| `ConfirmInventory` | Finalize inventory after seller confirmation | CatalogService |
+
+## Fulfillment Saga Success Events
+
+| Contract | Meaning |
+|---|---|
+| `SellerNewOrderNotifiedIntegrationEvent` | Seller notification was sent |
+| `BuyerNotifiedIntegrationEvent` | Buyer notification was sent |
+| `OrderConfirmedBySellerIntegrationEvent` | Seller accepted fulfillment |
+| `OrderRejectedBySellerIntegrationEvent` | Seller rejected fulfillment |
+| `InventoryConfirmedIntegrationEvent` | Inventory was finalized |
+
+## Fulfillment Saga Failure and Timeout Events
+
+| Contract | Meaning |
+|---|---|
+| `SellerConfirmationExpiredIntegrationEvent` | Seller confirmation window expired |
+| `InventoryConfirmationFailedIntegrationEvent` | Final inventory confirmation failed |
+
+## Workflow Data Transfer Objects
 
 | Contract | Purpose |
 |---|---|
 | `CheckoutCouponSelectionDto` | Coupon selections passed through checkout |
+| `StoreCouponSelectionDto` | Store-level coupon selection entry passed through checkout |
 | `DeliveryAddressDto` | Delivery address snapshot passed through checkout |
 | `OrderItemDto` | Item snapshot passed through checkout |
+| `StockFailureDto` | Inventory failure details passed in reservation or confirmation failure events |
 
 ## Projection Events
 

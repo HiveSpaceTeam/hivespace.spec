@@ -28,3 +28,7 @@ MediaService owns:
 - MediaService owns file lifecycle, not the business meaning of the entity that references a file.
 - A media asset may be referenced by another service only after upload confirmation.
 - Failed processing must be observable and retryable where supported.
+
+## Publisher Policy
+
+- Media background processing publishes `MediaAssetProcessedIntegrationEvent` through a service-owned media event publisher after processing state is saved.

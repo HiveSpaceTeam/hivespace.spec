@@ -48,6 +48,7 @@ OrderService follows standard Clean Architecture / DDD with CQRS and Minimal API
 - Order item/product data should be snapshotted at purchase time.
 - Seller order actions must enforce seller/store ownership.
 - Payment result handling belongs to PaymentService; OrderService reacts to payment success/failure events.
+- Checkout, fulfillment, and shared handoff workflow contracts use standardized `*IntegrationEvent` names per [ADR-0002](../../architecture/decisions/ADR-0002-standardized-integration-event-contracts.md).
 
 ## Detail
 

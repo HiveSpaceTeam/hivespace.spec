@@ -32,18 +32,23 @@ CatalogService owns:
 | `ProductDeletedIntegrationEvent` | Deactivate product projections |
 | `ProductSkuUpdatedIntegrationEvent` | Refresh SKU price/availability projections |
 
-## Checkout Saga Participation
+## Checkout And Fulfillment Workflow Participation
 
 | Message | Role |
 |---|---|
 | `ReserveInventory` | Reserve stock for checkout |
-| `InventoryReserved` | Report successful reservation |
-| `InventoryReservationFailed` | Report reservation failure |
+| `InventoryReservedIntegrationEvent` | Report successful reservation |
+| `InventoryReservationFailedIntegrationEvent` | Report reservation failure |
 | `ReleaseInventory` | Release reservation during compensation |
-| `InventoryReleased` | Report release success |
+| `InventoryReleasedIntegrationEvent` | Report release success |
 | `ConfirmInventory` | Finalize inventory after seller confirmation |
-| `InventoryConfirmed` | Report final confirmation |
-| `InventoryConfirmationFailed` | Report final confirmation failure |
+| `InventoryConfirmedIntegrationEvent` | Report final confirmation |
+| `InventoryConfirmationFailedIntegrationEvent` | Report final confirmation failure |
+
+## Publisher Policy
+
+- CatalogService application publishing uses service-owned publisher abstractions for product/SKU integration events.
+- Saga participant responses remain MassTransit consume-context workflow messages.
 
 ## Invariants
 

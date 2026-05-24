@@ -7,7 +7,7 @@ OrderService CheckoutSaga
   -> InitiatePayment
   -> PaymentService creates payment
   -> PaymentService requests gateway URL
-  -> PaymentInitiated or PaymentInitiationFailed
+  -> PaymentInitiatedIntegrationEvent or PaymentInitiationFailedIntegrationEvent
 ```
 
 ## Gateway Return / IPN
@@ -25,4 +25,5 @@ Gateway
 - Treat gateway callbacks as potentially duplicated.
 - Store raw gateway response where supported for diagnostics.
 - Publish payment result events once per effective payment outcome.
+- Publish payment integration events through the service-owned payment event publisher outside saga consume-context responses.
 - Do not mutate OrderService data directly.

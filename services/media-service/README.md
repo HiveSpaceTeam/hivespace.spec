@@ -42,6 +42,7 @@ MediaService is a lighter service. New feature work should still follow the repo
 - Frontends upload file bytes directly to the issued storage URL.
 - Other domains store references to media IDs/URLs, but MediaService owns media processing state.
 - If a domain needs to react to processing completion, use `MediaAssetProcessedIntegrationEvent`.
+- Media processing publishes through a service-owned publisher according to [ADR-0002](../../architecture/decisions/ADR-0002-standardized-integration-event-contracts.md).
 
 ## Detail
 

@@ -31,6 +31,8 @@ Initial
        compensate by cancelling order and releasing inventory where needed
 ```
 
+Checkout success publishes `OrderReadyForFulfillmentIntegrationEvent` as the shared handoff to fulfillment.
+
 ## Fulfillment Saga
 
 ```text
@@ -46,6 +48,8 @@ Order ready for fulfillment
        notify buyer
        fail/cancel as required
 ```
+
+Fulfillment uses standardized continuation events including `SellerNewOrderNotifiedIntegrationEvent`, `OrderConfirmedBySellerIntegrationEvent`, `OrderRejectedBySellerIntegrationEvent`, `SellerConfirmationExpiredIntegrationEvent`, `InventoryConfirmedIntegrationEvent`, `InventoryConfirmationFailedIntegrationEvent`, and `BuyerNotifiedIntegrationEvent`.
 
 ## Saga Rules
 

@@ -32,3 +32,7 @@ IdentityService owns:
 - Profile, settings, addresses, and store lifecycle records are authoritative only in UserService.
 - Cross-boundary updates must use integration events with transactional outbox publication and idempotent consumers.
 - Missing required event data must remain observable through retry/dead-letter behavior.
+
+## Publisher Policy
+
+- IdentityService application and Razor Page flows publish identity-owned integration events through a service-owned identity event publisher.

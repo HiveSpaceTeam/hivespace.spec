@@ -51,6 +51,7 @@ IdentityServer public protocol and page endpoints are served directly from the I
 - Email verification events are IdentityService-owned; NotificationService only delivers the email/notification.
 - Seller access may require token refresh after role propagation.
 - The split is documented in [ADR-0001](../../architecture/decisions/ADR-0001-split-identity-service.md).
+- Standardized integration event naming, inheritance, and publisher policy are documented in [ADR-0002](../../architecture/decisions/ADR-0002-standardized-integration-event-contracts.md).
 
 ## Detail
 

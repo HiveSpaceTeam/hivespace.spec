@@ -49,6 +49,7 @@ UserService is narrowed to user-domain data after the IdentityService split. New
 - Address APIs are buyer-facing but remain UserService-owned because addresses belong to the user profile.
 - Downstream services should consume user/store events or maintain projections instead of querying UserService database.
 - The split is documented in [ADR-0001](../../architecture/decisions/ADR-0001-split-identity-service.md).
+- Standardized integration event naming, inheritance, and publisher policy are documented in [ADR-0002](../../architecture/decisions/ADR-0002-standardized-integration-event-contracts.md).
 
 ## Detail
 

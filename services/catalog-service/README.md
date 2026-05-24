@@ -52,6 +52,7 @@ New feature work should use CQRS handlers and Minimal API endpoint modules.
 - Storefront product discovery APIs are anonymous.
 - OrderService should use product/SKU projections from events rather than querying CatalogService database.
 - Media references should point to MediaService assets, but CatalogService owns the product association decision.
+- Inventory workflow events use standardized `*IntegrationEvent` names per [ADR-0002](../../architecture/decisions/ADR-0002-standardized-integration-event-contracts.md).
 
 ## Detail
 

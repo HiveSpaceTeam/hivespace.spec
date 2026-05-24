@@ -27,10 +27,15 @@ PaymentService owns:
 
 | Event | Purpose |
 |---|---|
-| `PaymentInitiated` | Saga can redirect/wait for payment |
-| `PaymentInitiationFailed` | Saga should compensate/fail payment path |
+| `PaymentInitiatedIntegrationEvent` | Saga can redirect/wait for payment |
+| `PaymentInitiationFailedIntegrationEvent` | Saga should compensate/fail payment path |
 | `PaymentSucceededIntegrationEvent` | OrderService can continue paid checkout |
 | `PaymentFailedIntegrationEvent` | OrderService can fail or compensate checkout |
+
+## Publisher Policy
+
+- PaymentService application publishing uses service-owned publisher abstractions for payment integration events.
+- Checkout saga participant responses remain MassTransit consume-context workflow messages.
 
 ## Invariants
 

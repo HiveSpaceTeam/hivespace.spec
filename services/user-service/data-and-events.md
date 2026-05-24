@@ -43,3 +43,7 @@ UserService owns:
 - IdentityService is authoritative for authentication, roles, claims, lockout, account status, and email verification.
 - Store registration is the only supported UserService trigger for seller/store-owner role propagation.
 - Other services must not assume store/user display data without a projection event or public API contract.
+
+## Publisher Policy
+
+- UserService application publishing uses service-owned publisher abstractions such as `IStoreEventPublisher` for user/store integration events.

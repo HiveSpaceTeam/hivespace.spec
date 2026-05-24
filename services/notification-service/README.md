@@ -45,6 +45,7 @@ NotificationService is a lighter service. New work should use the repo's CQRS/Mi
 - Other services publish notification intent; NotificationService decides delivery mechanics.
 - Notification preferences affect delivery, not whether source-domain events occurred.
 - SignalR clients receive `ReceiveNotification` events through the shared frontend realtime composable.
+- Fulfillment continuation events use standardized `*IntegrationEvent` names while remaining MassTransit consume-context orchestration messages per [ADR-0002](../../architecture/decisions/ADR-0002-standardized-integration-event-contracts.md).
 
 ## Detail
 

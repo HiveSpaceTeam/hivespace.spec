@@ -20,6 +20,15 @@ Domain service
   -> delivery attempt recorded
 ```
 
+## Fulfillment Continuation
+
+```text
+OrderService FulfillmentSaga
+  -> NotifySellerNewOrder / NotifyBuyerOrderConfirmed / NotifyBuyerOrderCancelled
+  -> NotificationService records delivery
+  -> SellerNewOrderNotifiedIntegrationEvent or BuyerNotifiedIntegrationEvent
+```
+
 ## Preference Handling
 
 ```text
@@ -33,3 +42,4 @@ User updates preferences
 - Delivery may be skipped by preference, but the source-domain event remains true.
 - Failed delivery should be observable through delivery attempts.
 - Realtime push complements persistence; it must not be the only record.
+- Fulfillment continuation publishes remain MassTransit consume-context orchestration messages.

@@ -26,8 +26,8 @@ NotificationService owns:
 
 | Event | Purpose |
 |---|---|
-| `SellerNewOrderNotified` | Continue fulfillment saga after seller notification |
-| `BuyerNotified` | Continue/complete saga after buyer notification |
+| `SellerNewOrderNotifiedIntegrationEvent` | Continue fulfillment saga after seller notification |
+| `BuyerNotifiedIntegrationEvent` | Continue/complete saga after buyer notification |
 
 ## Delivery Rules
 
@@ -37,3 +37,7 @@ NotificationService owns:
 - In-app notifications may be pushed through SignalR and persisted.
 - Email notifications use templates and provider integration.
 - IdentityService owns email verification state; NotificationService only owns delivery and delivery observability.
+
+## Publisher Policy
+
+- Fulfillment continuation publishes remain MassTransit consume-context orchestration messages, not application/background publisher calls.

@@ -46,6 +46,7 @@ PaymentService follows standard Clean Architecture / DDD with CQRS and Minimal A
 - Gateway callbacks should not cause duplicate payment success/failure events.
 - OrderService reacts to payment outcomes; PaymentService does not mutate order state directly.
 - Wallet ledger entries should be append-only.
+- Payment workflow events use standardized `*IntegrationEvent` names and service-owned publisher policy per [ADR-0002](../../architecture/decisions/ADR-0002-standardized-integration-event-contracts.md).
 
 ## Detail
 

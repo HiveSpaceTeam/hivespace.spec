@@ -31,11 +31,15 @@ OrderService owns:
 
 | Event | Purpose |
 |---|---|
-| `InventoryReserved` / `InventoryReservationFailed` | Continue or compensate checkout |
+| `InventoryReservedIntegrationEvent` / `InventoryReservationFailedIntegrationEvent` | Continue or compensate checkout |
 | `PaymentSucceededIntegrationEvent` / `PaymentFailedIntegrationEvent` | Continue or fail payment path |
-| `PaymentInitiated` / `PaymentInitiationFailed` | Continue or compensate payment initiation |
-| `SellerNewOrderNotified` | Continue fulfillment notification step |
-| `BuyerNotified` | Complete buyer notification step |
+| `PaymentInitiatedIntegrationEvent` / `PaymentInitiationFailedIntegrationEvent` | Continue or compensate payment initiation |
+| `OrderReadyForFulfillmentIntegrationEvent` | Start fulfillment after checkout completion |
+| `SellerNewOrderNotifiedIntegrationEvent` | Continue fulfillment notification step |
+| `BuyerNotifiedIntegrationEvent` | Complete buyer notification step |
+| `OrderConfirmedBySellerIntegrationEvent` / `OrderRejectedBySellerIntegrationEvent` | Continue fulfillment after seller decision |
+| `SellerConfirmationExpiredIntegrationEvent` | Compensate fulfillment after seller confirmation timeout |
+| `InventoryConfirmedIntegrationEvent` / `InventoryConfirmationFailedIntegrationEvent` | Continue or compensate final inventory confirmation |
 
 ## Published Saga Messages
 
@@ -48,6 +52,11 @@ OrderService owns:
 | `NotifySellerNewOrder` | NotificationService |
 | `NotifyBuyerOrderConfirmed` | NotificationService |
 | `NotifyBuyerOrderCancelled` | NotificationService |
+
+## Publisher Policy
+
+- OrderService application publishing uses service-owned publisher abstractions for order-owned integration events.
+- Checkout and fulfillment saga request/response, timeout, schedule, handoff, and continuation messages remain MassTransit orchestration messages.
 
 ## Invariants
 

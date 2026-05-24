@@ -54,6 +54,10 @@ Before editing code, read the relevant source repo instructions:
 
 ### Messaging
 
+- Shared event contracts must end with `IntegrationEvent` and derive from `HiveSpace.Infrastructure.Messaging.Events.IntegrationEvent` so every cross-service fact exposes `EventId` and `OccurredOn`.
+- Command and DTO contracts must not derive from `IntegrationEvent` and must not be renamed with an event suffix; saga commands stay action-named and DTOs stay shape-only.
+- Application and background integration event publishing must go through a service-owned publisher abstraction. MassTransit saga request/response, timeout, schedule, and continuation publishing stays in saga or consume-context orchestration code.
+- Breaking event-contract renames require old broker and outbox messages using renamed contracts to be drained or explicitly cleared before deployment.
 - Outgoing integration messages must be published through the transactional outbox pattern.
 - Consumers must be idempotent.
 - Consumers must not silently return when required entities are missing; surface a domain/not-found failure so retries and dead-letter handling preserve observability.
