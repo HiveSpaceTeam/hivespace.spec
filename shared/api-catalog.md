@@ -34,7 +34,7 @@ Local gateway defaults:
 |---|---|
 | `/.well-known/**` | IdentityService direct authority endpoint, not routed through ApiGateway |
 | `/connect/**` | IdentityService direct authority endpoint, not routed through ApiGateway |
-| `/Account/**` | IdentityService direct authority endpoint, not routed through ApiGateway |
+| `/Account/**` | IdentityService direct compatibility endpoint for legacy account URLs, not routed through ApiGateway |
 | `/api/v1/accounts/**` | IdentityService |
 | `/api/v1/admins/**` | IdentityService and UserService split by action |
 | `/api/v1/users/**` | UserService |
@@ -53,14 +53,20 @@ Local gateway defaults:
 
 ## IdentityService
 
-IdentityServer public OIDC protocol/page endpoints are served directly by IdentityService on `http://localhost:5001`: `/.well-known/**`, `/connect/**`, and `/Account/**`. ApiGateway does not forward these endpoints. `/identity/**` and `/api/v1/identity/**` are intentionally not part of the target contract.
+IdentityServer public OIDC protocol endpoints are served directly by IdentityService on `http://localhost:5001`: `/.well-known/**` and `/connect/**`. Legacy `/Account/**` login, registration, and logout URLs are direct IdentityService compatibility redirects to frontend routes, not ApiGateway routes and not user-facing IdentityService UI. `/identity/**` and `/api/v1/identity/**` are intentionally not part of the target contract.
 
 ### Account and Email Verification
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
+| POST | `/api/v1/accounts/login` | Anonymous | Password login from frontend-owned UI; sets secure HttpOnly browser session cookie and CSRF token |
+| POST | `/api/v1/accounts/register` | Anonymous | Frontend-owned public account registration where allowed; creates identity account, triggers existing profile creation flow, and sets browser session |
+| POST | `/api/v1/accounts/session/refresh` | Session cookie + CSRF | Bootstrap after reload or refresh/rotate the browser session through the gateway |
+| POST | `/api/v1/accounts/logout` | Session cookie + CSRF | Clear the browser session and CSRF cookie |
 | POST | `/api/v1/accounts/email-verification` | `RequireAdminOrUser` | Send verification email |
 | POST | `/api/v1/accounts/email-verification/verify` | Anonymous | Verify email token |
+
+Browser session endpoints are served through ApiGateway under `/api/v1/accounts/**`. Successful login, registration, and refresh responses must not expose access or refresh tokens to browser scripts. Cookie-authenticated state-changing browser requests require a server-issued CSRF token in a custom header before downstream state changes.
 
 ### Admin Identity Management
 
