@@ -17,7 +17,8 @@
 
 - [ ] F002 [US1] [US2] [US3] [US4] Create account session auth types
   - File: `../hivespace.web/packages/shared/src/types/auth-session.ts`, `../hivespace.web/packages/shared/src/types/index.ts`, `../hivespace.web/packages/shared/src/internal.ts`
-  - Add `AuthApp = 'admin' | 'seller' | 'buyer'`, `SignInRequest`, `RegisterAccountRequest`, `RefreshSessionRequest`, `SignOutRequest`, `SessionUser`, `SessionResponse`, and standard API error response types matching backend `ExceptionModel`/`ErrorCodeDto`.
+  - Add `AuthApp = 'admin' | 'seller' | 'buyer'`, `SignInRequest`, `RegisterAccountRequest`, `RefreshSessionRequest`, `SessionUser`, `SessionResponse`, and standard API error response types matching backend `ExceptionModel`/`ErrorCodeDto`.
+  - Do not add a post-logout navigation request field; logout is an empty request or no-body request.
   - Ensure response types contain `csrfToken`, `expiresAt`, `refreshExpiresAt`, `redirectTo`, and `user`; do not include access token or refresh token fields.
   - Export types from shared public/internal entrypoints used by apps.
   - Acceptance: apps can import shared auth session types without defining local duplicates.
@@ -25,23 +26,27 @@
 - [ ] F003 [US1] [US2] [US3] [US4] Create account session auth service
   - File: `../hivespace.web/packages/shared/src/features/auth/account-session.service.ts`, `../hivespace.web/packages/shared/src/features/auth/index.ts`
   - Implement calls for `POST /api/v1/accounts/login`, `POST /api/v1/accounts/register`, `POST /api/v1/accounts/session/refresh`, and `POST /api/v1/accounts/logout`.
+  - Send logout as `{}` or no body; do not send a post-logout redirect target to IdentityService.
   - Build URLs from configured gateway base URL, supporting `VITE_GATEWAY_BASE_URL=http://localhost:5000`.
-  - Use `credentials: 'include'` or axios `withCredentials: true`; send `X-HiveSpace-CSRF` on refresh/logout when token exists.
+  - Use `credentials: 'include'` or axios `withCredentials: true`; send `X-HiveSpace-CSRF` on refresh/logout when a CSRF token exists.
   - Do not call IdentityService authority URL directly and do not use `/connect/token`.
   - Acceptance: service targets only gateway `/api/v1/accounts/**` routes and returns typed session responses.
 
-- [ ] F004 [US1] [US2] [US3] [US4] Create shared auth image contract
-  - File: `../hivespace.web/packages/shared/src/types/auth-branding.ts`
-  - Define app auth image metadata shape: `imageSrc`, `altKey`, `headingKey`, `bodyKey`, and `app`.
-  - Use it from app auth pages to replace demo `CommonGridShape` with app-specific image assets.
-  - Do not import app-local assets into the shared package.
-  - Acceptance: shared page/component contracts allow each app to provide its own auth image and translated text.
+- [ ] F004 [US1] [US2] [US3] [US4] Create shared auth layout component
+  - File: `../hivespace.web/packages/shared/src/components/layout/AuthLayout.vue`, `../hivespace.web/packages/shared/src/components/layout/index.ts`, `../hivespace.web/packages/shared/src/internal.ts`
+  - Base the component on `packages/demo/src/Auth/Signin.vue` and `Signup.vue` structure using shared `FullScreenLayout`.
+  - Expose a left-side default slot for each page's form content.
+  - Render the right-side panel consistently with shared `CommonGridShape` as the background and props for center image source, image alt text/key, heading text/key, and body text/key.
+  - Do not import app-local assets into the shared package and do not import production code from `packages/demo`.
+  - Remove demo-only social buttons, `/demo` links, console logging, and hardcoded English from the shared shell.
+  - Acceptance: admin/seller/buyer pages can reuse one auth layout while only changing the form slot, center image, and translated copy.
 
 ### Update
 
 - [ ] F005 [US1] [US2] [US3] [US4] Update shared `useAuth` for cookie-session auth
   - File: `../hivespace.web/packages/shared/src/composables/useAuth.ts`
-  - Replace `oidc-client-ts` redirect flow with browser-session methods: `initializeAuth({ gatewayBaseUrl, app })`, `login(request)`, `register(request)`, `refreshSession(app)`, `logout(redirectTo?)`, `getCurrentUser()`, `isAuthenticated`, and `currentUser`.
+  - Replace `oidc-client-ts` redirect flow with browser-session methods: `initializeAuth({ gatewayBaseUrl, app })`, `login(request)`, `register(request)`, `refreshSession(app)`, `logout()`, `getCurrentUser()`, `isAuthenticated`, and `currentUser`.
+  - Keep post-logout navigation in app/router code after `logout()` completes.
   - Make `getCurrentUser()` bootstrap by calling `POST /api/v1/accounts/session/refresh` when no in-memory session exists and CSRF/session cookies are present.
   - Store only derived `SessionUser`, expiry timestamps, and CSRF token; clean known OIDC web-storage keys on bootstrap.
   - Preserve method names needed by existing callers where possible, but change implementation to route to frontend sign-in pages instead of IdentityService redirects.
@@ -50,7 +55,7 @@
 - [ ] F006 [US3] [US4] Update shared `ApiService` for credentials and CSRF
   - File: `../hivespace.web/packages/shared/src/utils/api.ts`
   - Set axios `withCredentials: true`.
-  - Remove bearer `Authorization` injection from `currentUser.access_token`.
+  - Remove bearer `Authorization` injection from `currentUser.access_token`; browser token values live only in HttpOnly cookies.
   - Add `X-HiveSpace-CSRF` for `POST`, `PUT`, `PATCH`, and `DELETE` when a CSRF token exists in shared auth state or `HiveSpace.Csrf` cookie.
   - On `401`, attempt one `refreshSession` before logout for protected requests; avoid retry loops.
   - Preserve `X-Correlation-ID`, `X-Request-Timestamp`, retry behavior for safe methods, and translated error callbacks.
@@ -84,10 +89,10 @@
 
 - [ ] F010 [US1] [US2] Verify demo auth page source before adapting
   - File: `../hivespace.web/packages/demo/src/Auth/Signin.vue`, `../hivespace.web/packages/demo/src/Auth/Signup.vue`
-  - Use these two pages as the visual/layout starting point for app sign-in and sign-up pages.
-  - Remove demo-only social login buttons, `/demo` links, console logging, hardcoded strings, and `CommonGridShape`.
-  - Replace the right-side panel with app-provided bitmap image assets and translated app-specific copy.
-  - Acceptance: app tasks reference the demo source but do not import demo components into production apps.
+  - Use these two pages as the visual/layout starting point for shared `AuthLayout` and app form content.
+  - Remove demo-only social login buttons, `/demo` links, console logging, and hardcoded strings.
+  - Keep the right-side `CommonGridShape` background behavior in shared `AuthLayout`; page/app tasks provide only center image and translated copy.
+  - Acceptance: production apps reference the demo source only as design input and do not import demo components.
 
 ## Admin App
 
@@ -95,17 +100,17 @@
 
 - [ ] F011 [US1] Create admin sign-in page from demo `Signin.vue`
   - File: `../hivespace.web/apps/admin/src/pages/Auth/SignInPage.vue`
-  - Adapt structure from `packages/demo/src/Auth/Signin.vue` using `FullScreenLayout`, email/password form, password visibility toggle, and submit button.
-  - Remove social-login buttons, `CommonGridShape`, "Back to dashboard", forgot-password link unless an existing route exists, and all hardcoded English text.
+  - Use shared `AuthLayout`; the page supplies only the email/password form, password visibility toggle, submit button, and link behavior needed for admin.
+  - Remove social-login buttons, "Back to dashboard", forgot-password link unless an existing route exists, and all hardcoded English text.
   - Use shared `useAuth().login({ email, password, app: 'admin', returnUrl, culture })` and route success to the requested admin route or admin default.
   - Show safe errors from shared auth through i18n keys and app notifications.
-  - Acceptance: admin sign-in page submits to shared browser auth and contains no direct IdentityService/OIDC redirect call.
+  - Acceptance: admin sign-in page submits to shared browser auth, renders through `AuthLayout`, and contains no direct IdentityService/OIDC redirect call.
 
 - [ ] F012 [US1] Create admin auth image asset
-  - File: `../hivespace.web/apps/admin/src/assets/auth/admin-auth.jpg`
-  - Add or generate a professional admin operations/dashboard-themed bitmap image suitable for the right-side auth panel.
-  - Use actual image asset, not `CommonGridShape`, gradient orbs, SVG illustration, or decorative-only background.
-  - Acceptance: `SignInPage.vue` renders the image with translated alt text and responsive object-cover sizing.
+  - File: `../hivespace.web/apps/admin/src/assets/auth/admin-auth.svg`
+  - Add or generate a professional admin operations/dashboard-themed image asset suitable for the centered image area in shared `AuthLayout`.
+  - Use an app-owned SVG/vector image asset; the shared right-panel background remains `CommonGridShape`.
+  - Acceptance: `SignInPage.vue` passes the image and translated alt/copy keys into `AuthLayout`.
 
 ### Update
 
@@ -137,23 +142,24 @@
 
 - [ ] F016 [US1] Create seller sign-in page from demo `Signin.vue`
   - File: `../hivespace.web/apps/seller/src/pages/Auth/SignInPage.vue`
-  - Adapt demo layout and email/password form for seller audience.
-  - Remove social-login buttons, `CommonGridShape`, demo routes, console logging, and hardcoded strings.
+  - Use shared `AuthLayout`; the page supplies only the seller sign-in form and seller-specific links.
+  - Remove social-login buttons, demo routes, console logging, and hardcoded strings.
   - Use `useAuth().login({ app: 'seller' })`, preserving seller route behavior after email verification/store role propagation.
-  - Acceptance: seller sign-in page submits through shared browser auth and routes according to seller access rules.
+  - Acceptance: seller sign-in page submits through shared browser auth, renders through `AuthLayout`, and routes according to seller access rules.
 
 - [ ] F017 [US2] Create seller sign-up page from demo `Signup.vue`
   - File: `../hivespace.web/apps/seller/src/pages/Auth/SignUpPage.vue`
-  - Adapt demo sign-up page using full name or first/last name mapped to `fullName`, email, password, confirm password, terms checkbox where required, and shared `register({ app: 'seller' })`.
-  - Remove social-login buttons, `CommonGridShape`, demo links, console logging, and hardcoded strings.
+  - Use shared `AuthLayout`; the page supplies only the seller registration form.
+  - Build the form from demo fields using full name or first/last name mapped to `fullName`, email, password, confirm password, terms checkbox where required, and shared `register({ app: 'seller' })`.
+  - Remove social-login buttons, demo links, console logging, and hardcoded strings.
   - After registration, route to seller email verification or seller onboarding flow according to current seller router rules.
-  - Acceptance: seller sign-up page calls `/api/v1/accounts/register` through shared auth and handles duplicate/validation errors safely.
+  - Acceptance: seller sign-up page renders through `AuthLayout`, calls `/api/v1/accounts/register` through shared auth, and handles duplicate/validation errors safely.
 
 - [ ] F018 [US1] [US2] Create seller auth image asset
-  - File: `../hivespace.web/apps/seller/src/assets/auth/seller-auth.jpg`
-  - Add or generate a merchant storefront/order management-themed bitmap image suitable for seller sign-in/sign-up right panel.
-  - Use actual image asset, not `CommonGridShape`, gradient orbs, SVG illustration, or decorative-only background.
-  - Acceptance: seller auth pages render the image with translated alt text and responsive object-cover sizing.
+  - File: `../hivespace.web/apps/seller/src/assets/auth/seller-auth.svg`
+  - Add or generate a merchant storefront/order management-themed image asset suitable for the centered image area in shared `AuthLayout`.
+  - Use an app-owned SVG/vector image asset; the shared right-panel background remains `CommonGridShape`.
+  - Acceptance: seller auth pages pass the image and translated alt/copy keys into `AuthLayout`.
 
 ### Update
 
@@ -191,22 +197,23 @@
 
 - [ ] F023 [US1] Create buyer sign-in page from demo `Signin.vue`
   - File: `../hivespace.web/apps/buyer/src/pages/Auth/SignInPage.vue`
-  - Adapt demo layout and email/password form for storefront users.
-  - Remove social-login buttons, `CommonGridShape`, demo routes, console logging, and hardcoded strings.
+  - Use shared `AuthLayout`; the page supplies only the storefront sign-in form and buyer-specific links.
+  - Remove social-login buttons, demo routes, console logging, and hardcoded strings.
   - Use shared `useAuth().login({ app: 'buyer' })`, preserving return URL for protected cart/checkout/profile routes.
-  - Acceptance: buyer sign-in page submits through shared browser auth and returns to requested protected route.
+  - Acceptance: buyer sign-in page renders through `AuthLayout`, submits through shared browser auth, and returns to requested protected route.
 
 - [ ] F024 [US2] Create buyer sign-up page from demo `Signup.vue`
   - File: `../hivespace.web/apps/buyer/src/pages/Auth/SignUpPage.vue`
-  - Adapt demo sign-up page using full name or first/last name mapped to `fullName`, email, password, confirm password, terms checkbox where required, and shared `register({ app: 'buyer' })`.
-  - Remove social-login buttons, `CommonGridShape`, demo links, console logging, and hardcoded strings.
-  - Acceptance: buyer sign-up page calls `/api/v1/accounts/register` through shared auth and handles duplicate/validation errors safely.
+  - Use shared `AuthLayout`; the page supplies only the buyer registration form.
+  - Build the form from demo fields using full name or first/last name mapped to `fullName`, email, password, confirm password, terms checkbox where required, and shared `register({ app: 'buyer' })`.
+  - Remove social-login buttons, demo links, console logging, and hardcoded strings.
+  - Acceptance: buyer sign-up page renders through `AuthLayout`, calls `/api/v1/accounts/register` through shared auth, and handles duplicate/validation errors safely.
 
 - [ ] F025 [US1] [US2] Create buyer auth image asset
-  - File: `../hivespace.web/apps/buyer/src/assets/auth/buyer-auth.jpg`
-  - Add or generate a shopper/storefront-themed bitmap image suitable for buyer sign-in/sign-up right panel.
-  - Use actual image asset, not `CommonGridShape`, gradient orbs, SVG illustration, or decorative-only background.
-  - Acceptance: buyer auth pages render the image with translated alt text and responsive object-cover sizing.
+  - File: `../hivespace.web/apps/buyer/src/assets/auth/buyer-auth.svg`
+  - Add or generate a shopper/storefront-themed image asset suitable for the centered image area in shared `AuthLayout`.
+  - Use an app-owned SVG/vector image asset; the shared right-panel background remains `CommonGridShape`.
+  - Acceptance: buyer auth pages pass the image and translated alt/copy keys into `AuthLayout`.
 
 ### Update
 
@@ -244,9 +251,9 @@
 
 ### Verify
 
-- [ ] F030 [US1] [US2] [US3] [US4] Verify app auth pages use demo layout but not demo imports
+- [ ] F030 [US1] [US2] [US3] [US4] Verify app auth pages use shared AuthLayout but not demo imports
   - File: `../hivespace.web/apps/admin/src/pages/Auth/*`, `../hivespace.web/apps/seller/src/pages/Auth/*`, `../hivespace.web/apps/buyer/src/pages/Auth/*`
-  - Confirm pages are local app pages based on demo structure, not imports from `packages/demo`.
-  - Confirm no app auth page imports or renders `CommonGridShape`.
-  - Confirm app-specific auth image assets render in the right panel.
-  - Acceptance: production apps do not depend on demo auth components and use app-specific images.
+  - Confirm pages are local app pages using `AuthLayout` from `@hivespace/shared`, not imports from `packages/demo`.
+  - Confirm pages do not duplicate the right-panel layout or import `CommonGridShape` directly; `AuthLayout` owns that background.
+  - Confirm app-specific auth image assets and translated center text render through `AuthLayout` props/slots.
+  - Acceptance: production apps do not depend on demo auth components and share one auth layout.

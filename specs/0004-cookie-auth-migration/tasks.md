@@ -9,20 +9,20 @@
 
 | Area | File | Status | Notes |
 | --- | --- | --- | --- |
-| Backend | [tasks/backend.md](tasks/backend.md) | Not started | IdentityService REST auth/session endpoints, Razor UI removal, ApiGateway cookie/CSRF mediation |
-| Frontend | [tasks/frontend.md](tasks/frontend.md) | Not started | Shared cookie-session auth, app sign-in/sign-up pages from demo templates, app images, routes, i18n |
-| Config | [tasks/config.md](tasks/config.md) | Not started | Data Protection key ring, frontend gateway env, CORS/cookie settings |
+| Backend | [tasks/backend.md](tasks/backend.md) | Not started | IdentityService REST auth/session endpoints, raw HttpOnly token cookies, Razor UI removal, ApiGateway cookie/CSRF mediation |
+| Frontend | [tasks/frontend.md](tasks/frontend.md) | Not started | Shared cookie-session auth, shared AuthLayout from demo templates, app sign-in/sign-up forms, app images, routes, i18n |
+| Config | [tasks/config.md](tasks/config.md) | Not started | Token cookie names/lifetimes, frontend gateway env, CORS/cookie settings |
 | Docs/Catalog | [tasks/docs-catalog.md](tasks/docs-catalog.md) | Not started | IdentityService and ApiGateway docs, API catalog verification, event catalog no-change evidence |
 | Verification | [tasks/verification.md](tasks/verification.md) | Not started | Builds/type-checks, browser/manual quickstart, security/storage searches |
 
 ## Dependency Order
 
 1. Complete setup and impact-analysis tasks in backend/frontend detailed files before editing source symbols.
-2. Complete config tasks for shared Data Protection, gateway origin, CORS, and frontend env defaults.
+2. Complete config tasks for token cookie names/lifetimes, gateway origin, CORS, and frontend env defaults.
 3. Complete IdentityService account session application services and endpoint contracts.
 4. Complete ApiGateway cookie-to-bearer and CSRF mediation.
 5. Complete shared frontend auth service/store and shared HTTP/realtime changes.
-6. Complete app auth pages/routes using `packages/demo/src/Auth/Signin.vue` and `Signup.vue` as the source design, replacing `CommonGridShape` with app-specific images.
+6. Complete shared `AuthLayout` from `packages/demo/src/Auth/Signin.vue` and `Signup.vue`, then app auth pages/routes that provide only their form slot plus page-specific center image/text.
 7. Complete docs/catalog updates and verification-only checks for unchanged events/supporting services.
 8. Run verification tasks in dependency order: backend builds, frontend checks, storage/security searches, and quickstart/manual flows.
 
@@ -41,7 +41,7 @@ MVP for US1 requires:
 
 - Backend: IdentityService login/session issuance plus ApiGateway cookie-to-bearer/CSRF path needed for protected calls.
 - Frontend: shared account session auth service/store, `ApiService` credentials/CSRF support, and sign-in pages/routes for admin, seller, and buyer.
-- Config: local Data Protection key sharing and `VITE_GATEWAY_BASE_URL=http://localhost:5000`.
+- Config: token cookie names/lifetimes, CSRF header, frontend origins, and `VITE_GATEWAY_BASE_URL=http://localhost:5000`.
 - Verification: backend builds, frontend type checks, sign-in happy/failure paths, and storage check.
 
 Registration polish, cross-app/session edge cases, and old URL redirect verification can follow after the initial US1 sign-in path is smoke-tested, but old URL compatibility remains required before the feature is complete.

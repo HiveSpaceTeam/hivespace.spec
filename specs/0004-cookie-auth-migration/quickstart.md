@@ -23,8 +23,9 @@ This quickstart is for implementation verification after tasks are generated and
    - `POST /api/v1/accounts/session/refresh`
    - `POST /api/v1/accounts/logout`
 3. Confirm ApiGateway routes `/api/v1/accounts/**` to IdentityService.
-4. Confirm ApiGateway decrypts the auth cookie, forwards `Authorization: Bearer <token>` to downstream services, and strips browser auth cookies before forwarding.
-5. Confirm state-changing cookie-authenticated requests without `X-HiveSpace-CSRF` are rejected at ApiGateway.
+4. Confirm IdentityService sets raw token cookies named `__Host-HiveSpace.AccessToken` and `__Host-HiveSpace.RefreshToken` with `HttpOnly`, `Secure`, `SameSite=None`, and no application-level encryption envelope.
+5. Confirm ApiGateway reads and validates the access-token cookie, forwards `Authorization: Bearer <token>` to downstream services, and strips HiveSpace auth/CSRF cookies before forwarding.
+6. Confirm state-changing cookie-authenticated requests without `X-HiveSpace-CSRF` are rejected at ApiGateway.
 
 ## Frontend Verification
 
@@ -33,9 +34,10 @@ This quickstart is for implementation verification after tasks are generated and
 3. Verify the network request targets `/api/v1/accounts/login` through ApiGateway.
 4. Verify no IdentityService-hosted login UI is rendered.
 5. Verify browser localStorage and sessionStorage do not contain access tokens or refresh tokens.
-6. Reload the app and confirm the shared auth bootstrap or router guard calls `POST /api/v1/accounts/session/refresh` through the configured gateway origin.
-7. Call a protected workflow and confirm the downstream service accepts the request according to existing policies.
-8. Sign out and confirm protected routes require sign-in after refresh.
+6. Verify app auth pages use shared `AuthLayout`: the left side renders only the page form, and the right side uses `CommonGridShape` with page-specific center text/image.
+7. Reload the app and confirm the shared auth bootstrap or router guard calls `POST /api/v1/accounts/session/refresh` through the configured gateway origin.
+8. Call a protected workflow and confirm the downstream service accepts the request according to existing policies.
+9. Sign out and confirm protected routes require sign-in after refresh.
 
 ## Cross-App Session Check
 

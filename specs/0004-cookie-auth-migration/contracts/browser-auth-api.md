@@ -44,7 +44,8 @@ Frontend clients should map `errors[].messageCode` and `errors[].code` to locali
 
 | Cookie | Attributes | Notes |
 |---|---|---|
-| `__Host-HiveSpace.Auth` | `HttpOnly; Secure; SameSite=None; Path=/` | Protected browser session cookie. |
+| `__Host-HiveSpace.AccessToken` | `HttpOnly; Secure; SameSite=None; Path=/` | Raw signed access token cookie. Not application-encrypted and not readable by browser scripts. |
+| `__Host-HiveSpace.RefreshToken` | `HttpOnly; Secure; SameSite=None; Path=/` | Raw refresh token or refresh handle cookie used only by IdentityService refresh/logout paths. |
 | `HiveSpace.Csrf` | `Secure; SameSite=None; Path=/` | Readable signed CSRF token or token mirror used for `X-HiveSpace-CSRF`. |
 
 ## POST `/api/v1/accounts/login`
@@ -77,7 +78,7 @@ Anonymous. If a stale session cookie is present, the endpoint may replace it on 
 
 ### Success Response: `200 OK`
 
-Sets `__Host-HiveSpace.Auth` and `HiveSpace.Csrf`.
+Sets `__Host-HiveSpace.AccessToken`, `__Host-HiveSpace.RefreshToken`, and `HiveSpace.Csrf`.
 
 ```json
 {
@@ -140,7 +141,7 @@ Anonymous.
 
 ### Success Response: `201 Created`
 
-Sets `__Host-HiveSpace.Auth` and `HiveSpace.Csrf`.
+Sets `__Host-HiveSpace.AccessToken`, `__Host-HiveSpace.RefreshToken`, and `HiveSpace.Csrf`.
 
 ```json
 {
@@ -199,7 +200,7 @@ Requires valid session cookie and `X-HiveSpace-CSRF`.
 
 ### Success Response: `200 OK`
 
-Sets rotated `__Host-HiveSpace.Auth` and `HiveSpace.Csrf`.
+Sets rotated `__Host-HiveSpace.AccessToken`, `__Host-HiveSpace.RefreshToken`, and `HiveSpace.Csrf`.
 
 ```json
 {
@@ -239,14 +240,14 @@ Requires valid session cookie and `X-HiveSpace-CSRF`. The endpoint should be ide
 ### Request
 
 ```json
-{
-  "redirectTo": "/"
-}
+{}
 ```
+
+The request has no redirect target. Frontend apps own post-logout navigation after the `204 No Content` response.
 
 ### Success Response: `204 No Content`
 
-Clears `__Host-HiveSpace.Auth` and `HiveSpace.Csrf`.
+Clears `__Host-HiveSpace.AccessToken`, `__Host-HiveSpace.RefreshToken`, and `HiveSpace.Csrf`.
 
 ### Error Responses
 
@@ -256,7 +257,7 @@ Clears `__Host-HiveSpace.Auth` and `HiveSpace.Csrf`.
 
 ## Gateway CSRF Contract For Downstream APIs
 
-For browser requests that include `__Host-HiveSpace.Auth`, ApiGateway must require `X-HiveSpace-CSRF` for:
+For browser requests that include `__Host-HiveSpace.AccessToken`, ApiGateway must require `X-HiveSpace-CSRF` for:
 
 - `POST`
 - `PUT`

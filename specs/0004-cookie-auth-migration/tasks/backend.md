@@ -17,7 +17,7 @@
 
 - [ ] B002 [US1] [US2] Create account session DTOs
   - File: `../hivespace.microservice/src/HiveSpace.IdentityService/HiveSpace.IdentityService.Core/Features/AccountSessions/Dtos/AccountSessionDtos.cs`
-  - Include request records: `SignInRequest(string Email, string Password, string App, string? ReturnUrl, string? Culture)`, `RegisterAccountRequest(string Email, string Password, string ConfirmPassword, string? FullName, string App, string? ReturnUrl, string? Culture)`, `RefreshSessionRequest(string App)`, `SignOutRequest(string? RedirectTo)`.
+  - Include request records: `SignInRequest(string Email, string Password, string App, string? ReturnUrl, string? Culture)`, `RegisterAccountRequest(string Email, string Password, string ConfirmPassword, string? FullName, string App, string? ReturnUrl, string? Culture)`, and `RefreshSessionRequest(string App)`. Logout does not require a request DTO or redirect target.
   - Include response records: `SessionResponse(SessionUser User, DateTimeOffset ExpiresAt, DateTimeOffset RefreshExpiresAt, string CsrfToken, string? RedirectTo)` and `SessionUser(Guid UserId, string Email, string? DisplayName, IReadOnlyCollection<string> Roles, bool EmailVerified, string AccountStatus)`.
   - Do not include access token, refresh token, Duende persisted grant, password hash, profile/address/store fields, or UserService-owned data.
   - Acceptance: DTOs compile and match `contracts/browser-auth-api.md` request/response fields.
@@ -26,15 +26,17 @@
   - File: `../hivespace.microservice/src/HiveSpace.IdentityService/HiveSpace.IdentityService.Core/Features/AccountSessions/Commands/*`
   - Create CQRS command records and validators for `SignInCommand`, `RegisterAccountCommand`, `RefreshSessionCommand`, and `SignOutCommand`.
   - Validate email format, non-empty password, matching confirmation password, `app` limited to `admin`, `seller`, `buyer`, and safe local/configured frontend `returnUrl`.
+  - Do not add `RedirectTo` or redirect-target validation to `SignOutCommand`; frontend apps own post-logout navigation.
   - Reject public admin self-registration in the register validator or handler with `IdentityDomainErrorCode.AccountNotAllowed`.
   - Acceptance: command/validator files compile and validation failures use the existing exception pipeline without leaking account existence.
 
-- [ ] B004 [US1] [US2] [US3] [US4] Create protected session cookie service
-  - File: `../hivespace.microservice/src/HiveSpace.IdentityService/HiveSpace.IdentityService.Core/Features/AccountSessions/Services/IProtectedSessionCookieService.cs`, `../hivespace.microservice/src/HiveSpace.IdentityService/HiveSpace.IdentityService.Api/Services/ProtectedSessionCookieService.cs`
-  - Implement issuance, refresh, and clearing of `__Host-HiveSpace.Auth` with `HttpOnly`, `Secure`, `SameSite=None`, `Path=/`, no `Domain`.
-  - Store protected envelope fields from `data-model.md`: `sessionId`, `userId`, access token, refresh handle/token, access expiry, refresh expiry, security stamp when available, and issued time.
-  - Use ASP.NET Core Data Protection purpose names shared with ApiGateway; do not expose protected envelope contents in JSON responses.
-  - Acceptance: successful login/register/refresh can set cookies and JSON response contains no access or refresh token fields.
+- [ ] B004 [US1] [US2] [US3] [US4] Create token cookie service
+  - File: `../hivespace.microservice/src/HiveSpace.IdentityService/HiveSpace.IdentityService.Core/Features/AccountSessions/Services/ITokenCookieService.cs`, `../hivespace.microservice/src/HiveSpace.IdentityService/HiveSpace.IdentityService.Api/Services/TokenCookieService.cs`
+  - Implement issuance, refresh, and clearing of `__Host-HiveSpace.AccessToken` and `__Host-HiveSpace.RefreshToken` with `HttpOnly`, `Secure`, `SameSite=None`, `Path=/`, no `Domain`.
+  - Store raw signed access token and raw refresh token/handle directly in cookies without ASP.NET Core Data Protection or any custom encryption envelope.
+  - Keep access-token lifetime short enough for gateway stateless validation; rotate access and refresh token material on refresh.
+  - Do not expose access token, refresh token, or refresh handle values in JSON responses.
+  - Acceptance: successful login/register/refresh sets token cookies and JSON response contains no access or refresh token fields.
 
 - [ ] B005 [US1] [US2] [US3] [US4] Create CSRF token service
   - File: `../hivespace.microservice/src/HiveSpace.IdentityService/HiveSpace.IdentityService.Core/Features/AccountSessions/Services/ICsrfTokenService.cs`, `../hivespace.microservice/src/HiveSpace.IdentityService/HiveSpace.IdentityService.Api/Services/CsrfTokenService.cs`
@@ -54,8 +56,9 @@
 
 - [ ] B007 [US1] Update password login behavior into CQRS handler
   - File: `../hivespace.microservice/src/HiveSpace.IdentityService/HiveSpace.IdentityService.Core/Features/AccountSessions/Commands/SignInCommandHandler.cs`
-  - Move behavior currently in `HiveSpace.IdentityService.Api/Pages/Account/Login/Index.cshtml.cs`: find user by email, account status check, admin/seller/buyer app role checks, lockout-on-failure, `LastLoginAt`, Duende login success/failure events where still applicable, and safe error mapping.
-  - On success, issue protected browser session and CSRF token through B004/B005.
+  - Move behavior currently in `HiveSpace.IdentityService.Api/Pages/Account/Login/Index.cshtml.cs`: find user by email, account status check, admin/seller/buyer app role checks, lockout-on-failure, `LastLoginAt`, and safe error mapping.
+  - Do not raise Duende `UserLoginSuccessEvent` or `UserLoginFailureEvent` from the new `/api/v1/accounts/**` account-session flow.
+  - On success, issue token cookies and CSRF token through B004/B005.
   - Do not render Razor pages, redirect to IdentityService UI, or store tokens in script-readable response fields.
   - Acceptance: handler returns `SessionResponse` for valid credentials and standard `IdentityDomainErrorCode` errors for invalid, locked, inactive, or wrong-app accounts.
 
@@ -68,14 +71,14 @@
 
 - [ ] B009 [US3] Update session refresh behavior
   - File: `../hivespace.microservice/src/HiveSpace.IdentityService/HiveSpace.IdentityService.Core/Features/AccountSessions/Commands/RefreshSessionCommandHandler.cs`
-  - Read and validate protected session cookie, account status, lockout, security stamp when available, refresh expiry, and app role eligibility.
-  - Rotate access token/session envelope and CSRF token; update claims so email verification and seller-role propagation can be observed after refresh.
+  - Read and validate refresh token/handle cookie, account status, lockout, security stamp when available, refresh expiry, and app role eligibility.
+  - Rotate access-token cookie, refresh-token/handle cookie, and CSRF token; update claims so email verification and seller-role propagation can be observed after refresh.
   - Return `SessionExpired`, `AccountInactive`, or `AccountNotAllowed` safely on failure through the standard exception pipeline.
   - Acceptance: reload/near-expiry refresh returns updated `SessionResponse` or safe signed-out error without exposing tokens.
 
 - [ ] B010 [US4] Update session logout behavior
   - File: `../hivespace.microservice/src/HiveSpace.IdentityService/HiveSpace.IdentityService.Core/Features/AccountSessions/Commands/SignOutCommandHandler.cs`
-  - Clear `__Host-HiveSpace.Auth` and `HiveSpace.Csrf` cookies and invalidate refresh handle/token where applicable.
+  - Clear `__Host-HiveSpace.AccessToken`, `__Host-HiveSpace.RefreshToken`, and `HiveSpace.Csrf` cookies and invalidate refresh handle/token where applicable.
   - Keep logout idempotent when the session cookie is missing or already invalid.
   - Do not require a redirect through IdentityService UI.
   - Acceptance: logout returns `204 No Content` and subsequent protected requests are unauthenticated.
@@ -108,6 +111,7 @@
 - [ ] B014 [US1] [US2] [US3] [US4] Verify IdentityService auth contract shape
   - File: `../hivespace.microservice/src/HiveSpace.IdentityService/**`
   - Search JSON response DTOs and endpoint handlers for forbidden `access_token`, `refresh_token`, `id_token`, `token`, and `refreshToken` response fields.
+  - Confirm token values only appear in HttpOnly cookie-setting code, gateway forwarding code, and token validation paths.
   - Confirm `IdentityUserCreatedIntegrationEvent` is still the only profile-creation event used by registration.
   - Acceptance: no account session JSON response exposes access/refresh tokens and event reuse remains unchanged.
 
@@ -117,8 +121,9 @@
 
 - [ ] B015 [US3] Create gateway session forwarding middleware
   - File: `../hivespace.microservice/src/HiveSpace.ApiGateway/HiveSpace.YarpApiGateway/Middleware/SessionForwardingMiddleware.cs`
-  - Read `__Host-HiveSpace.Auth`, decrypt/validate protected envelope with shared Data Protection purpose, reject expired/invalid session for protected routes, and attach `Authorization: Bearer <access-token>` before YARP forwarding.
-  - Strip `__Host-HiveSpace.Auth` and `HiveSpace.Csrf` from forwarded downstream requests.
+  - Read `__Host-HiveSpace.AccessToken`, validate JWT signature/issuer/audience/expiry with existing IdentityService authority configuration, reject expired/invalid sessions for protected routes, and attach `Authorization: Bearer <access-token>` before YARP forwarding.
+  - Do not decrypt the cookie value; token cookies are not wrapped in a Data Protection envelope.
+  - Strip `__Host-HiveSpace.AccessToken`, `__Host-HiveSpace.RefreshToken`, and `HiveSpace.Csrf` from forwarded downstream requests.
   - Leave anonymous login/register requests pass-through without requiring a pre-existing cookie.
   - Acceptance: downstream services receive bearer authorization context while session/CSRF cookies are not forwarded.
 
@@ -133,14 +138,14 @@
 
 - [ ] B017 [US3] Update ApiGateway startup pipeline
   - File: `../hivespace.microservice/src/HiveSpace.ApiGateway/HiveSpace.YarpApiGateway/Program.cs`
-  - Register Data Protection, `SessionForwardingMiddleware`, and `CsrfValidationMiddleware` before `app.MapReverseProxy()`.
+  - Register token validation options, `SessionForwardingMiddleware`, and `CsrfValidationMiddleware` before `app.MapReverseProxy()`.
   - Preserve `UseCors()`, `UseWebSockets()`, health checks, and existing YARP route loading.
   - Do not add business validation or account ownership logic to the gateway.
   - Acceptance: ApiGateway builds and middleware runs before YARP forwarding.
 
 - [ ] B018 [US3] Update ApiGateway auth/session options
   - File: `../hivespace.microservice/src/HiveSpace.ApiGateway/HiveSpace.YarpApiGateway/appsettings.json`, `../hivespace.microservice/src/HiveSpace.ApiGateway/HiveSpace.YarpApiGateway/appsettings.Development.json`
-  - Add shared Data Protection key-ring path/config section, cookie names, CSRF header name `X-HiveSpace-CSRF`, and frontend origins.
+  - Add token cookie names, CSRF header name `X-HiveSpace-CSRF`, IdentityService authority/JWT validation settings, and frontend origins.
   - Ensure local HTTP origin `http://localhost:5000` and existing HTTPS gateway origin are documented/configurable.
   - Do not remove existing route prefixes or notification hub route.
   - Acceptance: local gateway can load config and existing routes remain unchanged.

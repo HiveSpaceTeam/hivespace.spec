@@ -59,14 +59,14 @@ IdentityServer public OIDC protocol endpoints are served directly by IdentitySer
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
-| POST | `/api/v1/accounts/login` | Anonymous | Password login from frontend-owned UI; sets secure HttpOnly browser session cookie and CSRF token |
-| POST | `/api/v1/accounts/register` | Anonymous | Frontend-owned public account registration where allowed; creates identity account, triggers existing profile creation flow, and sets browser session |
+| POST | `/api/v1/accounts/login` | Anonymous | Password login from frontend-owned UI; sets secure HttpOnly access/refresh token cookies and CSRF token |
+| POST | `/api/v1/accounts/register` | Anonymous | Frontend-owned public account registration where allowed; creates identity account, triggers existing profile creation flow, and sets token cookies/browser session |
 | POST | `/api/v1/accounts/session/refresh` | Session cookie + CSRF | Bootstrap after reload or refresh/rotate the browser session through the gateway |
-| POST | `/api/v1/accounts/logout` | Session cookie + CSRF | Clear the browser session and CSRF cookie |
+| POST | `/api/v1/accounts/logout` | Session cookie + CSRF | Clear token cookies and CSRF cookie |
 | POST | `/api/v1/accounts/email-verification` | `RequireAdminOrUser` | Send verification email |
 | POST | `/api/v1/accounts/email-verification/verify` | Anonymous | Verify email token |
 
-Browser session endpoints are served through ApiGateway under `/api/v1/accounts/**`. Successful login, registration, and refresh responses must not expose access or refresh tokens to browser scripts. Cookie-authenticated state-changing browser requests require a server-issued CSRF token in a custom header before downstream state changes.
+Browser session endpoints are served through ApiGateway under `/api/v1/accounts/**`. Successful login, registration, and refresh responses must not expose access or refresh tokens to browser scripts. IdentityService stores token material only in secure HttpOnly cookies, and ApiGateway forwards the access-token cookie value as downstream bearer authorization. Cookie-authenticated state-changing browser requests require a server-issued CSRF token in a custom header before downstream state changes.
 
 ### Admin Identity Management
 

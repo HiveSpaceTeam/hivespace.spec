@@ -8,7 +8,7 @@ Represents the shared platform browser session accepted by ApiGateway for admin,
 
 | Field | Type | Owner | Notes |
 |---|---|---|---|
-| `sessionId` | string | IdentityService | Opaque session identifier inside the protected cookie envelope. |
+| `sessionId` | string | IdentityService | Opaque session identifier returned in derived session state if needed for CSRF binding/log correlation. |
 | `userId` | GUID string | IdentityService | Public user ID shared with UserService profile creation. |
 | `email` | string | IdentityService | Returned in session summary when available. |
 | `displayName` | string or null | IdentityService/UserService projection in frontend | IdentityService can return token display claims; apps may enrich from `/api/v1/users/me`. |
@@ -23,7 +23,7 @@ Represents the shared platform browser session accepted by ApiGateway for admin,
 
 ### Validation rules
 
-- A session is valid only when the protected cookie decrypts successfully, is unexpired, and the IdentityService account remains eligible at refresh time.
+- A session is valid only when the access-token cookie is present, the token validates against IdentityService signing/issuer/audience rules, it is unexpired, and the IdentityService account remains eligible at refresh time.
 - The frontend must not receive access token or refresh token fields.
 - The same session cookie is accepted for all three frontend apps through the gateway; each app still enforces role and account-state rules.
 - A failed refresh clears local frontend session state and routes to signed-out state.
@@ -38,27 +38,28 @@ Represents the shared platform browser session accepted by ApiGateway for admin,
 | Active | Expiry or failed refresh | Expired |
 | Active | Account locked/inactive/deleted detected on refresh | Invalid |
 
-## ProtectedSessionCookieEnvelope
+## TokenCookies
 
-Opaque cookie payload protected by ASP.NET Core Data Protection. It is not browser-readable.
+HttpOnly token cookies issued by IdentityService. The cookies do not use application-level encryption or a Data Protection envelope; confidentiality from browser scripts comes from `HttpOnly`, and token integrity comes from the token signature/refresh-token validation model.
 
-| Field | Type | Notes |
+| Cookie / field | Type | Notes |
 |---|---|---|
-| `sessionId` | string | Used for correlation and CSRF binding. |
-| `userId` | GUID string | Subject identifier. |
-| `accessToken` | string | Bearer token used only by ApiGateway for downstream forwarding. |
-| `refreshToken` or `refreshHandle` | string | Used only by IdentityService refresh/logout paths, never exposed to scripts. |
-| `accessTokenExpiresAt` | timestamp | Gateway rejects or omits bearer forwarding when expired. |
-| `refreshExpiresAt` | timestamp | IdentityService rejects refresh after this time. |
+| `__Host-HiveSpace.AccessToken` | string | Raw signed JWT access token in an HttpOnly cookie. ApiGateway validates and forwards it as bearer auth. |
+| `__Host-HiveSpace.RefreshToken` | string | Raw refresh token or opaque refresh handle in an HttpOnly cookie. IdentityService uses it for refresh/logout only. |
+| `sessionId` claim/handle | string | Used for correlation and CSRF binding where available. |
+| `sub` / `userId` claim | GUID string | Subject identifier. |
+| `exp` / access expiry | timestamp | Gateway rejects expired access-token cookies. |
+| `refreshExpiresAt` | timestamp | IdentityService rejects refresh after this time. May be stored server-side or encoded in refresh-token metadata depending on existing IdentityService pattern. |
 | `securityStamp` | string or null | Used at refresh to detect credential/security changes if available. |
 | `issuedAt` | timestamp | UTC issue time. |
 
 ### Validation rules
 
-- Cookie name: `__Host-HiveSpace.Auth`.
+- Cookie names: `__Host-HiveSpace.AccessToken` and `__Host-HiveSpace.RefreshToken`.
 - Attributes: `HttpOnly`, `Secure`, `SameSite=None`, `Path=/`, no `Domain`.
-- Payload must be integrity-protected and encrypted.
-- Gateway must strip this cookie before forwarding to downstream services.
+- Token cookies must not be exposed in JSON responses or script-readable storage.
+- Gateway must validate the access-token cookie before forwarding and strip HiveSpace auth/CSRF cookies before downstream requests.
+- Refresh token/handle is not used by ApiGateway.
 
 ## CsrfToken
 
@@ -94,7 +95,7 @@ App-owned login or registration form state.
 
 ## AuthorizationContext
 
-The downstream authorization proof produced by ApiGateway from the protected cookie.
+The downstream authorization proof produced by ApiGateway from the access-token cookie.
 
 | Field | Type | Notes |
 |---|---|---|

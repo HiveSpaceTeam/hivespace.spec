@@ -35,4 +35,4 @@ IdentityService owns:
 
 ## Publisher Policy
 
-- IdentityService application and Razor Page flows publish identity-owned integration events through a service-owned identity event publisher.
+- IdentityService application flows publish identity-owned integration events through a service-owned identity event publisher.

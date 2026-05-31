@@ -12,21 +12,22 @@
 | Frontend calls IdentityService authority directly for login/register | Conflicts with the clarified requirement that browser auth actions use `/api/v1/accounts/**` through ApiGateway. |
 | Move credential ownership to frontend or UserService | Violates service boundaries. IdentityService owns credentials, roles, claims, account status, and token/session issuance. |
 
-## Decision: Store browser session proof in encrypted HttpOnly cookies, not web storage
+## Decision: Store token material in HttpOnly cookies without application-level encryption, not web storage
 
-**Rationale:** The current shared frontend auth code uses `oidc-client-ts` and stores access/refresh token material in browser storage. The migration requires no access token or refresh token to be available to scripts. An HttpOnly secure cookie keeps token/session material out of JavaScript while still allowing all three apps to call the common gateway with credentials.
+**Rationale:** The current shared frontend auth code uses `oidc-client-ts` and stores access/refresh token material in browser storage. The migration requires no access token or refresh token to be available to scripts, and the planning update explicitly requires the token to be placed in cookies without application-level encryption. IdentityService will therefore set raw token cookies protected by browser cookie controls (`HttpOnly`, `Secure`, `SameSite=None`) and by the tokens' own signing, expiry, and refresh rotation. This keeps tokens unavailable to JavaScript while allowing ApiGateway to read the access-token cookie directly and forward the bearer context expected by downstream services.
 
 **Alternatives considered:**
 
 | Alternative | Reason rejected |
 |---|---|
 | Continue SPA-held access and refresh tokens with stricter storage cleanup | Fails the no script-readable token requirement. |
-| Store opaque session IDs in Redis only | Strong revocation properties, but it introduces a mandatory distributed session store and adds operational coupling not required for the first migration. It remains a future hardening option. |
+| Store opaque session IDs in Redis only | Strong revocation properties, but it does not satisfy the updated direction to place token material in cookies and introduces a mandatory distributed session store. |
 | Use only ASP.NET Identity application cookies downstream | Downstream services already expect bearer authorization context and should not read browser cookies directly. |
+| Encrypt token material in a Data Protection cookie envelope | Stronger cookie-at-rest confidentiality, but conflicts with the explicit update that token cookies should not use application-level encryption. |
 
-## Decision: Share ASP.NET Core Data Protection between IdentityService and ApiGateway
+## Decision: ApiGateway reads and validates the access-token cookie directly
 
-**Rationale:** IdentityService issues the protected browser session envelope, while ApiGateway must decrypt/validate it to attach a bearer access token to downstream requests. Shared Data Protection keys fit the .NET platform, avoid browser-readable token storage, and keep the gateway stateless beyond key access.
+**Rationale:** IdentityService issues the access-token cookie and refresh-token cookie, while ApiGateway only needs the access token to attach `Authorization: Bearer <token>` to forwarded downstream requests. Because the cookie value is not encrypted by the application, the gateway can validate the JWT using the existing authority/signing-key configuration and expiry checks instead of sharing ASP.NET Core Data Protection keys.
 
 **Alternatives considered:**
 
@@ -35,6 +36,7 @@
 | Gateway calls IdentityService to introspect every request | Adds synchronous service dependency and latency to every protected API call. |
 | Gateway stores sessions in its own database | Gives gateway account/session data ownership, which conflicts with the boundary that gateway should not own business or identity state. |
 | Frontend exchanges cookie for bearer token before each call | Re-exposes bearer tokens to browser scripts. |
+| Share Data Protection keys to decrypt an auth envelope | Unnecessary for the updated no-encryption cookie design and adds config coupling between IdentityService and ApiGateway. |
 
 ## Decision: Gateway validates CSRF and performs cookie-to-bearer forwarding
 
@@ -59,6 +61,18 @@
 | Put the CSRF token only in memory | Breaks reload and second-tab behavior unless every first state-changing request performs a refresh bootstrap. |
 | Put the access token in a readable cookie and reuse it as CSRF proof | Re-exposes credential material and mixes authentication with CSRF protection. |
 | Require CSRF on anonymous login/register before any token exists | Adds bootstrap complexity not required by the spec, which scopes CSRF to cookie-authenticated state-changing browser requests. |
+
+## Decision: Create a shared frontend `AuthLayout` for all auth pages
+
+**Rationale:** The demo `Signin.vue` and `Signup.vue` already define the intended two-column auth surface with `FullScreenLayout` and `CommonGridShape`. Recreating that structure in each app would duplicate layout, spacing, dark-mode behavior, and right-panel composition. A shared `AuthLayout` in `@hivespace/shared` lets each page provide only the left-side form while the right panel consistently uses the shared `CommonGridShape` background and accepts page/app-specific center image and translated text.
+
+**Alternatives considered:**
+
+| Alternative | Reason rejected |
+|---|---|
+| Copy the demo page layout into every admin/seller/buyer auth page | Creates duplicated production UI that will drift across apps. |
+| Import demo `Signin.vue`/`Signup.vue` directly into production apps | Violates the app dependency boundary and keeps demo-only social buttons/routes/logging coupled to production. |
+| Keep right-side images/backgrounds app-local without a shared shell | Fails the requirement that every page share the same auth layout and `CommonGridShape` background. |
 
 ## Decision: Reuse existing integration events unchanged
 

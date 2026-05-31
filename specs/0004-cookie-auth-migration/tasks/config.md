@@ -4,18 +4,19 @@
 
 ### Update
 
-- [ ] C001 [US1] [US2] [US3] [US4] Update shared Data Protection configuration
+- [ ] C001 [US1] [US2] [US3] [US4] Update browser token cookie configuration
   - File: `../hivespace.microservice/src/HiveSpace.IdentityService/HiveSpace.IdentityService.Api/appsettings.json`, `../hivespace.microservice/src/HiveSpace.ApiGateway/HiveSpace.YarpApiGateway/appsettings.json`, `../hivespace.config/**/appsettings*.json`
-  - Add matching Data Protection application name and key-ring path for IdentityService and ApiGateway.
-  - Ensure local key path is writable by both services and does not require a database.
+  - Add cookie names `__Host-HiveSpace.AccessToken`, `__Host-HiveSpace.RefreshToken`, and `HiveSpace.Csrf`, plus CSRF header `X-HiveSpace-CSRF`, where code reads options.
+  - Do not add shared Data Protection key-ring settings for the auth cookies; token cookies are stored without an application-level encrypted envelope.
+  - Configure access-token lifetime/validation options consistently between IdentityService issuance and ApiGateway validation.
   - Do not hardcode secrets or environment-specific absolute paths that cannot run on another machine.
-  - Acceptance: IdentityService-issued browser session cookie can be decrypted by ApiGateway locally.
+  - Acceptance: IdentityService-issued access-token cookie can be read and validated by ApiGateway locally without Data Protection decryption.
 
 - [ ] C002 [US1] [US2] [US3] [US4] Update frontend origin and cookie settings
   - File: `../hivespace.microservice/src/HiveSpace.IdentityService/HiveSpace.IdentityService.Api/appsettings.json`, `../hivespace.microservice/src/HiveSpace.ApiGateway/HiveSpace.YarpApiGateway/appsettings.json`
   - Confirm allowed origins include `http://localhost:5173`, `http://localhost:5174`, and `http://localhost:5175`.
   - Add frontend fallback URLs for old account URL redirects by app: admin, seller, buyer.
-  - Add cookie names `__Host-HiveSpace.Auth`, `HiveSpace.Csrf`, and CSRF header `X-HiveSpace-CSRF` as config keys where code reads options.
+  - Ensure token/CSRF cookie names and CSRF header values match C001.
   - Acceptance: config supports shared local session across all three frontend app origins.
 
 ## Frontend Env

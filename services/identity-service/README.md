@@ -13,8 +13,8 @@ Source path:
 ## Owns
 
 - ASP.NET Identity users, credentials, roles, claims, logins, and tokens.
-- Duende IdentityServer clients, grants, protocol endpoints, and interactive account pages.
-- Sign-in, sign-out, token issuance, token refresh, and account registration.
+- Duende IdentityServer clients, grants, protocol endpoints, browser auth REST endpoints, and legacy account URL compatibility redirects.
+- Sign-in, sign-out, token cookie issuance, token refresh, and account registration.
 - Account status used for authentication and authorization decisions.
 - Temporary failed-login lockout state.
 - Email verification state and verification workflows.
@@ -29,16 +29,16 @@ Source path:
 
 ## Architecture
 
-IdentityService is a LiteService. Identity behavior uses CQRS-style command/query handlers under the service core, while API endpoints, MassTransit consumers, and IdentityServer Razor Page handlers stay thin.
+IdentityService is a LiteService. Identity behavior uses CQRS-style command/query handlers under the service core, while API endpoints, MassTransit consumers, IdentityServer protocol handlers, and legacy compatibility redirects stay thin.
 
-IdentityServer public protocol and page endpoints are served directly from the IdentityService authority URL. ApiGateway does not forward `/.well-known/**`, `/connect/**`, or `/Account/**`.
+IdentityServer public protocol endpoints are served directly from the IdentityService authority URL. ApiGateway does not forward `/.well-known/**`, `/connect/**`, or `/Account/**`. HiveSpace browser login, registration, refresh, and logout use `/api/v1/accounts/**` through ApiGateway; legacy `/Account/Login`, `/Account/Register`, and `/Account/Logout` redirect to frontend-owned routes rather than rendering IdentityService UI.
 
 ## Runtime
 
 | Item | Value |
 |---|---|
 | Local HTTP authority | `http://localhost:5001` |
-| Direct authority endpoints | `/.well-known/**`, `/connect/**`, `/Account/**` |
+| Direct authority endpoints | `/.well-known/**`, `/connect/**`, `/Account/**` compatibility redirects |
 | Gateway REST prefixes | `/api/v1/accounts`, `/api/v1/admins` for identity-affecting account/admin actions |
 | Database | SQL Server, IdentityService-owned identity and IdentityServer schema |
 | Auth provider | Duende IdentityServer |
@@ -49,9 +49,11 @@ IdentityServer public protocol and page endpoints are served directly from the I
 - Account creation publishes `IdentityUserCreatedIntegrationEvent`; UserService consumes it to create the matching profile.
 - Store registration remains UserService-owned. IdentityService consumes `StoreCreatedIntegrationEvent` idempotently to grant seller role/claims and store reference on the identity account.
 - Email verification events are IdentityService-owned; NotificationService only delivers the email/notification.
+- Browser auth responses set secure HttpOnly token cookies and a CSRF token; responses must not expose access or refresh tokens to frontend scripts.
 - Seller access may require token refresh after role propagation.
 - The split is documented in [ADR-0001](../../architecture/decisions/ADR-0001-split-identity-service.md).
 - Standardized integration event naming, inheritance, and publisher policy are documented in [ADR-0002](../../architecture/decisions/ADR-0002-standardized-integration-event-contracts.md).
+- Gateway-mediated cookie browser sessions are documented in [ADR-0003](../../architecture/decisions/ADR-0003-gateway-mediated-cookie-browser-sessions.md).
 
 ## Detail
 

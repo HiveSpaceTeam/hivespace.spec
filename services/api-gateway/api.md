@@ -26,5 +26,7 @@
 - Prefer versioned `/api/v1/...` REST routes.
 - Preserve `/hubs/notifications` for SignalR.
 - Do not route browser traffic directly to internal service implementation paths.
-- Do not route IdentityServer public authority endpoints through ApiGateway. Frontend OIDC clients use IdentityService directly for `/.well-known/**`, `/connect/**`, and `/Account/**`.
+- Do not route IdentityServer public authority endpoints through ApiGateway. IdentityService remains direct for `/.well-known/**`, `/connect/**`, and `/Account/**` compatibility redirects.
+- Browser auth actions use `/api/v1/accounts/**` through ApiGateway to IdentityService.
+- For cookie-authenticated browser requests, validate the access-token cookie, attach downstream `Authorization: Bearer <token>`, strip HiveSpace auth/CSRF cookies before forwarding, and reject state-changing requests without the configured CSRF header.
 - Do not reintroduce `/identity/**` or add `/api/v1/identity/**`.

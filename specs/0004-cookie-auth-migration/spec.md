@@ -2,7 +2,8 @@
 
 - **Feature Branch**: `0004-cookie-auth-migration`
 - **Created**: 2026-05-25
-- **Status**: Draft
+- **Status**: Implemented
+- **Implemented**: 2026-05-31
 - **Input**: User description: "Update the current Identity service login, register, and token handling flow so IdentityService no longer owns UI pages. Move all login/register UI pages to the frontend apps. Frontend forms submit authentication requests to IdentityService. Successful password login returns 200 and establishes an HttpOnly cookie. After login, the app calls the gateway with that cookie; the gateway extracts the token, attaches it to forwarded requests, and downstream services continue receiving authenticated requests."
 
 ## Clarifications

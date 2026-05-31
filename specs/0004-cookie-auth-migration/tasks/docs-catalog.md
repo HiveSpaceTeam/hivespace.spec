@@ -40,7 +40,7 @@ Verification-only docs/services:
 
 - [ ] D003 [US3] [US4] Update ApiGateway docs for auth mediation
   - File: `services/api-gateway/README.md`, `services/api-gateway/api.md`
-  - Document cookie-to-bearer forwarding, CSRF header validation, stripped browser cookies before downstream forwarding, and unchanged route prefixes.
+  - Document raw HttpOnly access-token cookie to bearer forwarding, CSRF header validation, stripped browser cookies before downstream forwarding, and unchanged route prefixes.
   - Explicitly state gateway does not own account state or business authorization decisions.
   - Acceptance: ApiGateway docs explain the security mediation behavior needed by ADR-0003.
 
@@ -65,6 +65,6 @@ Verification-only docs/services:
 
 - [ ] D006 Verify ADR follow-up is reflected in tasks/docs
   - File: `architecture/decisions/ADR-0003-gateway-mediated-cookie-browser-sessions.md`, `specs/0004-cookie-auth-migration/tasks/*.md`
-  - Confirm tasks implement the ADR decision: IdentityService issues HttpOnly session, ApiGateway mediates cookie-to-bearer and CSRF, frontend avoids web-storage tokens.
+  - Confirm tasks implement the ADR decision: IdentityService issues raw HttpOnly token cookies without application-level encryption, ApiGateway mediates cookie-to-bearer and CSRF, frontend avoids web-storage tokens, and frontend auth pages use shared `AuthLayout`.
   - Update ADR follow-up only if implementation discovers a material decision change.
   - Acceptance: ADR and tasks stay aligned.

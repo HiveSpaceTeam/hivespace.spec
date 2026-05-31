@@ -19,7 +19,7 @@
 - [ ] V003 [US1] [US2] [US3] [US4] Verify backend forbidden token exposure
   - File: `../hivespace.microservice/src/HiveSpace.IdentityService/**`, `../hivespace.microservice/src/HiveSpace.ApiGateway/**`
   - Search browser auth endpoint DTOs/responses for `access_token`, `refresh_token`, `id_token`, and token-returning JSON fields.
-  - Confirm access token only appears inside protected cookie envelope or gateway forwarding header code.
+  - Confirm access/refresh token values only appear in HttpOnly cookie-setting code, token validation paths, or gateway forwarding header code.
   - Acceptance: no browser JSON response exposes access or refresh token material.
 
 - [ ] V004 [US1] [US2] [US4] Verify old IdentityService UI removal
@@ -62,11 +62,12 @@
   - Document any remaining non-auth or cleanup-only references; remove live token storage and refresh grant usage.
   - Acceptance: browser auth flow stores no access/refresh token in script-readable storage.
 
-- [ ] V010 [US1] [US2] Verify auth pages use images, not `CommonGridShape`
+- [ ] V010 [US1] [US2] Verify auth pages use shared AuthLayout and app images
   - File: `../hivespace.web/apps/admin/src/pages/Auth/*`, `../hivespace.web/apps/seller/src/pages/Auth/*`, `../hivespace.web/apps/buyer/src/pages/Auth/*`
-  - Search app auth pages for `CommonGridShape`, `common-grid-shape`, social login buttons, `/demo`, and hardcoded English user-facing strings.
-  - Confirm each app renders its own image asset: `admin-auth.jpg`, `seller-auth.jpg`, `buyer-auth.jpg`.
-  - Acceptance: app auth pages are production app pages using images and i18n.
+  - Search app auth pages for direct `CommonGridShape` imports/usages, `common-grid-shape`, social login buttons, `/demo`, and hardcoded English user-facing strings.
+  - Confirm pages render through shared `AuthLayout`, which owns the `CommonGridShape` right-side background.
+  - Confirm each app passes its own SVG image asset into `AuthLayout`: `admin-auth.svg`, `seller-auth.svg`, `buyer-auth.svg`.
+  - Acceptance: app auth pages are production app pages using shared layout, app images, and i18n.
 
 ## Manual Quickstart Verification
 

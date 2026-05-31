@@ -32,4 +32,4 @@
 ## Notes
 
 - Validation pass 1 completed on 2026-05-25. No clarification markers remain.
-- Technical choices already discussed, such as encrypted HttpOnly cookie handling and gateway token forwarding, should be captured in `/speckit-plan`, not expanded in this stakeholder-facing specification.
+- Technical choices already discussed, such as HttpOnly token cookie handling and gateway token forwarding, should be captured in `/speckit-plan`, not expanded in this stakeholder-facing specification.
