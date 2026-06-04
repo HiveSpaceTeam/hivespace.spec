@@ -163,3 +163,4 @@ You **MUST** consider the user input before proceeding (if not empty).
 - Use absolute paths for filesystem operations; use project-relative paths for references in documentation and agent context files
 - ERROR on gate failures or unresolved clarifications
 - Plans must explicitly say whether reused common contracts are unchanged and require no catalog update
+- Plans must not require feature implementation updates to `../hivespace.config`. Source-repo runtime settings, appsettings, gateway route config, and frontend environment typing should be planned under backend or frontend ownership.

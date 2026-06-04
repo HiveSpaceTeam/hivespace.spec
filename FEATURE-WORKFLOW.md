@@ -125,13 +125,16 @@ Review the detailed files generated for the feature, typically:
 
 - `tasks/backend.md`
 - `tasks/frontend.md`
-- `tasks/config.md`
 - `tasks/docs-catalog.md`
 - `tasks/verification.md`
 
 Detailed tasks are grouped by implementation ownership, then service, app,
-package, config, or docs area. User-story labels are kept for traceability, but
+package, library, or docs area. User-story labels are kept for traceability, but
 the detailed files are not primarily ordered by user story.
+
+Do not generate or implement `tasks/config.md`, `C###` task IDs, or feature
+tasks that edit `../hivespace.config`. Source-repo appsettings, gateway route
+config, and frontend environment typing belong in backend or frontend tasks.
 
 Recommended quality gate:
 
@@ -174,8 +177,16 @@ may be interleaved when the detailed tasks require it.
 
 `$speckit-implement` in Codex or `/speckit-implement` in Claude Code is available
 from this spec repo when you want Spec Kit to process the detailed task files
-directly, but prefer the source-repo `start-story` and `done-story` workflow when
-those commands are available.
+directly, but prefer the source-repo `start-story`, `verify-story`, and
+`done-story` workflow when those commands are available.
+
+Recommended source-repo story order:
+
+1. Run `start-story` to load the feature and story/task-group scope.
+2. Implement the coherent story or task group.
+3. Run `verify-story` to audit current changes against the feature task definitions.
+4. Fix any coverage gaps or verification failures.
+5. Run `done-story` only when the story is ready to close.
 
 ## 9. Backend Implementation Notes
 
@@ -193,15 +204,20 @@ Typical backend story commands, when provided by that repo:
 
 | Agent | Commands |
 | --- | --- |
-| Codex | `$start-story`, `$done-story` |
-| Claude Code | `/start-story`, `/done-story` |
+| Codex | `$start-story`, `$verify-story`, `$done-story` |
+| Claude Code | `/start-story`, `/verify-story`, `/done-story` |
 
 Backend implementation should follow the repo rules: .NET 8, Clean Architecture,
 CQRS, Minimal APIs for new feature work, SQL Server, EF Core, MassTransit, and
 transactional outbox for outgoing integration messages.
 
-Use `tasks/backend.md`, relevant `tasks/config.md`, `tasks/docs-catalog.md`, and
-`tasks/verification.md` entries as the backend story scope.
+Use `tasks/backend.md`, `tasks/docs-catalog.md`, and `tasks/verification.md`
+entries as the backend story scope.
+
+Use `verify-story` before `done-story` to audit current backend, docs/catalog,
+and backend verification changes against the planned task
+acceptance criteria. `verify-story` is verification-only and must not edit,
+stage, format, generate migrations, or implement missing work.
 
 ## 10. Frontend Implementation Notes
 
@@ -219,8 +235,8 @@ Typical frontend story commands, when provided by that repo:
 
 | Agent | Commands |
 | --- | --- |
-| Codex | `$start-story`, `$done-story` |
-| Claude Code | `/start-story`, `/done-story` |
+| Codex | `$start-story`, `$verify-story`, `$done-story` |
+| Claude Code | `/start-story`, `/verify-story`, `/done-story` |
 
 Frontend implementation should follow this order:
 
@@ -234,8 +250,13 @@ Frontend implementation should follow this order:
 
 Always inspect `packages/shared/src` before creating local frontend code.
 
-Use `tasks/frontend.md`, relevant `tasks/config.md`, and
-`tasks/verification.md` entries as the frontend story scope.
+Use `tasks/frontend.md` and `tasks/verification.md` entries as the frontend
+story scope.
+
+Use `verify-story` before `done-story` to audit current frontend and frontend
+verification changes against the planned task acceptance criteria.
+`verify-story` is verification-only and must not edit, stage, format, or
+implement missing work.
 
 ## 11. Wrap Up
 

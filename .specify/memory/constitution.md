@@ -201,6 +201,10 @@ Required planning context must live in:
 
 Generated or temporary documentation folders must not be required for future planning.
 
+### Config Repo Scope
+
+`../hivespace.config` remains the local/cloud infrastructure source, but feature specs, plans, tasks, and implementation work must not require updates to that repo. Source-repo runtime settings, appsettings, gateway route config, and frontend environment typing belong under backend or frontend planning/tasks. References to `../hivespace.config` are allowed only for infrastructure context such as starting Docker Compose.
+
 ## Article V - Observability
 
 - Services use structured logging.

@@ -81,9 +81,9 @@ You **MUST** consider the user input before proceeding (if not empty).
 4. **Generate task artifacts**: Read the tasks template from TASKS_TEMPLATE and use it as the structure for `tasks.md`. If TASKS_TEMPLATE is empty, fall back to `.specify/templates/tasks-template.md`. Fill with:
    - Correct feature name from plan.md
    - `tasks.md` as the compatibility entrypoint, summary, task-file index, dependency order, story traceability table, and completion checklist
-   - Detailed task files under `FEATURE_DIR/tasks/` as needed: `backend.md`, `frontend.md`, `config.md`, `docs-catalog.md`, and `verification.md`
+   - Detailed task files under `FEATURE_DIR/tasks/` as needed: `backend.md`, `frontend.md`, `docs-catalog.md`, and `verification.md`
    - Detailed tasks grouped by service/app/package/lib and then action headings: Create, Update, Remove, Move/Rename, Verify
-   - Detailed tasks with stable prefixes: B### backend, F### frontend, C### config, D### docs/catalog, V### verification
+   - Detailed tasks with stable prefixes: B### backend, F### frontend, D### docs/catalog, V### verification
    - Tests only if requested, placed in the relevant detailed file or `verification.md` depending on whether they create test code or run checks
    - Documentation/catalog scope that says which service docs and catalog entries are editable, and which supporting services are verification-only
 
@@ -92,7 +92,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Task count by detailed file and by user story label
    - Implementation groups and dependency order
    - Independent test criteria for each story
-   - Suggested MVP scope (typically the minimal backend/frontend/config/docs/verification groups needed for User Story 1)
+   - Suggested MVP scope (typically the minimal backend/frontend/docs/verification groups needed for User Story 1)
    - Format validation: Confirm ALL detailed tasks follow the detailed checkbox format with IDs, story labels where applicable, file paths/file sets, exact change details, and acceptance checks
 
 6. **Check for extension hooks**: After tasks are generated, check if `.specify/extensions.yml` exists in the project root.
@@ -141,9 +141,10 @@ Keep `tasks.md` as the compatibility entrypoint and high-level tracker. Generate
 
 - `backend.md` for backend services, APIs, domain/application/infrastructure code, shared backend libs, migrations
 - `frontend.md` for frontend apps, shared package, services, stores, components, pages, routes, i18n
-- `config.md` for Docker, appsettings source config, environment sync, local/cloud infrastructure config
 - `docs-catalog.md` for service docs, API catalog, event catalog, ADRs, architecture docs
 - `verification.md` for builds, tests, lint/type-check, quickstart/manual validation, final searches
+
+Do not generate `tasks/config.md`, `C###` task IDs, or feature tasks that edit `../hivespace.config`. Source-repo runtime settings, appsettings, gateway route config, and frontend environment typing belong in `backend.md` or `frontend.md` based on the owning source repo. The config repo may remain referenced only as local infrastructure context, such as starting Docker Compose.
 
 ### Detailed Checklist Format (REQUIRED)
 
@@ -159,7 +160,7 @@ Every detailed task MUST strictly follow this format:
 **Format Components**:
 
 1. **Checkbox**: ALWAYS start with `- [ ]` (markdown checkbox)
-2. **Task ID**: Unique ID across all detailed files using area prefixes: B###, F###, C###, D###, V###
+2. **Task ID**: Unique ID across all detailed files using area prefixes: B###, F###, D###, V###
 3. **[Story] label**: REQUIRED for feature work that maps to a user story
    - Format: [US1], [US2], [US3], etc. (maps to user stories from spec.md)
    - Cross-cutting setup, docs, and verification tasks may omit story labels only when they do not map to a single story
@@ -177,8 +178,8 @@ Every detailed task MUST strictly follow this format:
 ### Task Organization
 
 1. **From Implementation Ownership** - PRIMARY ORGANIZATION:
-   - Group by detailed file: backend, frontend, config, docs/catalog, verification
-   - Inside each file, group by service/app/package/lib/config/docs area
+   - Group by detailed file: backend, frontend, docs/catalog, verification
+   - Inside each file, group by service/app/package/lib/docs area
    - Inside each area, group by action: Create, Update, Remove, Move/Rename, Verify
    - Use user-story labels for traceability only
 
@@ -194,7 +195,8 @@ Every detailed task MUST strictly follow this format:
 4. **From Setup/Infrastructure**:
    - Backend setup goes in `backend.md`
    - Frontend setup goes in `frontend.md`
-   - Docker/appsettings/env sync goes in `config.md`
+   - Source-repo appsettings, gateway route config, and frontend environment typing go in `backend.md` or `frontend.md`
+   - Do not create feature tasks for Docker, local/cloud infrastructure config, environment sync, or `../hivespace.config`
    - Cross-cutting verification goes in `verification.md`
 
 5. **From Documentation/Catalog Scope**:

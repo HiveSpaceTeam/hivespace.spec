@@ -98,7 +98,8 @@ Load only the minimal necessary context from each artifact:
 - Task IDs
 - Descriptions
 - Task index, dependency order, and story traceability from tasks.md
-- Detailed task grouping by backend/frontend/config/docs/verification, service/app/package/lib, and action heading
+- Detailed task grouping by backend/frontend/docs/verification, service/app/package/lib, and action heading
+- Deprecated config workflow output: flag any `tasks/config.md`, `C###` task ID, or feature task targeting `../hivespace.config` as a workflow issue. Source-repo settings must be represented under backend or frontend tasks.
 - Referenced file paths or file sets
 - Exact implementation details, forbidden behavior, dependencies/callers, and acceptance checks from detailed tasks
 
