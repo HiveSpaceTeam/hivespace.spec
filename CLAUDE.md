@@ -118,6 +118,7 @@ Example: if UserService stores a buyer avatar reference and consumes existing Me
 ## Repo Rules
 
 - This repo is planning-only; do not add runnable product code here.
+- Do not create new branches in this repo unless the user explicitly asks. Default to pulling the latest code, making requested updates on the current branch or `master` as directed, then pushing to `master`/remote.
 - Every new public endpoint, or actual change to an existing public endpoint, must be added to `shared/api-catalog.md`.
 - Every new cross-service event, command, saga message, failure event, timeout event, projection event, or actual change to an existing message contract/consumer set must be added to `shared/event-catalog.md`.
 - Do not rewrite common service docs or shared catalog descriptions just because a feature uses an existing common capability.
