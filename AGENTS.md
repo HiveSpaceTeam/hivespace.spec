@@ -140,5 +140,5 @@ Before switching to `../hivespace.microservice` or `../hivespace.web`:
 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
-shell commands, and other important information, read `specs/0005-google-login-linking/plan.md`.
+shell commands, and other important information, read `specs/0006-aspire-setup/plan.md`.
 <!-- SPECKIT END -->
