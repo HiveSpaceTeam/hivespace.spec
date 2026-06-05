@@ -18,7 +18,6 @@ Generate only the files needed by the feature, using these defaults:
 | --- | --- | --- |
 | `tasks/backend.md` | Backend services, APIs, domain/application/infrastructure code, shared backend libs, migrations | `B###` |
 | `tasks/frontend.md` | Frontend apps, shared package, services, stores, components, pages, routes, i18n | `F###` |
-| `tasks/config.md` | Docker, appsettings source config, environment sync, local/cloud infrastructure config | `C###` |
 | `tasks/docs-catalog.md` | Service docs, API catalog, event catalog, ADRs, architecture docs | `D###` |
 | `tasks/verification.md` | Builds, tests, lint/type-check, quickstart/manual validation, final searches | `V###` |
 
@@ -47,6 +46,8 @@ Each task that touches code, config, or docs must include:
 - forbidden behavior or values that must not be introduced
 - affected callers, dependencies, or ordering constraints when relevant
 - acceptance check that can be verified locally
+
+Do not generate `tasks/config.md`, `C###` task IDs, or feature tasks that edit `../hivespace.config`. Source-repo runtime settings, appsettings, gateway route config, and frontend environment typing belong in `backend.md` or `frontend.md` based on the owning source repo. The config repo may remain referenced only as local infrastructure context, such as starting Docker Compose.
 
 ## Grouping Rules
 
@@ -89,7 +90,6 @@ Generated tasks must distinguish editable docs from verification-only context:
 | --- | --- | --- | --- |
 | Backend | `tasks/backend.md` | Not started | Services, shared libs, migrations |
 | Frontend | `tasks/frontend.md` | Not started | Apps, shared package, routes, i18n |
-| Config | `tasks/config.md` | Not started | Docker, appsettings, env sync |
 | Docs/Catalog | `tasks/docs-catalog.md` | Not started | Service docs, catalogs, ADRs |
 | Verification | `tasks/verification.md` | Not started | Builds, tests, quickstart |
 
@@ -99,9 +99,8 @@ Generated tasks must distinguish editable docs from verification-only context:
 2. Complete foundational contract and shared model/config tasks.
 3. Complete backend service/lib tasks needed by the MVP story.
 4. Complete frontend app/package tasks for the same story.
-5. Complete config tasks needed to run the feature locally.
-6. Complete docs/catalog updates for changed ownership, APIs, events, and ADR decisions.
-7. Complete verification tasks.
+5. Complete docs/catalog updates for changed ownership, APIs, events, and ADR decisions.
+6. Complete verification tasks.
 
 ## Story Traceability
 

@@ -16,6 +16,7 @@ Implementation source:
 |---|---|---|
 | `ApplicationUser` | ASP.NET Identity user | Identity-owned account record with credentials, email verification, status, lockout fields, role, claims, timestamps, and optional store reference |
 | `IdentityRole` / role records | ASP.NET Identity role | Authorization roles such as buyer, seller, admin, and system admin |
+| External login records | ASP.NET Identity external login | Durable Google provider link owned by IdentityService |
 | IdentityServer clients/grants | IdentityServer data | OIDC client configuration, persisted grants, refresh tokens, and protocol state |
 
 ## Business Rules
@@ -25,6 +26,9 @@ Implementation source:
 - Suspended, inactive, locked-out, or invalid accounts cannot authenticate or receive valid authorization state.
 - Store registration does not directly write identity state. IdentityService grants seller access only after consuming the UserService-owned `StoreCreatedIntegrationEvent`.
 - Role propagation is idempotent by store owner and store ID so message retries do not duplicate role/claim assignments.
+- Google sign-in is allowed only for buyer and seller app contexts. Admin accounts cannot be created or signed in through Google.
+- New Google-authenticated users start as normal user accounts. Seller access still requires the existing store onboarding flow.
+- A matching existing email/password account may link Google only after Google provides the same verified email, the user explicitly consents, and the existing password is confirmed.
 
 ## Lifecycle
 
@@ -35,6 +39,7 @@ Implementation source:
 | Email verification | Verification request publishes a notification event; successful verification updates identity-owned state |
 | Seller transition | `StoreCreatedIntegrationEvent` consumption grants seller role/claims and records the store reference on the identity account |
 | Account creation | Successful account creation publishes `IdentityUserCreatedIntegrationEvent` for UserService profile creation |
+| Google link | Pending external login state becomes a durable external login record only after consent and password confirmation |
 
 ## Cross-Service Facts
 

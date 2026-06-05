@@ -230,6 +230,8 @@ pnpm dev:seller
 pnpm dev:buyer
 ```
 
+`../hivespace.config` is infrastructure context only for feature workflows. Feature plans and tasks must not require edits to that repo; source-repo runtime settings, appsettings, gateway route config, and frontend environment typing belong with backend or frontend work.
+
 ## Planning Rules
 
 Before planning a feature:

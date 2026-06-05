@@ -134,6 +134,10 @@ Before switching to `../hivespace.microservice` or `../hivespace.web`:
 3. Keep backend and frontend work scoped to one coherent story or task group.
 4. Follow the target repo's own agent instruction files.
 
+## Config Repo Scope
+
+`../hivespace.config` remains the local/cloud infrastructure source, but feature specs, plans, tasks, and implementation work must not require updates to that repo. Put source-repo runtime settings, appsettings, gateway route config, and frontend environment typing under backend or frontend planning/tasks instead. References to `../hivespace.config` are allowed only for infrastructure context such as starting Docker Compose.
+
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read `specs/0006-aspire-setup/plan.md`.

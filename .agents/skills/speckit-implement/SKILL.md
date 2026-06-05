@@ -87,7 +87,8 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 3. Load and analyze the implementation context:
    - **REQUIRED**: Read `tasks.md` as the task entrypoint, index, dependency order, and story traceability
-   - **REQUIRED IF PRESENT**: Read every linked detailed task file under `FEATURE_DIR/tasks/`, including `backend.md`, `frontend.md`, `config.md`, `docs-catalog.md`, and `verification.md`
+   - **REQUIRED IF PRESENT**: Read every linked detailed task file under `FEATURE_DIR/tasks/`, including `backend.md`, `frontend.md`, `docs-catalog.md`, and `verification.md`
+   - If `tasks/config.md`, `C###` task IDs, or feature tasks targeting `../hivespace.config` are present, treat them as deprecated workflow output and stop before implementation; instruct the user to regenerate or migrate tasks so source-repo config work lives in `backend.md` or `frontend.md`.
    - If `tasks/` exists, treat detailed task files as the source of executable tasks and `tasks.md` as the coordinating index
    - If `tasks/` does not exist, fall back to parsing executable tasks directly from `tasks.md` for backward compatibility
    - **REQUIRED**: Read plan.md for tech stack, architecture, and file structure
@@ -144,7 +145,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 5. Parse task structure and extract:
    - **Task index**: Detailed task file list, dependency order, story traceability, and completion checklist from `tasks.md`
    - **Detailed tasks**: IDs, descriptions, file paths/file sets, exact change details, forbidden behavior, affected callers/dependencies, and acceptance checks from `tasks/*.md`
-   - **Task groups**: Backend/frontend/config/docs/verification grouping, then service/app/package/lib/config/docs area, then action heading
+   - **Task groups**: Backend/frontend/docs/verification grouping, then service/app/package/lib/docs area, then action heading
    - **Execution flow**: Overall dependency order from `tasks.md`, then ordering constraints from detailed task bullets
 
 6. Execute implementation following the task plan:
@@ -158,7 +159,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 7. Implementation execution rules:
    - **Setup first**: Complete target repo instruction reads and foundational source-layout checks
    - **Tests before code**: If tests are requested, create test-code tasks before corresponding implementation tasks and run checks from `verification.md`
-   - **Backend/frontend/config/docs work**: Follow the detailed file groups and action headings rather than user-story phases
+   - **Backend/frontend/docs work**: Follow the detailed file groups and action headings rather than user-story phases
    - **Verification last per increment**: Run relevant `verification.md` tasks after each independently testable story or implementation group
 
 8. Progress tracking and error handling:

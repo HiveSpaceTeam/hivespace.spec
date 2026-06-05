@@ -8,7 +8,7 @@ These endpoints are served directly by IdentityService at `http://localhost:5001
 |---|---|---|
 | `/.well-known/**` | Anonymous | OIDC discovery and metadata |
 | `/connect/**` | Anonymous or authenticated per OIDC flow | Authorize, token, refresh, userinfo, revocation, introspection, device, callback, and sign-out protocol endpoints |
-| `/Account/**` | Anonymous or authenticated per compatibility flow | Legacy account URL compatibility redirects and any non-HiveSpace IdentityServer protocol pages that remain required; HiveSpace login/register/logout UI is frontend-owned |
+| `/Account/**` | Unsupported legacy URL space | Must not render old HiveSpace account pages or compatibility redirects after legacy page removal |
 
 `/identity/**` and `/api/v1/identity/**` are intentionally not part of the target contract.
 
@@ -22,8 +22,14 @@ These endpoints are served directly by IdentityService at `http://localhost:5001
 | POST | `/api/v1/accounts/logout` | Session cookie + CSRF | Clear token cookies and CSRF cookie |
 | POST | `/api/v1/accounts/email-verification` | `RequireAdminOrUser` | Send verification email from the identity-owned verification workflow |
 | POST | `/api/v1/accounts/email-verification/verify` | Anonymous | Verify email token and update identity-owned verification state |
+| GET | `/api/v1/accounts/external/google/challenge` | Anonymous | Start buyer/seller Google authentication from sign-in or sign-up and preserve app/return URL context |
+| GET | `/api/v1/accounts/external/google/complete` | Anonymous | Complete Google sign-in, create/sign in a normal user only when no same-email password account exists, or start required frontend account linking |
+| POST | `/api/v1/accounts/external/google/link` | Temporary Google link state + CSRF/link token | Link Google to an existing password account after consent and password confirmation, mark verified matching email, and issue browser session cookies |
+| DELETE | `/api/v1/accounts/external/google/link` | Temporary Google link state + CSRF/link token | Cancel pending Google account linking without issuing a session or creating a duplicate same-email account |
 
 Account registration and credential flows for HiveSpace browser apps are served through versioned account REST endpoints via ApiGateway, not IdentityService-rendered UI. After successful account creation, IdentityService publishes `IdentityUserCreatedIntegrationEvent`. Successful login, registration, and refresh responses must not expose access or refresh tokens in JSON; token material is stored only in secure HttpOnly cookies.
+
+Google sign-in is limited to buyer and seller app contexts. New Google-authenticated users are normal user accounts only when no same-email local password account exists. If a verified Google email matches an existing unlinked password account, Google sign-in must stop at required linking or safe exits to password sign-in, password reset, or another Google account. Admin accounts cannot be created or signed in through Google.
 
 ## Admin Identity Management
 

@@ -34,7 +34,7 @@ Local gateway defaults:
 |---|---|
 | `/.well-known/**` | IdentityService direct authority endpoint, not routed through ApiGateway |
 | `/connect/**` | IdentityService direct authority endpoint, not routed through ApiGateway |
-| `/Account/**` | IdentityService direct compatibility endpoint for legacy account URLs, not routed through ApiGateway |
+| `/Account/**` | Not a supported HiveSpace contract after legacy page removal; old user-facing account URLs may return not-found/error and must not render account pages or compatibility redirects |
 | `/api/v1/accounts/**` | IdentityService |
 | `/api/v1/admins/**` | IdentityService and UserService split by action |
 | `/api/v1/users/**` | UserService |
@@ -53,7 +53,7 @@ Local gateway defaults:
 
 ## IdentityService
 
-IdentityServer public OIDC protocol endpoints are served directly by IdentityService on `http://localhost:5001`: `/.well-known/**` and `/connect/**`. Legacy `/Account/**` login, registration, and logout URLs are direct IdentityService compatibility redirects to frontend routes, not ApiGateway routes and not user-facing IdentityService UI. `/identity/**` and `/api/v1/identity/**` are intentionally not part of the target contract.
+IdentityServer public OIDC protocol endpoints are served directly by IdentityService on `http://localhost:5001`: `/.well-known/**` and `/connect/**`. Legacy `/Account/**` URLs are not ApiGateway routes and old HiveSpace user-facing IdentityService account pages are not part of the target contract. Because HiveSpace is still in development, old user-facing account URL compatibility redirects are removed instead of preserved. `/identity/**` and `/api/v1/identity/**` are intentionally not part of the target contract.
 
 ### Account and Email Verification
 
@@ -65,8 +65,14 @@ IdentityServer public OIDC protocol endpoints are served directly by IdentitySer
 | POST | `/api/v1/accounts/logout` | Session cookie + CSRF | Clear token cookies and CSRF cookie |
 | POST | `/api/v1/accounts/email-verification` | `RequireAdminOrUser` | Send verification email |
 | POST | `/api/v1/accounts/email-verification/verify` | Anonymous | Verify email token |
+| GET | `/api/v1/accounts/external/google/challenge` | Anonymous | Start Google from buyer/seller sign-in or sign-up context and preserve a safe return URL |
+| GET | `/api/v1/accounts/external/google/complete` | Anonymous | Complete Google sign-in, create/sign in a Google-linked normal user account only when no same-email password account exists, or redirect to required frontend account-link confirmation |
+| POST | `/api/v1/accounts/external/google/link` | Temporary Google link state + CSRF/link token | Confirm consent and existing account password, link Google, mark verified matching email, and set browser session cookies |
+| DELETE | `/api/v1/accounts/external/google/link` | Temporary Google link state + CSRF/link token | Cancel pending Google account linking, clear temporary link state, and create no duplicate same-email account |
 
 Browser session endpoints are served through ApiGateway under `/api/v1/accounts/**`. Successful login, registration, and refresh responses must not expose access or refresh tokens to browser scripts. IdentityService stores token material only in secure HttpOnly cookies, and ApiGateway forwards the access-token cookie value as downstream bearer authorization. Cookie-authenticated state-changing browser requests require a server-issued CSRF token in a custom header before downstream state changes.
+
+Google sign-in is buyer/seller only. New Google-authenticated users are normal user accounts only when no same-email local password account exists; seller access still requires existing seller onboarding. If a verified Google email matches an existing unlinked local password account, the user must link, use password sign-in/reset, or choose another Google account. Admin accounts must not be created or signed in through Google.
 
 ### Admin Identity Management
 
