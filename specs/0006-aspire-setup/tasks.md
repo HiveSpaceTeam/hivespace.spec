@@ -1,7 +1,7 @@
 # Tasks: Local Backend Runtime Orchestration
 
 - **Input**: Design documents from `/specs/0006-aspire-setup/`
-- **Prerequisites**: `plan.md`, `spec.md`, `research.md`, `data-model.md`, `contracts/local-runtime.md`, `quickstart.md`, `architecture/decisions/ADR-0004-aspire-local-runtime.md`
+- **Prerequisites**: `plan.md`, `spec.md`, `research.md`, `data-model.md`, `contracts/local-runtime.md`, `quickstart.md`, `architecture/decisions/ADR-0005-aspire-local-runtime.md`
 - **Detailed tasks**: Implementation tasks live under `/specs/0006-aspire-setup/tasks/`
 - **Organization**: `tasks.md` is the compatibility entrypoint and high-level tracker. Detailed task files are grouped by implementation ownership, then service/app/package/lib, then action.
 
@@ -50,4 +50,3 @@ The MVP for User Story 1 is `B001-B005`, `B009-B018`, `B020`, `C001` if appsetti
 - [ ] `tasks.md` dependency order matches the detailed task dependencies.
 - [ ] Verification tasks cover builds/checks and quickstart/manual validation.
 - [ ] API and event catalogs are unchanged unless implementation discovers a real public contract change.
-

@@ -32,7 +32,7 @@
 
 ### Technical unknowns
 
-No unresolved clarification markers remain for planning. Key decisions are captured in [research.md](research.md) and [ADR-0004](../../architecture/decisions/ADR-0004-aspire-local-runtime.md).
+No unresolved clarification markers remain for planning. Key decisions are captured in [research.md](research.md) and [ADR-0005](../../architecture/decisions/ADR-0005-aspire-local-runtime.md).
 
 ### Research notes
 
@@ -98,7 +98,7 @@ No saga required. The feature does not add or change a MassTransit saga state ma
 
 ### Architecture decision
 
-Use [ADR-0004: Aspire Local Backend Runtime](../../architecture/decisions/ADR-0004-aspire-local-runtime.md). It records the decision to replace Docker Compose for backend local development with an Aspire AppHost while preserving existing local ports and avoiding Docker Compose data migration.
+Use [ADR-0005: Aspire Local Backend Runtime](../../architecture/decisions/ADR-0005-aspire-local-runtime.md). It records the decision to replace Docker Compose for backend local development with an Aspire AppHost while preserving existing local ports and avoiding Docker Compose data migration.
 
 ---
 
@@ -199,7 +199,7 @@ Implementation occurs in `../hivespace.microservice` after reading that repo's `
 | Artifact | Decision |
 | --- | --- |
 | `saga-design.md` | Not created; no saga state machine is introduced or changed. |
-| ADR | Created: [ADR-0004](../../architecture/decisions/ADR-0004-aspire-local-runtime.md). |
+| ADR | Created: [ADR-0005](../../architecture/decisions/ADR-0005-aspire-local-runtime.md). |
 | Event catalog | No update required; no new or changed integration message. |
 | API catalog | No update required; no new or changed public endpoint. |
 
@@ -222,4 +222,4 @@ Implementation occurs in `../hivespace.microservice` after reading that repo's `
 
 ### Post-design
 
-The design remains compliant. The cross-cutting architectural changes are local developer orchestration, startup standardization, and local OpenTelemetry monitoring, documented in ADR-0004. They do not alter service ownership, business APIs, integration events, sagas, data ownership, or browser-facing contracts.
+The design remains compliant. The cross-cutting architectural changes are local developer orchestration, startup standardization, and local OpenTelemetry monitoring, documented in ADR-0005. They do not alter service ownership, business APIs, integration events, sagas, data ownership, or browser-facing contracts.

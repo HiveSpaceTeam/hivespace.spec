@@ -1,4 +1,4 @@
-# ADR-0004: Aspire Local Backend Runtime
+# ADR-0005: Aspire Local Backend Runtime
 
 - **Status**: Draft
 - **Date**: 2026-06-04
