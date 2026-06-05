@@ -136,5 +136,5 @@ Before switching to `../hivespace.microservice` or `../hivespace.web`:
 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
-shell commands, and other important information, read `specs/0004-cookie-auth-migration/plan.md`.
+shell commands, and other important information, read `specs/0006-aspire-setup/plan.md`.
 <!-- SPECKIT END -->
