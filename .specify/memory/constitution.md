@@ -203,7 +203,7 @@ Generated or temporary documentation folders must not be required for future pla
 
 ### Config Repo Scope
 
-`../hivespace.config` remains the local/cloud infrastructure source, but feature specs, plans, tasks, and implementation work must not require updates to that repo. Source-repo runtime settings, appsettings, gateway route config, and frontend environment typing belong under backend or frontend planning/tasks. References to `../hivespace.config` are allowed only for infrastructure context such as starting Docker Compose.
+`../hivespace.config` remains the local/cloud infrastructure source, but feature specs, plans, tasks, and implementation work must not require updates to that repo. Source-repo runtime settings, appsettings, gateway route config, and frontend environment typing belong under backend or frontend planning/tasks. References to `../hivespace.config` are allowed only for infrastructure context such as raw container or dependency setup, not as the supported backend local development startup flow.
 
 ## Article V - Observability
 
@@ -225,3 +225,4 @@ Generated or temporary documentation folders must not be required for future pla
 |---|---|---|---|
 | 2026-05-17 | All | Replaced generated-doc dependencies with durable `architecture/`, `services/`, and `shared/` source-of-truth references | Allow future deletion of generated documentation without losing planning context |
 | 2026-05-24 | I, II | Added IdentityService boundary and narrowed UserService to profile/settings/address/store ownership | Reflect shipped split of identity ownership from UserService |
+| 2026-06-07 | IV | Clarified `hivespace.config` as infrastructure context only, not the supported backend local development startup flow after Aspire AppHost adoption | Keep planning guidance aligned with story `0006` runtime documentation |

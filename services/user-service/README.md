@@ -40,6 +40,8 @@ UserService is narrowed to user-domain data after the IdentityService split. New
 | Database | SQL Server, UserService-owned profile/settings/address/store schema |
 | Auth provider | IdentityService-issued JWTs |
 
+Backend local development starts UserService through Aspire AppHost in `../hivespace.microservice/src/HiveSpace.AppHost`; frontend dev servers remain separate.
+
 ## Planning Notes
 
 - Store creation publishes `StoreCreatedIntegrationEvent`; IdentityService consumes it to grant seller access, so seller app must force token refresh after propagation.

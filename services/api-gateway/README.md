@@ -33,6 +33,8 @@ Source path:
 | Local HTTPS | `https://localhost:7001` |
 | Database | None |
 
+Backend local development starts ApiGateway through Aspire AppHost in `../hivespace.microservice/src/HiveSpace.AppHost`; frontend dev servers remain separate.
+
 ## Planning Notes
 
 - New public HTTP APIs normally require a gateway route only when they introduce a new path prefix or downstream service.

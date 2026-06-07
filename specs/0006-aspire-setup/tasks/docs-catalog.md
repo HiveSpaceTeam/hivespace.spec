@@ -8,13 +8,15 @@
   - File: `../hivespace.microservice/AGENTS.md`, `../hivespace.microservice/CLAUDE.md`
   - Update both files together so Aspire AppHost is the preferred backend local startup command: `dotnet run --project .\HiveSpace.AppHost\HiveSpace.AppHost.csproj`.
   - Mark Docker Compose as replaced for backend local development while preserving any remaining config/infrastructure maintenance notes.
+  - Document Azure Functions Core Tools as required for the full AppHost runtime because MediaService Function is included.
+  - Document Kafka as declared local infrastructure only; no v1 backend service or function uses it.
   - Document that frontend dev servers remain outside the AppHost v1 scope and continue using the existing gateway URL.
   - Do not let `AGENTS.md` and `CLAUDE.md` drift semantically.
   - Acceptance: both instruction files contain equivalent backend local runtime guidance.
 
 - [ ] D002 [US1] [US2] [US4] Update `backend runtime and startup docs`
   - File: `../hivespace.microservice/README.md`, `../hivespace.microservice/docs/agent/startup-conventions.md`, `../hivespace.microservice/docs/**`
-  - Document prerequisites, AppHost command, dashboard/runtime view, fixed ports, stop/restart expectations, no Docker Compose data migration, and startup convention expectations.
+  - Document prerequisites, including Azure Functions Core Tools for MediaService Function, AppHost command, dashboard/runtime view, fixed ports, stop/restart expectations, no Docker Compose data migration, Kafka declared-only status, and startup convention expectations.
   - Include the connection-string-first dependency contract and broker feature flag rules.
   - Include any concrete startup exceptions discovered during implementation, especially for IdentityService, UserService, NotificationService, ApiGateway, MediaService API, or MediaService Function.
   - Do not document public endpoint or integration event changes unless implementation actually introduced them.
@@ -48,4 +50,3 @@
   - If a real integration contract changed unexpectedly, update the catalog row in the same change and explain why it was necessary.
   - Do not add Aspire resources, OpenTelemetry signals, or local dependency status as integration events.
   - Acceptance: catalog remains unchanged or contains only justified real integration contract changes.
-

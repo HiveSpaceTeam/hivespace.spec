@@ -40,6 +40,8 @@ NotificationService is a lighter service. New work should use the repo's CQRS/Mi
 | Cache/jobs | Redis and Hangfire-style retry/throttle support where configured |
 | Email | Resend/FluentEmail |
 
+Backend local development starts NotificationService through Aspire AppHost in `../hivespace.microservice/src/HiveSpace.AppHost`; frontend dev servers remain separate.
+
 ## Planning Notes
 
 - Other services publish notification intent; NotificationService decides delivery mechanics.

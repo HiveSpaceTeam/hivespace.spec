@@ -118,7 +118,7 @@ Example: if UserService stores a buyer avatar reference and consumes existing Me
 ## Repo Rules
 
 - This repo is planning-only; do not add runnable product code here.
-- Do not create new branches in this repo unless the user explicitly asks. Default to pulling the latest code, making requested updates on the current branch or `master` as directed, then pushing to `master`/remote.
+- Do not create new branches in this repo unless the user explicitly asks or the current task requires a Spec Kit feature branch that does not exist locally. When a task uses an active feature under `.specify/feature.json`, agents may create and check out the matching feature branch so Spec Kit prerequisites pass. Otherwise, default to pulling the latest code, making requested updates on the current branch or `master` as directed, then pushing to `master`/remote.
 - Every new public endpoint, or actual change to an existing public endpoint, must be added to `shared/api-catalog.md`.
 - Every new cross-service event, command, saga message, failure event, timeout event, projection event, or actual change to an existing message contract/consumer set must be added to `shared/event-catalog.md`.
 - Do not rewrite common service docs or shared catalog descriptions just because a feature uses an existing common capability.
@@ -137,7 +137,7 @@ Before switching to `../hivespace.microservice` or `../hivespace.web`:
 
 ## Config Repo Scope
 
-`../hivespace.config` remains the local/cloud infrastructure source, but feature specs, plans, tasks, and implementation work must not require updates to that repo. Put source-repo runtime settings, appsettings, gateway route config, and frontend environment typing under backend or frontend planning/tasks instead. References to `../hivespace.config` are allowed only for infrastructure context such as starting Docker Compose.
+`../hivespace.config` remains the local/cloud infrastructure source, but feature specs, plans, tasks, and implementation work must not require updates to that repo. Put source-repo runtime settings, appsettings, gateway route config, and frontend environment typing under backend or frontend planning/tasks instead. References to `../hivespace.config` are allowed only for infrastructure context such as raw container or dependency setup, not as the supported backend local development startup flow.
 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,

@@ -20,7 +20,7 @@ Use this file with:
 | Spec | `hivespace.spec` | Product specs, architecture docs, service reference, catalogs, constitution |
 | Backend | `../hivespace.microservice` | .NET 8 microservice backend |
 | Frontend | `../hivespace.web` | Vue 3 pnpm/Turbo frontend monorepo |
-| Config | `../hivespace.config` | Docker Compose and infrastructure configuration |
+| Config | `../hivespace.config` | Infrastructure configuration and historical/raw container orchestration context |
 
 The spec repo is the planning source of truth. Backend and frontend repos are the implementation source of truth.
 
@@ -200,28 +200,27 @@ Cross-service data is copied only through explicit contracts, such as `store_ref
 
 ## Local Runtime
 
-Local infrastructure is expected from `../hivespace.config/docker`.
+Backend local development runs through Aspire AppHost in `../hivespace.microservice/src/HiveSpace.AppHost`. AppHost starts the backend APIs, MediaService Function, and declared local dependencies. Frontend dev servers still run separately from `../hivespace.web`.
 
 | Dependency | Port |
 |---|---:|
 | SQL Server | 1433 |
 | RabbitMQ AMQP | 5672 |
 | RabbitMQ UI | 15672 |
-| Azure Service Bus emulator | 5673 |
+| Kafka (declared only, unused by v1 services) | 9092 |
 | Redis | 6379 |
 | Azurite Blob | 10000 |
 | Azurite Queue | 10001 |
 | Azurite Table | 10002 |
+| MediaService Function | 7072 |
 
 Common commands:
 
 ```bash
-cd ../hivespace.config/docker
-docker compose up -d
-
-cd ../../hivespace.microservice
+cd ../hivespace.microservice
 dotnet restore
 dotnet build
+dotnet run --project src/HiveSpace.AppHost/HiveSpace.AppHost.csproj
 
 cd ../hivespace.web
 pnpm install
@@ -230,7 +229,7 @@ pnpm dev:seller
 pnpm dev:buyer
 ```
 
-`../hivespace.config` is infrastructure context only for feature workflows. Feature plans and tasks must not require edits to that repo; source-repo runtime settings, appsettings, gateway route config, and frontend environment typing belong with backend or frontend work.
+`../hivespace.config` remains infrastructure context only for feature workflows. It may still be referenced for raw container/infrastructure setup, but it is not the supported backend local development startup flow after story `0006`. Feature plans and tasks must not require edits to that repo; source-repo runtime settings, appsettings, gateway route config, and frontend environment typing belong with backend or frontend work.
 
 ## Planning Rules
 

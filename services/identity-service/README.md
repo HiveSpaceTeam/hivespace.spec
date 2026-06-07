@@ -43,6 +43,8 @@ IdentityServer public protocol endpoints are served directly from the IdentitySe
 | Database | SQL Server, IdentityService-owned identity and IdentityServer schema |
 | Auth provider | Duende IdentityServer |
 
+Backend local development starts IdentityService through Aspire AppHost in `../hivespace.microservice/src/HiveSpace.AppHost`; frontend dev servers remain separate.
+
 ## Planning Notes
 
 - IdentityService and UserService share the same public user ID for the same user, but each service writes only its own database.
