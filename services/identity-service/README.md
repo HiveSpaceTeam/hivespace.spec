@@ -48,7 +48,7 @@ Backend local development starts IdentityService through Aspire AppHost in `../h
 ## Planning Notes
 
 - IdentityService and UserService share the same public user ID for the same user, but each service writes only its own database.
-- Account creation publishes `IdentityUserCreatedIntegrationEvent`; UserService consumes it to create the matching profile.
+- Account readiness publishes `IdentityUserReadyIntegrationEvent`; UserService consumes it to create the matching profile once the account is usable.
 - Store registration remains UserService-owned. IdentityService consumes `StoreCreatedIntegrationEvent` idempotently to grant seller role/claims and store reference on the identity account.
 - Email verification events are IdentityService-owned; NotificationService only delivers the email/notification.
 - Browser auth responses set secure HttpOnly token cookies and a CSRF token; responses must not expose access or refresh tokens to frontend scripts.
@@ -59,6 +59,7 @@ Backend local development starts IdentityService through Aspire AppHost in `../h
 - The split is documented in [ADR-0001](../../architecture/decisions/ADR-0001-split-identity-service.md).
 - Standardized integration event naming, inheritance, and publisher policy are documented in [ADR-0002](../../architecture/decisions/ADR-0002-standardized-integration-event-contracts.md).
 - Gateway-mediated cookie browser sessions are documented in [ADR-0003](../../architecture/decisions/ADR-0003-gateway-mediated-cookie-browser-sessions.md).
+- Email/password activation readiness and downstream provisioning timing are documented in [ADR-0006](../../architecture/decisions/ADR-0006-email-verification-activation-boundary.md).
 
 ## Detail
 

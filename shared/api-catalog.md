@@ -60,17 +60,20 @@ IdentityServer public OIDC protocol endpoints are served directly by IdentitySer
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
 | POST | `/api/v1/accounts/login` | Anonymous | Password login from frontend-owned UI; sets secure HttpOnly access/refresh token cookies and CSRF token |
-| POST | `/api/v1/accounts/register` | Anonymous | Frontend-owned public account registration where allowed; creates identity account, triggers existing profile creation flow, and sets token cookies/browser session |
+| POST | `/api/v1/accounts/register` | Anonymous | Frontend-owned public account registration where allowed; creates only a pending identity account, sends verification email, and returns a non-authenticated confirmation result without issuing token cookies/browser session |
 | POST | `/api/v1/accounts/session/refresh` | Session cookie + CSRF | Bootstrap after reload or refresh/rotate the browser session through the gateway |
 | POST | `/api/v1/accounts/logout` | Session cookie + CSRF | Clear token cookies and CSRF cookie |
 | POST | `/api/v1/accounts/email-verification` | `RequireAdminOrUser` | Send verification email |
-| POST | `/api/v1/accounts/email-verification/verify` | Anonymous | Verify email token |
+| POST | `/api/v1/accounts/email-verification/resend` | Anonymous | Request another verification email for pending accounts with generic success semantics, cooldown protection, and `204 No Content` success |
+| POST | `/api/v1/accounts/email-verification/verify` | Anonymous | Verify email token and return `204 No Content` on success |
 | GET | `/api/v1/accounts/external/google/challenge` | Anonymous | Start Google from buyer/seller sign-in or sign-up context and preserve a safe return URL |
 | GET | `/api/v1/accounts/external/google/complete` | Anonymous | Complete Google sign-in, create/sign in a Google-linked normal user account only when no same-email password account exists, or redirect to required frontend account-link confirmation |
 | POST | `/api/v1/accounts/external/google/link` | Temporary Google link state + CSRF/link token | Confirm consent and existing account password, link Google, mark verified matching email, and set browser session cookies |
 | DELETE | `/api/v1/accounts/external/google/link` | Temporary Google link state + CSRF/link token | Cancel pending Google account linking, clear temporary link state, and create no duplicate same-email account |
 
-Browser session endpoints are served through ApiGateway under `/api/v1/accounts/**`. Successful login, registration, and refresh responses must not expose access or refresh tokens to browser scripts. IdentityService stores token material only in secure HttpOnly cookies, and ApiGateway forwards the access-token cookie value as downstream bearer authorization. Cookie-authenticated state-changing browser requests require a server-issued CSRF token in a custom header before downstream state changes.
+Browser session endpoints are served through ApiGateway under `/api/v1/accounts/**`. Successful login and refresh responses must not expose access or refresh tokens to browser scripts. IdentityService stores token material only in secure HttpOnly cookies, and ApiGateway forwards the access-token cookie value as downstream bearer authorization. Cookie-authenticated state-changing browser requests require a server-issued CSRF token in a custom header before downstream state changes. Email/password registration no longer creates a browser session; it returns a pending-verification result for the frontend instead.
+
+Where account-related flows fail through exception handling, they continue to use the existing service exception response convention. Registration returns a plain data-only verification-sent success payload without a server-supplied `message` field and does not issue a browser session.
 
 Google sign-in is buyer/seller only. New Google-authenticated users are normal user accounts only when no same-email local password account exists; seller access still requires existing seller onboarding. If a verified Google email matches an existing unlinked local password account, the user must link, use password sign-in/reset, or choose another Google account. Admin accounts must not be created or signed in through Google.
 

@@ -23,7 +23,7 @@ Implementation source:
 ## Business Rules
 
 - Users require a matching identity-owned account and the same public user ID.
-- Profile creation is driven by `IdentityUserCreatedIntegrationEvent` and must be idempotent by public user ID.
+- Profile creation is driven by `IdentityUserReadyIntegrationEvent` and must be idempotent by public user ID.
 - Username is trimmed, must be 3-50 characters, and may contain only letters, digits, `_`, `-`, `@`, and `.`.
 - Full name is trimmed and must be 2-100 characters when creating a user.
 - UserService does not own account status, lockout, email verification, credentials, roles, or claims.
@@ -47,7 +47,7 @@ Implementation source:
 
 ## Cross-Service Facts
 
-- UserService consumes `IdentityUserCreatedIntegrationEvent` from IdentityService to create profile records.
+- UserService consumes `IdentityUserReadyIntegrationEvent` from IdentityService to create profile records.
 - UserService publishes user-created and user-updated events for downstream `user_refs` projections.
 - UserService publishes store events for downstream `store_refs` projections in CatalogService and OrderService.
 - MediaService owns file processing; UserService stores avatar/logo file IDs and resolved URLs only as profile/store references.

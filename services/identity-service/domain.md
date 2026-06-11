@@ -38,7 +38,7 @@ Implementation source:
 | Lockout | Failed sign-in attempts update ASP.NET Identity lockout fields until lockout expires or is cleared |
 | Email verification | Verification request publishes a notification event; successful verification updates identity-owned state |
 | Seller transition | `StoreCreatedIntegrationEvent` consumption grants seller role/claims and records the store reference on the identity account |
-| Account creation | Successful account creation publishes `IdentityUserCreatedIntegrationEvent` for UserService profile creation |
+| Account readiness | When an account becomes usable, IdentityService publishes `IdentityUserReadyIntegrationEvent` for UserService profile creation |
 | Google link | Pending external login state becomes a durable external login record only after consent and password confirmation |
 
 ## Cross-Service Facts

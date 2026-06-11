@@ -31,7 +31,7 @@ Rules:
 
 | Contract | Owner | Consumers / Purpose |
 |---|---|---|
-| `IdentityUserCreatedIntegrationEvent` | IdentityService | UserService creates the matching profile with the same public user ID |
+| `IdentityUserReadyIntegrationEvent` | IdentityService | UserService creates the matching profile with the same public user ID once the account is usable |
 | `UserCreatedIntegrationEvent` | UserService | Build profile/display user projections in downstream services after profile creation |
 | `UserUpdatedIntegrationEvent` | UserService | Refresh profile/display user projections |
 | `UserEmailVerificationRequestedIntegrationEvent` | IdentityService | Notification/email delivery |
