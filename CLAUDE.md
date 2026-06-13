@@ -141,5 +141,5 @@ Before switching to `../hivespace.microservice` or `../hivespace.web`:
 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
-shell commands, and other important information, read `specs/0007-email-verification-signup/plan.md`.
+shell commands, and other important information, read `specs/0008-system-testing-quality-gate/plan.md`.
 <!-- SPECKIT END -->
