@@ -3,6 +3,18 @@
 **Repo**: `../hivespace.web`
 **Prerequisites**: Read `../hivespace.web/AGENTS.md` and `CLAUDE.md` before starting. Preserve all pnpm/Turbo workspace conventions. Do not broaden existing lint/type-check baseline failures.
 
+**All frontend tests are new deliverables.** Do not treat any existing test files as a pre-existing baseline — all tests in this feature must reach the coverage gate.
+
+**Coverage target**: 80% policy-scoped line coverage per workspace, enforced by the existing `coverage.ps1` script. Run `.\coverage.ps1` from `../hivespace.web` to verify; script exits with code 1 if any workspace is below 80%.
+
+**Testing rules**: Follow `../hivespace.web/TESTING.md` and `specs/0008-system-testing-quality-gate/testing-rules.md`. Summary:
+- Framework: Jest 29 + `@testing-library/vue` + `@pinia/testing`
+- Store tests: state and actions only, no component rendering
+- View tests: mount with wired stores, stub HTTP via `stubApiResponse`
+- Naming: `action_When_Result` (stores), `renders_What_FromWhere` (views)
+- All text assertions use i18n key lookups, never hardcoded strings
+- No real HTTP calls; stub all axios via `createMockAxios()` / `stubApiResponse()`
+
 ---
 
 ## Root Workspace Setup
@@ -13,7 +25,7 @@
   - File: `../hivespace.web/package.json`
   - Add to `scripts`: `"test": "turbo run test"` (Turbo fan-out across all workspaces)
   - Add to `scripts`: `"quality-gate": "node scripts/quality-gate.mjs"`
-  - Add to `devDependencies` (root-level, hoisted): `"vitest": "^2.x"` (use the same major version across all workspaces)
+  - Do not add vitest — the project uses Jest (`jest.base.cjs` factory); do not introduce a vitest dependency
   - Preserve all existing script entries (`build`, `lint`, `type-check`, `dev`, etc.); do not rename or remove
   - Acceptance: `pnpm test` invokes Turbo `test` task across all workspaces that define a `test` script; `pnpm quality-gate` resolves without "command not found"
 
@@ -51,12 +63,38 @@
 
 ### Update
 
-- [ ] F004 [US1] Verify `packages/shared/package.json` — confirm test script and Jest config are present
+- [ ] F004 [US1] Create shared package test suite — confirm test script present; create tests to reach 80% coverage
   - File: `../hivespace.web/packages/shared/package.json`
   - The project uses **Jest** (via `jest.base.cjs` factory), not Vitest. `packages/shared/jest.config.cjs` already exists.
-  - Verify `"test": "jest"` (or `"test": "jest --passWithNoTests"`) exists in `scripts`; add it if absent
+  - Confirm `"test": "jest"` (or `"test": "jest --passWithNoTests"`) exists in `scripts`; add it if absent
   - Do not add a vitest config or vitest dependency
-  - Acceptance: `pnpm --filter @hivespace/shared test` runs without "test script not found" errors
+  - Create all test files listed below co-located next to their source files.
+  - **Feature tests** (co-located in `src/features/<name>/`): only `create*Store.test.ts` files are required. `*.service.ts` and `*.types.ts` files are excluded from the coverage scope and do not need test files.
+    - `notifications/createNotificationStore.test.ts`: `fetchNotifications_LoadsFromApi`, `markRead_DecrementsUnreadCount`, `receiveRealtimeNotification_AppendsToList`, `toastDismissal_RemovesFromQueue`
+    - `media-upload/createMediaUploadStore.test.ts`: `uploadFile_RequestsPresignUrl_ThenUploadsToBlob_ThenConfirms`, `uploadFailed_SetsErrorState`, `pendingUpload_SetsLoadingState`
+    - `user-profile/createUserProfileStore.test.ts`: `fetchProfile_LoadsFromApi`, `updateProfile_CallsEndpointAndUpdatesState`
+    - `user-settings/createUserSettingsStore.test.ts`: `fetchSettings_LoadsFromApi`, `updateSetting_CallsEndpointAndUpdatesState`
+  - **Composable tests** (co-located in `src/composables/`):
+    - `useAsyncAction.test.ts`: `setsLoadingTrue_DuringExecution`, `setsLoadingFalse_AfterCompletion`, `capturesError_OnRejection`
+    - `useDebounce.test.ts`: `withSameKey_OnlyLastCallExecutes`, `withDifferentKeys_BothExecuteIndependently`
+    - `useFieldValidation.test.ts`: `validField_PassesValidation`, `invalidField_ReturnsError`
+    - `useValidationRules.test.ts`: `required_WithEmptyString_Fails`, `minLength_BelowMinimum_Fails`
+    - `useFormatDate.test.ts`: `formatDate_ReturnsCorrectLocaleString`
+    - `useNumberInputFormatter.test.ts`: `input_NonNumericCharacters_AreStripped`
+    - `useCooldown.test.ts`: `isOnCooldown_AfterTrigger_ReturnsTrue`, `cooldownExpires_AfterDelay_ReturnsFalse`
+    - `useAuth.test.ts`: `isAuthenticated_WithValidUser_ReturnsTrue`, `currentRole_ReturnsUserRole`
+    - `useModal.test.ts`: `openModal_SetsVisibleTrue`, `closeModal_SetsVisibleFalse`
+    - `useConfirmModal.test.ts`: `confirm_WithUserConfirm_ResolvesTrue`, `confirm_WithUserCancel_ResolvesFalse`
+    - `useSidebar.test.ts`: `toggle_FlipsOpenState`
+    - `useNotificationHub.test.ts`: `connects_OnMount_UsesSignalRFake`, `disconnects_OnUnmount`
+    - `useAppShell.test.ts`: `returns_LayoutState` (smoke test)
+  - **Test-utils tests** (co-located in `src/test-utils/`):
+    - `auth.test.ts`: `createFakeAuthUser_ReturnsTypedUser`, `createFakeAuthState_WithRole_PopulatesAuthStore`
+    - `i18n.test.ts`: `createTestI18n_ReturnsI18nInstance`, `translatesKey_FromSharedLocale`
+    - `media.test.ts`: `createFakePresignResponse_ReturnsCorrectShape`, `simulateUploadConfirm_ReturnsConfirmed`
+    - `modal.test.ts`: `openModal_MountsComponent`, `closeAllModals_ResetsState`
+    - `notification.test.ts`: `createFakeSignalRHub_CapturesInvocations`, `emit_TriggersInvocation`
+  - Acceptance: `pnpm --filter @hivespace/shared test` exits with code 0; `coverage.ps1` reports ≥80% line coverage for the `shared` workspace
 
 ### Create
 
@@ -97,35 +135,51 @@
 
 ### Update
 
-- [ ] F006 [US2] Verify `apps/buyer/package.json` — confirm test script and Jest config are present
+- [ ] F006 [US2] Confirm `apps/buyer/package.json` has Jest test script
   - File: `../hivespace.web/apps/buyer/package.json`
   - The project uses **Jest** (via `jest.base.cjs` factory). `apps/buyer/jest.config.cjs` already exists.
-  - Verify `"test": "jest"` (or `"test": "jest --passWithNoTests"`) exists in `scripts`; add it if absent
+  - Confirm `"test": "jest"` (or `"test": "jest --passWithNoTests"`) exists in `scripts`; add it if absent
   - Do not create a vitest.config.ts; do not add vitest dependency
   - Acceptance: `pnpm --filter buyer test` runs without "test script not found" or Jest config error
 
 ### Create
 
-- [ ] F007 [US2] Verify and extend buyer critical-path tests co-located in `apps/buyer/src/`
+- [ ] F007 [US2] Create buyer critical-path tests co-located in `apps/buyer/src/`
   - Test files live next to their source files (co-location). All apps use `src/pages/<SubFolder>/` — **not** `src/views/`.
   - TESTING.md coverage policy includes `apps/*/src/pages/**`, `apps/*/src/stores/**`, `apps/*/src/composables/**`, `apps/*/src/router/**`.
-  - **Most files already exist** — verify each has adequate coverage per the test cases below; add missing test cases rather than recreating files.
-  - Store tests already exist (verify and extend):
-    - `../hivespace.web/apps/buyer/src/stores/auth.test.ts` ← already exists
-    - `../hivespace.web/apps/buyer/src/stores/cart.store.test.ts` ← already exists
-    - `../hivespace.web/apps/buyer/src/stores/checkout.store.test.ts` ← already exists
-    - `../hivespace.web/apps/buyer/src/stores/orders.store.test.ts` ← already exists
-    - `../hivespace.web/apps/buyer/src/stores/notification.store.test.ts` ← already exists
-    - `../hivespace.web/apps/buyer/src/router/index.test.ts` ← already exists
-  - Page tests already exist (verify and extend):
-    - `../hivespace.web/apps/buyer/src/pages/Cart/CartPage.test.ts` ← already exists
-    - `../hivespace.web/apps/buyer/src/pages/Checkout/CheckoutPage.test.ts` ← already exists
-    - `../hivespace.web/apps/buyer/src/pages/Payment/PaymentResultPage.test.ts` ← already exists
-    - `../hivespace.web/apps/buyer/src/pages/Notifications/NotificationsPage.test.ts` ← already exists
-    - `../hivespace.web/apps/buyer/src/pages/Profile/OrdersPage.test.ts` ← already exists (covers order list)
-    - `../hivespace.web/apps/buyer/src/pages/Product/ProductDetailPage.test.ts` ← already exists
-  - Create if absent:
-    - `../hivespace.web/apps/buyer/src/pages/Home/HomePage.test.ts` — verify this exists; if missing, add storefront catalog/product listing test
+  - Create all test files listed below. If a file already exists, confirm it covers the test cases listed and add any missing ones.
+  - Store tests to create:
+    - `../hivespace.web/apps/buyer/src/stores/auth.test.ts`
+    - `../hivespace.web/apps/buyer/src/stores/cart.store.test.ts`
+    - `../hivespace.web/apps/buyer/src/stores/checkout.store.test.ts`
+    - `../hivespace.web/apps/buyer/src/stores/orders.store.test.ts`
+    - `../hivespace.web/apps/buyer/src/stores/notification.store.test.ts`
+    - `../hivespace.web/apps/buyer/src/stores/account.store.test.ts`
+    - `../hivespace.web/apps/buyer/src/stores/address.store.test.ts`
+    - `../hivespace.web/apps/buyer/src/stores/category.store.test.ts`
+    - `../hivespace.web/apps/buyer/src/stores/coupon.store.test.ts`
+    - `../hivespace.web/apps/buyer/src/stores/profile.store.test.ts`
+    - `../hivespace.web/apps/buyer/src/stores/user-settings.store.test.ts`
+    - `../hivespace.web/apps/buyer/src/stores/media.store.test.ts`
+    - `../hivespace.web/apps/buyer/src/router/index.test.ts`
+  - Page tests to create:
+    - `../hivespace.web/apps/buyer/src/pages/Cart/CartPage.test.ts`
+    - `../hivespace.web/apps/buyer/src/pages/Checkout/CheckoutPage.test.ts`
+    - `../hivespace.web/apps/buyer/src/pages/Payment/PaymentResultPage.test.ts`
+    - `../hivespace.web/apps/buyer/src/pages/Notifications/NotificationsPage.test.ts`
+    - `../hivespace.web/apps/buyer/src/pages/Profile/OrdersPage.test.ts`
+    - `../hivespace.web/apps/buyer/src/pages/Product/ProductDetailPage.test.ts`
+    - `../hivespace.web/apps/buyer/src/pages/Home/HomePage.test.ts` — storefront catalog/product listing
+    - `../hivespace.web/apps/buyer/src/pages/Auth/SignInPage.test.ts`
+    - `../hivespace.web/apps/buyer/src/pages/Auth/SignUpPage.test.ts`
+    - `../hivespace.web/apps/buyer/src/pages/Auth/GoogleLinkPage.test.ts`
+    - `../hivespace.web/apps/buyer/src/pages/Profile/ProfilePage.test.ts`
+    - `../hivespace.web/apps/buyer/src/pages/Profile/AddressPage.test.ts`
+    - `../hivespace.web/apps/buyer/src/pages/VerifyEmailPage.test.ts`
+    - `../hivespace.web/apps/buyer/src/pages/VerifyEmailCallbackPage.test.ts`
+  - Composable tests to create:
+    - `../hivespace.web/apps/buyer/src/composables/useAddressModal.test.ts`
+    - `../hivespace.web/apps/buyer/src/composables/useAsyncAction.test.ts`
   - `stores/auth.test.ts` (store actions/state only, no component rendering):
     - `initiateLogin_DispatchesOidcRedirect`: login action triggers OIDC redirect
     - `processCallback_StoresAppUserInAuthStore`: successful callback stores `AppUser` in Pinia auth store
@@ -172,10 +226,26 @@
   - `views/NotificationsPage.test.ts`:
     - `renders_UnreadBadgeCount_FromStore`: badge reflects store unread count
     - `renders_NotificationListFromStore`: notification items shown from store
+  - `stores/account.store.test.ts`: `fetchAccount_LoadsFromApi`, `updateAccount_CallsEndpoint`
+  - `stores/address.store.test.ts`: `fetchAddresses_LoadsFromApi`, `addAddress_AppendsToList`, `setDefault_UpdatesDefaultFlag`, `removeAddress_RemovesFromList`
+  - `stores/category.store.test.ts`: `fetchCategories_LoadsFromApi`, `categoriesInStore_AfterFetch_ArePopulated`
+  - `stores/coupon.store.test.ts`: `fetchCoupons_LoadsFromApi`, `applyCoupon_CallsApplyEndpoint`
+  - `stores/profile.store.test.ts`: `fetchProfile_LoadsFromApi`, `updateProfile_CallsEndpoint`
+  - `stores/user-settings.store.test.ts`: `fetchSettings_LoadsFromApi`, `updateSetting_PersistsLocally`
+  - `stores/media.store.test.ts`: `upload_RequestsPresignUrl_ThenConfirms`, `uploadState_ResetsAfterCompletion`
+  - `pages/Auth/SignInPage.test.ts`: `renders_SignInForm`, `formSubmit_DispatchesLoginAction`
+  - `pages/Auth/SignUpPage.test.ts`: `renders_SignUpForm`, `invalidEmail_ShowsValidationError`
+  - `pages/Auth/GoogleLinkPage.test.ts`: `renders_WithGoogleLinkPrompt` (smoke test)
+  - `pages/Profile/ProfilePage.test.ts`: `renders_ProfileFieldsFromStore`, `editForm_SubmitsToEndpoint`
+  - `pages/Profile/AddressPage.test.ts`: `renders_AddressListFromStore`, `addAddress_OpensModal`
+  - `pages/VerifyEmailPage.test.ts`: `renders_InstructionMessage` (smoke test)
+  - `pages/VerifyEmailCallbackPage.test.ts`: `onMount_CallsVerifyEndpoint`, `onSuccess_NavigatesToHome`
+  - `composables/useAddressModal.test.ts`: `openAddressModal_SetsVisibleTrue`, `submitAddress_CallsStoreAction`
+  - `composables/useAsyncAction.test.ts`: `setsLoadingTrue_DuringExecution`, `capturesError_OnRejection`
   - Use `createFakeAuthUser`, `createMockAxios`, `stubApiResponse`, `createFakeSignalRHub`, `createTestI18n` from `@hivespace/shared/test-utils`
   - All text assertions use i18n key lookups, not hardcoded display strings
   - Do not import from `apps/seller`, `apps/admin`, or cross-app paths
-  - Acceptance: `pnpm --filter buyer test` exits with code 0
+  - Acceptance: `pnpm --filter buyer test` exits with code 0; `coverage.ps1` reports ≥80% line coverage for the `buyer` workspace
 
 ---
 
@@ -183,29 +253,47 @@
 
 ### Update
 
-- [ ] F008 [US2] Verify `apps/seller/package.json` — confirm test script and Jest config are present
+- [ ] F008 [US2] Confirm `apps/seller/package.json` has Jest test script
   - File: `../hivespace.web/apps/seller/package.json`
   - The project uses **Jest** (via `jest.base.cjs` factory). `apps/seller/jest.config.cjs` already exists.
-  - Verify `"test": "jest"` (or `"test": "jest --passWithNoTests"`) exists in `scripts`; add it if absent
+  - Confirm `"test": "jest"` (or `"test": "jest --passWithNoTests"`) exists in `scripts`; add it if absent
   - Do not create a vitest.config.ts; do not add vitest dependency
   - Acceptance: `pnpm --filter seller test` runs without "test script not found" or Jest config error
 
 ### Create
 
-- [ ] F009 [US2] Verify and extend seller critical-path tests co-located in `apps/seller/src/`
+- [ ] F009 [US2] Create seller critical-path tests co-located in `apps/seller/src/`
   - Test files live next to their source files (co-location). All apps use `src/pages/<SubFolder>/` — **not** `src/views/`.
   - TESTING.md coverage policy includes `apps/*/src/pages/**`, `apps/*/src/stores/**`, `apps/*/src/composables/**`, `apps/*/src/router/**`.
-  - **Most files already exist** — verify each has adequate coverage per the test cases below; add missing test cases rather than recreating files.
-  - Store tests already exist (verify and extend):
-    - `../hivespace.web/apps/seller/src/stores/auth.test.ts` ← already exists
-    - `../hivespace.web/apps/seller/src/stores/product.test.ts` ← already exists
-    - `../hivespace.web/apps/seller/src/stores/order.test.ts` ← already exists
-  - Page tests already exist (verify and extend):
-    - `../hivespace.web/apps/seller/src/pages/DashboardPage.test.ts` ← already exists
-    - `../hivespace.web/apps/seller/src/pages/Products/ProductListPage.test.ts` ← already exists
-    - `../hivespace.web/apps/seller/src/pages/Products/UpsertProductPage.test.ts` ← already exists (covers create and edit)
-    - `../hivespace.web/apps/seller/src/pages/Marketing/CouponListPage.test.ts` ← already exists
-    - `../hivespace.web/apps/seller/src/pages/Orders/OrderManagementPage.test.ts` ← already exists (covers list and detail)
+  - Create all test files listed below. If a file already exists, confirm it covers the test cases listed and add any missing ones.
+  - Store tests to create:
+    - `../hivespace.web/apps/seller/src/stores/auth.test.ts`
+    - `../hivespace.web/apps/seller/src/stores/product.test.ts`
+    - `../hivespace.web/apps/seller/src/stores/order.test.ts`
+    - `../hivespace.web/apps/seller/src/stores/coupon.store.test.ts`
+    - `../hivespace.web/apps/seller/src/stores/store.store.test.ts`
+    - `../hivespace.web/apps/seller/src/stores/notification.store.test.ts`
+    - `../hivespace.web/apps/seller/src/stores/user-settings.store.test.ts`
+    - `../hivespace.web/apps/seller/src/stores/account.store.test.ts`
+  - Page tests to create:
+    - `../hivespace.web/apps/seller/src/pages/DashboardPage.test.ts`
+    - `../hivespace.web/apps/seller/src/pages/Products/ProductListPage.test.ts`
+    - `../hivespace.web/apps/seller/src/pages/Products/UpsertProductPage.test.ts`
+    - `../hivespace.web/apps/seller/src/pages/Marketing/CouponListPage.test.ts`
+    - `../hivespace.web/apps/seller/src/pages/Orders/OrderManagementPage.test.ts`
+    - `../hivespace.web/apps/seller/src/pages/Auth/SignInPage.test.ts`
+    - `../hivespace.web/apps/seller/src/pages/Auth/SignUpPage.test.ts`
+    - `../hivespace.web/apps/seller/src/pages/Auth/GoogleLinkPage.test.ts`
+    - `../hivespace.web/apps/seller/src/pages/EmailActionPage.test.ts`
+    - `../hivespace.web/apps/seller/src/pages/VerifyEmailPage.test.ts`
+    - `../hivespace.web/apps/seller/src/pages/VerifyEmailCallbackPage.test.ts`
+    - `../hivespace.web/apps/seller/src/pages/RegisterStorePage.test.ts`
+    - `../hivespace.web/apps/seller/src/pages/Marketing/CouponDetailPage.test.ts`
+    - `../hivespace.web/apps/seller/src/pages/Notifications/NotificationsPage.test.ts`
+  - Composable tests to create:
+    - `../hivespace.web/apps/seller/src/composables/useCouponValidation.test.ts`
+  - Router tests to create:
+    - `../hivespace.web/apps/seller/src/router/index.test.ts`
   - `stores/auth.test.ts` (store actions/state only):
     - `sellerRole_WithCreateFakeAuthUser_GrantsDashboardAccess`: `createFakeAuthUser({role: 'seller'})` populates seller role in auth store
     - `nonSellerRole_IsRedirectedByRouteGuard`: route guard with buyer role returns redirect from seller routes
@@ -237,9 +325,25 @@
     - `renders_BuyerInfoAndLineItems`: detail view renders buyer reference and line items
     - `confirmOrder_UpdatesStatusDisplay`: confirm action triggers confirm endpoint; status updated in view
     - `rejectOrder_WithReason_UpdatesStatusDisplay`: reject action posts reason; status updated in view
+  - `stores/coupon.store.test.ts`: `fetchCoupons_LoadsFromApi`, `createCoupon_AppendsToList`, `endCoupon_UpdatesStatus`
+  - `stores/store.store.test.ts`: `fetchStoreProfile_LoadsFromApi`, `updateStore_CallsEndpoint`
+  - `stores/notification.store.test.ts`: `fetchNotifications_LoadsFromApi`, `markRead_DecrementsUnreadCount`
+  - `stores/user-settings.store.test.ts`: `fetchSettings_LoadsFromApi`, `updateSetting_PersistsLocally`
+  - `stores/account.store.test.ts`: `fetchAccountProfile_LoadsFromApi`
+  - `pages/Auth/SignInPage.test.ts`: `renders_SignInForm`, `formSubmit_DispatchesLoginAction`
+  - `pages/Auth/SignUpPage.test.ts`: `renders_SignUpForm`, `invalidEmail_ShowsValidationError`
+  - `pages/Auth/GoogleLinkPage.test.ts`: `renders_WithGoogleLinkPrompt` (smoke test)
+  - `pages/EmailActionPage.test.ts`: `renders_EmailActionInstructions` (smoke test)
+  - `pages/VerifyEmailPage.test.ts`: `renders_InstructionMessage` (smoke test)
+  - `pages/VerifyEmailCallbackPage.test.ts`: `onMount_CallsVerifyEndpoint`
+  - `pages/RegisterStorePage.test.ts`: `renders_StoreRegistrationForm`, `formSubmit_CallsRegisterEndpoint`
+  - `pages/Marketing/CouponDetailPage.test.ts`: `renders_CouponFieldsFromApi`, `editForm_CallsUpdateEndpoint`
+  - `pages/Notifications/NotificationsPage.test.ts`: `renders_NotificationItemsFromStore`, `markRead_CallsStoreAction`
+  - `composables/useCouponValidation.test.ts`: `validCoupon_PassesValidation`, `expiredCoupon_FailsValidation`
+  - `router/index.test.ts`: `sellerRoute_WithSellerRole_Allows`, `sellerRoute_WithBuyerRole_Redirects`
   - Use `createFakeAuthUser({role: 'seller'})`, `createMockAxios`, `stubApiResponse`, `createTestI18n`
   - Do not import from `apps/buyer` or `apps/admin`
-  - Acceptance: `pnpm --filter seller test` exits with code 0
+  - Acceptance: `pnpm --filter seller test` exits with code 0; `coverage.ps1` reports ≥80% line coverage for the `seller` workspace
 
 ---
 
@@ -247,30 +351,45 @@
 
 ### Update
 
-- [ ] F010 [US2] Verify `apps/admin/package.json` — confirm test script and Jest config are present
+- [ ] F010 [US2] Confirm `apps/admin/package.json` has Jest test script
   - File: `../hivespace.web/apps/admin/package.json`
   - The project uses **Jest** (via `jest.base.cjs` factory). `apps/admin/jest.config.cjs` already exists.
-  - Verify `"test": "jest"` (or `"test": "jest --passWithNoTests"`) exists in `scripts`; add it if absent
+  - Confirm `"test": "jest"` (or `"test": "jest --passWithNoTests"`) exists in `scripts`; add it if absent
   - Do not create a vitest.config.ts; do not add vitest dependency
   - Acceptance: `pnpm --filter admin test` runs without "test script not found" or Jest config error
 
 ### Create
 
-- [ ] F011 [US2] Verify and extend admin critical-path tests co-located in `apps/admin/src/`
+- [ ] F011 [US2] Create admin critical-path tests co-located in `apps/admin/src/`
   - Test files live next to their source files (co-location). All apps use `src/pages/<SubFolder>/` — **not** `src/views/`.
   - TESTING.md coverage policy includes `apps/*/src/pages/**`, `apps/*/src/stores/**`, `apps/*/src/composables/**`, `apps/*/src/router/**`.
-  - **All expected files already exist** — verify each has adequate coverage per the test cases below; add missing test cases rather than recreating files.
-  - Store tests already exist (verify and extend):
-    - `../hivespace.web/apps/admin/src/stores/auth.test.ts` ← already exists
-    - `../hivespace.web/apps/admin/src/stores/accounts.test.ts` ← already exists
-    - `../hivespace.web/apps/admin/src/stores/notifications.test.ts` ← already exists
-  - Page tests already exist (verify and extend):
-    - `../hivespace.web/apps/admin/src/pages/DashboardPage.test.ts` ← already exists
-    - `../hivespace.web/apps/admin/src/pages/Accounts/AccountsPage.test.ts` ← already exists (covers account list)
-    - `../hivespace.web/apps/admin/src/pages/Accounts/AccountDetailPage.test.ts` ← already exists
-    - `../hivespace.web/apps/admin/src/pages/Notifications/NotificationsPage.test.ts` ← already exists
-    - `../hivespace.web/apps/admin/src/pages/Profile/ProfilePage.test.ts` ← already exists
-    - `../hivespace.web/apps/admin/src/pages/Settings/SettingsPage.test.ts` ← already exists
+  - Create all test files listed below. If a file already exists, confirm it covers the test cases listed and add any missing ones.
+  - Store tests to create:
+    - `../hivespace.web/apps/admin/src/stores/auth.test.ts`
+    - `../hivespace.web/apps/admin/src/stores/accounts.test.ts`
+    - `../hivespace.web/apps/admin/src/stores/notifications.test.ts`
+    - `../hivespace.web/apps/admin/src/stores/admin.store.test.ts`
+    - `../hivespace.web/apps/admin/src/stores/notification.store.test.ts`
+    - `../hivespace.web/apps/admin/src/stores/profile.store.test.ts`
+    - `../hivespace.web/apps/admin/src/stores/user-settings.store.test.ts`
+    - `../hivespace.web/apps/admin/src/stores/user.store.test.ts`
+  - Page tests to create:
+    - `../hivespace.web/apps/admin/src/pages/DashboardPage.test.ts`
+    - `../hivespace.web/apps/admin/src/pages/Accounts/AccountsPage.test.ts`
+    - `../hivespace.web/apps/admin/src/pages/Accounts/AccountDetailPage.test.ts`
+    - `../hivespace.web/apps/admin/src/pages/Notifications/NotificationsPage.test.ts`
+    - `../hivespace.web/apps/admin/src/pages/Profile/ProfilePage.test.ts`
+    - `../hivespace.web/apps/admin/src/pages/Settings/SettingsPage.test.ts`
+    - `../hivespace.web/apps/admin/src/pages/Auth/SignInPage.test.ts`
+    - `../hivespace.web/apps/admin/src/pages/AuditLog/AuditLogPage.test.ts`
+    - `../hivespace.web/apps/admin/src/pages/Buyers/BuyersPage.test.ts`
+    - `../hivespace.web/apps/admin/src/pages/KycQueue/KycQueuePage.test.ts`
+    - `../hivespace.web/apps/admin/src/pages/Merchants/MerchantsPage.test.ts`
+    - `../hivespace.web/apps/admin/src/pages/Configuration/ConfigurationPage.test.ts`
+    - `../hivespace.web/apps/admin/src/pages/Disputes/DisputesPage.test.ts`
+    - `../hivespace.web/apps/admin/src/pages/ScheduledJobs/ScheduledJobsPage.test.ts`
+  - Router tests to create:
+    - `../hivespace.web/apps/admin/src/router/index.test.ts`
   - `stores/auth.test.ts` (store actions/state only):
     - `adminRole_WithCreateFakeAuthUser_GrantsDashboardAccess`: `createFakeAuthUser({role: 'admin'})` populates admin role in auth store
     - `nonAdminRole_IsRedirectedByRouteGuard`: route guard with seller or buyer role returns redirect from admin routes
@@ -296,9 +415,23 @@
     - `profileUpdate_SubmitsToCorrectEndpoint`: edit form submit triggers update endpoint stub
   - `pages/Settings/SettingsPage.test.ts`:
     - `renders_WithoutError_ForAdminRole`: settings page renders without error for admin role
+  - `stores/admin.store.test.ts`: `fetchAdminProfile_LoadsFromApi`
+  - `stores/notification.store.test.ts`: `fetchNotifications_LoadsFromApi`, `markRead_DecrementsUnreadCount`
+  - `stores/profile.store.test.ts`: `fetchProfile_LoadsFromApi`, `updateProfile_CallsEndpoint`
+  - `stores/user-settings.store.test.ts`: `fetchSettings_LoadsFromApi`
+  - `stores/user.store.test.ts`: `fetchUsers_LoadsFromApi`, `suspendUser_UpdatesStatus`, `activateUser_UpdatesStatus`
+  - `pages/Auth/SignInPage.test.ts`: `renders_SignInForm`, `formSubmit_DispatchesLoginAction`
+  - `pages/AuditLog/AuditLogPage.test.ts`: `renders_WithAdminRole` (smoke test)
+  - `pages/Buyers/BuyersPage.test.ts`: `renders_BuyerListFromApi` (smoke test)
+  - `pages/KycQueue/KycQueuePage.test.ts`: `renders_KycQueueItems` (smoke test)
+  - `pages/Merchants/MerchantsPage.test.ts`: `renders_MerchantListFromApi` (smoke test)
+  - `pages/Configuration/ConfigurationPage.test.ts`: `renders_WithAdminRole` (smoke test)
+  - `pages/Disputes/DisputesPage.test.ts`: `renders_DisputeListFromApi` (smoke test)
+  - `pages/ScheduledJobs/ScheduledJobsPage.test.ts`: `renders_WithAdminRole` (smoke test)
+  - `router/index.test.ts`: `adminRoute_WithAdminRole_Allows`, `adminRoute_WithSellerRole_Redirects`
   - Use `createFakeAuthUser({role: 'admin'})`, `createMockAxios`, `stubApiResponse`, `createFakeSignalRHub`, `createTestI18n`
   - Do not import from `apps/buyer` or `apps/seller`
-  - Acceptance: `pnpm --filter admin test` exits with code 0
+  - Acceptance: `pnpm --filter admin test` exits with code 0; `coverage.ps1` reports ≥80% line coverage for the `admin` workspace
 
 ---
 
@@ -306,7 +439,7 @@
 
 ### Create
 
-- [ ] F012 Verify and update `TESTING.md` developer guide in `../hivespace.web`
+- [ ] F012 Update `TESTING.md` developer guide in `../hivespace.web`
   - File: `../hivespace.web/TESTING.md`
   - **Already exists** — do not recreate. Read the existing file and verify the sections below are present and accurate; add any missing sections.
   - Sections to verify (add if absent or incomplete):
@@ -314,8 +447,8 @@
   - **Store tests vs view tests**: store tests use `@pinia/testing` — no component rendering, no DOM, fast; view tests use `@testing-library/vue` — mount component with store wired up, stub HTTP calls via `stubApiResponse`. Explain when to use each.
   - **Shared test-utils reference**: table of each export from `@hivespace/shared/test-utils` (`createFakeAuthUser`, `createFakeAuthState`, `createMockAxios`, `stubApiResponse`, `createFakeSignalRHub`, `createFakePresignResponse`, `createTestI18n`) with one-line descriptions and when to use each.
   - **TDD workflow**: write store test (Red) → implement store action (Green) → write view test (Red) → wire up component (Green).
-  - **Naming convention**: store tests use `action_When_Result`; view tests use `renders_What_FromWhere` or `action_CallsEndpoint`. Show concrete examples.
+  - **Naming convention**: all test types use `should …` — a plain English sentence describing the expected behavior. Show concrete examples for store tests and view tests.
   - **i18n assertion rule**: all text assertions must use i18n key lookups — never assert on hardcoded display strings.
-  - **Coverage policy**: 80% policy-scoped target; included paths (`pages/`, `stores/`, `composables/`, `router/`); excluded paths (assets, styles, i18n, types, thin services, config constants, presentational components).
+  - **Coverage policy**: 80% policy-scoped target enforced by `coverage.ps1`; included paths (`pages/`, `stores/`, `composables/`, `router/`); excluded paths (assets, styles, i18n, types, thin services, config constants, presentational components). Reference `specs/0008-system-testing-quality-gate/testing-rules.md` for full scope definition.
   - Do not add product business logic, CI configuration, or workspace setup scripts
   - Acceptance: file exists with all sections; `pnpm test` results are not affected by this file's presence

@@ -80,7 +80,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Detailed task files under `FEATURE_DIR/tasks/` as needed: `backend.md`, `frontend.md`, `docs-catalog.md`, and `verification.md`
    - Detailed tasks grouped by service/app/package/lib and then action headings: Create, Update, Remove, Move/Rename, Verify
    - Detailed tasks with stable prefixes: B### backend, F### frontend, D### docs/catalog, V### verification
-   - Tests only if requested, placed in the relevant detailed file or `verification.md` depending on whether they create test code or run checks
+   - Test-code tasks for every AC in spec.md, placed in the relevant detailed file (backend.md or frontend.md) BEFORE their corresponding implementation tasks; run-test tasks in `verification.md`
    - Documentation/catalog scope that says which service docs and catalog entries are editable, and which supporting services are verification-only
 
 5. **Report**: Output path to generated `tasks.md` and generated detailed task files, plus summary:
@@ -128,7 +128,7 @@ The generated task set should be immediately executable. `tasks.md` is the entry
 
 **CRITICAL**: Detailed tasks MUST be organized by implementation ownership, not primarily by user story. Preserve user-story labels (`[US1]`, `[US2]`, etc.) for traceability and independent acceptance.
 
-**Tests are OPTIONAL**: Only generate test tasks if explicitly requested in the feature specification or if user requests TDD approach.
+**Tests are ALWAYS generated (TDD-first)**: For every feature, generate test tasks covering every Acceptance Criteria (AC) from spec.md. Test tasks must be placed BEFORE their corresponding implementation tasks in both the detailed file and the dependency order.
 
 ### Task Files (REQUIRED)
 
@@ -170,6 +170,44 @@ Every detailed task MUST strictly follow this format:
 - WRONG: `- [ ] B001 [US1] Create ApplicationUser` with no detail bullets
 - WRONG: `- [ ] T001 [US1] Create model` (wrong ID prefix and missing file path/detail)
 
+### AC-to-Test Task Mapping (REQUIRED)
+
+For every Acceptance Criteria (AC) in spec.md, generate at least one test task:
+
+1. **Reference the AC**: Include the AC scenario label (e.g., `AC1.1`) in the task description
+2. **Specify test file location** per source-repo TESTING.md guides:
+   - Backend: mirror the class under test — `CreateOrderCommandHandlerTests.cs` for `CreateOrderCommandHandler`
+   - Frontend: co-locate with source — `cart.store.test.ts` next to `cart.store.ts`, `CartPage.test.ts` next to `CartPage.vue`
+3. **Describe the test assertion** in plain language using the repo-mandated naming style:
+   - Backend: `Method_Condition_ExpectedOutcome` (e.g., `Handle_ValidCommand_CreatesOrder`)
+   - Frontend (all types): `should …` plain English sentence (e.g., `should render empty cart when no items exist`) — per `hivespace.web/TESTING.md`
+4. **Task ID**: Use B###/F### prefix, assign a lower number than the paired implementation task so test tasks sort first in the same group
+5. **Verification**: Add a `V###` task in `verification.md` per service/app group to run its test suite and confirm green
+
+**Example backend test task:**
+
+```text
+- [ ] B003 [US1] Create `CreateOrderCommandHandlerTests` — AC1.1: valid command persists order
+  - File: tests/HiveSpace.OrderService.Tests/Application/CreateOrderCommandHandlerTests.cs
+  - Test: Handle_ValidCommand_PersistsOrder
+  - Given: a valid CreateOrderCommand with items and delivery address
+  - When: Handle is called
+  - Then: the repository receives an Order with status Pending
+  - Use in-memory EF Core via IClassFixture<OrderServiceFixture>; no live DB
+  - Acceptance: test compiles and fails (red) before the paired implementation task runs
+```
+
+**Example frontend test task:**
+
+```text
+- [ ] F003 [US1] Create `cart.store.test.ts` — AC1.1: adding item increments selected count
+  - File: apps/buyer/src/stores/cart.store.test.ts
+  - Test: should increment selected count when item is added
+  - Mock cartService.addCartItem to resolve; assert store.selectedCount incremented
+  - Do not mount components; use @pinia/testing only
+  - Acceptance: test compiles and fails (red) before the paired cart.store.ts implementation task runs
+```
+
 ### Task Organization
 
 1. **From Implementation Ownership** - PRIMARY ORGANIZATION:
@@ -180,7 +218,7 @@ Every detailed task MUST strictly follow this format:
 
 2. **From Contracts**:
    - Map each interface contract to the owning implementation area and the user story it serves
-   - If tests requested: create test-code tasks in the relevant backend/frontend group before implementation tasks, and run-test tasks in `verification.md`
+   - Always create test-code tasks in the relevant backend/frontend group BEFORE implementation tasks (one per AC), and run-test tasks in `verification.md`
 
 3. **From Data Model**:
    - Map each entity to the owning service/lib and user story labels

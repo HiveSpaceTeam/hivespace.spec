@@ -12,7 +12,7 @@
 | File | Purpose | Task ID prefix | Status |
 | ---- | ------- | -------------- | ------ |
 | `tasks/backend.md` | Test projects and quality-gate runner in `../hivespace.microservice` | `B###` | Not started |
-| `tasks/frontend.md` | Test scripts, vitest configs, and test files in `../hivespace.web` | `F###` | Not started |
+| `tasks/frontend.md` | Test scripts, Jest configs, and test files in `../hivespace.web` | `F###` | Not started |
 | `tasks/docs-catalog.md` | Quality-gate contract and ADR acceptance in `hivespace.spec` | `D###` | Not started |
 | `tasks/verification.md` | Build, test, coverage map, and diagnostic checks | `V###` | Not started |
 
@@ -20,29 +20,24 @@
 
 ## Task Index
 
-### Backend (`tasks/backend.md`) — 20 tasks
+### Backend (`tasks/backend.md`) — 14 tasks
 
 | ID | Story | Description |
 | -- | ----- | ----------- |
 | B001 | — | Update `Directory.Packages.props` — add/verify test package versions |
 | B002 | — | Create `HiveSpace.Testing.Shared` project with fakes and builders |
 | B003 | US1 | Create backend quality-gate runner `quality-gate.ps1` |
-| B004 | US2 | Create `HiveSpace.IdentityService.Tests` |
-| B006 | US2 | Create `HiveSpace.UserService.Tests` |
-| B007 | US2 | Create `HiveSpace.CatalogService.Tests` |
-| B008 | US2 | Create `HiveSpace.OrderService.Tests` |
-| B009 | US2 | Update `HiveSpace.PaymentService.Tests` (extend existing) |
+| B004 | US2 | Create `HiveSpace.IdentityService.Tests` — all handlers layer-organized |
+| B006 | US2 | Create `HiveSpace.UserService.Tests` — all handlers layer-organized |
+| B007 | US2 | Create `HiveSpace.CatalogService.Tests` — all handlers and domain tests layer-organized |
+| B008 | US2 | Create `HiveSpace.OrderService.Tests` — all handlers, domain tests, and sagas layer-organized |
+| B009 | US2 | Create additional tests in `HiveSpace.PaymentService.Tests` to reach 80% coverage target |
 | B010 | US2 | Create `HiveSpace.MediaService.Tests` |
 | B011 | US2 | Create `HiveSpace.NotificationService.Tests` |
 | B012 | US1 | Update solution file to include all new test projects |
-| B013 | — | Verify and update `TESTING.md` developer TDD guide in `../hivespace.microservice` (already exists) |
-| B014 | US2 | CatalogService — add 5 missing application handler tests |
-| B015 | US2 | CatalogService — add Product aggregate and specification domain tests |
-| B016 | US2 | OrderService — add Coupon application handler tests (7 handlers) |
-| B017 | US2 | OrderService — add Cart missing application handler tests (6 handlers) |
-| B018 | US2 | OrderService — add Order missing application handler tests (4 handlers) |
-| B019 | US2 | OrderService — add Checkout domain tests and CheckoutCalculator helper tests |
-| B020 | US2 | PaymentService — add missing handler and Payment domain tests |
+| B013 | — | Update `TESTING.md` developer TDD guide in `../hivespace.microservice` to reference 80% coverage target and B021 enforcement |
+| B020 | US2 | PaymentService — add `GetTransactionHistory` handler and `Payment` domain tests |
+| B021 | US2 | Add 80% line coverage threshold enforcement to `quality-gate.ps1` (parse Cobertura XML per service; fail gate below threshold) |
 
 ### Frontend (`tasks/frontend.md`) — 12 tasks
 
@@ -51,15 +46,15 @@
 | F001 | US1 | Update root `package.json` — add test and quality-gate scripts |
 | F002 | US1 | Update root `turbo.json` — add `test` task |
 | F003 | US1 | Create frontend quality-gate runner `scripts/quality-gate.mjs` |
-| F004 | US1 | Verify `packages/shared/package.json` — confirm Jest test script is present |
-| F005 | US1/US2/US3 | Verify shared test utilities in `packages/shared/src/test-utils/` (already exists) |
-| F006 | US2 | Verify `apps/buyer/package.json` — confirm Jest test script is present |
-| F007 | US2 | Verify and extend buyer critical-path tests co-located in `apps/buyer/src/` |
-| F008 | US2 | Verify `apps/seller/package.json` — confirm Jest test script is present |
-| F009 | US2 | Verify and extend seller critical-path tests co-located in `apps/seller/src/` |
-| F010 | US2 | Verify `apps/admin/package.json` — confirm Jest test script is present |
-| F011 | US2 | Verify and extend admin critical-path tests co-located in `apps/admin/src/` |
-| F012 | — | Verify and update `TESTING.md` developer TDD guide in `../hivespace.web` (already exists) |
+| F004 | US1 | Confirm `packages/shared/package.json` has Jest test script; create shared package tests to reach 80% coverage |
+| F005 | US1/US2/US3 | Confirm shared test utilities in `packages/shared/src/test-utils/` are present and export all required helpers |
+| F006 | US2 | Confirm `apps/buyer/package.json` has Jest test script |
+| F007 | US2 | Create buyer critical-path tests co-located in `apps/buyer/src/` — target 80% policy-scoped coverage |
+| F008 | US2 | Confirm `apps/seller/package.json` has Jest test script |
+| F009 | US2 | Create seller critical-path tests co-located in `apps/seller/src/` — target 80% policy-scoped coverage |
+| F010 | US2 | Confirm `apps/admin/package.json` has Jest test script |
+| F011 | US2 | Create admin critical-path tests co-located in `apps/admin/src/` — target 80% policy-scoped coverage |
+| F012 | — | Update `TESTING.md` developer TDD guide in `../hivespace.web` to reference 80% coverage gate and testing-rules.md |
 
 ### Docs/Catalog (`tasks/docs-catalog.md`) — 2 tasks
 
@@ -86,7 +81,7 @@
 | V012 | US3 | Verify coverage gap visibility and accepted risk workflow |
 | V013 | — | Verify spec artifacts and ADR are complete |
 
-**Total: 46 tasks** (20 backend, 12 frontend, 2 docs/catalog, 13 verification) — B014–B020 added for systematic coverage expansion; B005 (ApiGateway.Tests) excluded
+**Total: 41 tasks** (14 backend, 12 frontend, 2 docs/catalog, 13 verification) — B006–B009, B011 are comprehensive layer-organized tasks covering all handlers and domain tests; B020 adds remaining PaymentService coverage; B021 adds 80% threshold enforcement to quality-gate.ps1; B005 (ApiGateway.Tests) excluded
 
 ---
 
@@ -114,15 +109,8 @@ Phase 4 — Backend runner + solution + guide (after B004–B011)
   B003  quality-gate.ps1
   B012  Update solution file
   B013  TESTING.md developer guide (no dependencies; can run in parallel with B003/B012)
-
-Phase 4B — Coverage expansion (parallel after B007, B008, B009)
-  B014  CatalogService missing handler tests
-  B015  CatalogService Product/specification domain tests
-  B016  OrderService Coupon handler tests
-  B017  OrderService Cart additional handler tests
-  B018  OrderService Order additional handler tests
-  B019  OrderService Checkout domain + CheckoutCalculator tests
-  B020  PaymentService missing handler + Payment domain tests
+  B020  PaymentService additional handler + Payment domain tests (after B009)
+  B021  Add 80% coverage threshold to quality-gate.ps1 (after B003; reads Cobertura XML output)
 
 Phase 5 — Frontend foundations (parallel with Phase 2–4)
   F001  root package.json
@@ -131,9 +119,9 @@ Phase 5 — Frontend foundations (parallel with Phase 2–4)
   F005  packages/shared/src/test-utils/  ← F007, F009, F011 all depend on this
 
 Phase 6 — Frontend app setup (parallel after F001 + F002 + F005)
-  F006  apps/buyer/package.json + vitest config
-  F008  apps/seller/package.json + vitest config
-  F010  apps/admin/package.json + vitest config
+  F006  apps/buyer/package.json + Jest config confirmation
+  F008  apps/seller/package.json + Jest config confirmation
+  F010  apps/admin/package.json + Jest config confirmation
 
 Phase 7 — Frontend app tests (parallel after F006, F008, F010)
   F007  Buyer tests
@@ -159,7 +147,7 @@ Phase 9 — Verification (after all implementation phases)
 | Story | Priority | Detailed task IDs | Independent acceptance |
 | ----- | -------- | ----------------- | ---------------------- |
 | US1 — Verify Changes Before Merge | P1 | B001–B003, B012, D001–D002, F001–F003, V001, V002, V004, V005, V007, V008, V013 | Run `.\quality-gate.ps1 -Scope backend:PaymentService` and `node scripts/quality-gate.mjs --scope frontend:buyer`; each produces a clear pass/fail result matching the contract schema |
-| US2 — Protect Critical User Journeys | P2 | B004, B006–B011, B014–B020, F005–F011, V003, V006, V009 | Review V009 coverage map; every FR-002 to FR-005 journey maps to at least one passing test or a documented gap |
+| US2 — Protect Critical User Journeys | P2 | B004, B006–B011, B020–B021, F005–F011, V003, V006, V009 | Review V009 coverage map; every FR-002 to FR-005 journey maps to at least one passing test or a documented gap |
 | US3 — Diagnose Failures And Gaps | P3 | F005, V010–V012 | Introduce a deliberate failure; confirm quality gate report names journey, expected behavior, and blocking level; environment failures classified separately from product failures |
 
 ---
@@ -187,7 +175,7 @@ All other B, F, D, V tasks expand coverage to US2 and US3 and are required for f
 ## Completion Checklist
 
 - [ ] All 4 detailed task files exist under `tasks/`
-- [ ] All 44 task IDs are unique across all files (no duplicate B/F/D/V numbers)
+- [ ] All 41 task IDs are unique across all files (no duplicate B/F/D/V numbers)
 - [ ] Every implementation task (B, F, D) includes file path, exact change detail, forbidden behavior, and acceptance check
 - [ ] `tasks.md` dependency order matches detailed task dependencies
 - [ ] Verification tasks cover: build, full test run, service-specific tests, runner scope options, coverage map, diagnostic output, and spec artifact check

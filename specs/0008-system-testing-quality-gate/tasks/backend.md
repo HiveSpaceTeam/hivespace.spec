@@ -3,6 +3,16 @@
 **Repo**: `../hivespace.microservice`
 **Prerequisites**: Read `../hivespace.microservice/AGENTS.md` and `CLAUDE.md` before starting.
 
+**All backend tests are new deliverables.** Do not treat any existing test files as a pre-existing baseline — all tests in this feature must reach the coverage gate.
+
+**Coverage target**: 80% line coverage on Domain + Application layers per service (measured by `coverage.runsettings`). Enforced by `quality-gate.ps1` after B021.
+
+**Testing rules**: Follow `../hivespace.microservice/TESTING.md` and `specs/0008-system-testing-quality-gate/testing-rules.md`. Summary:
+- Naming: `Method_Condition_ExpectedOutcome`
+- Domain tests: pure `[Fact]`, no fixtures, no fakes
+- Application tests: execute the real Application-layer unit; use `NSubstitute` when orchestration verification is sufficient, and use `IClassFixture<ServiceFixture>` with in-memory EF Core when persistence/query round-tripping must be observed
+- No live infrastructure: use fakes from `HiveSpace.Testing.Shared` only
+
 ---
 
 ## Shared Backend Test Infrastructure
@@ -91,8 +101,30 @@
   - `Application/AdminAccounts/ActivateAccountCommandHandlerTests.cs` (uses `IdentityServiceFixture`):
     - `Handle_WithSuspendedAccount_SetsStatusToActive`
     - `Handle_ProducesAuditRecord`
+  - `Application/EmailVerification/ResendEmailVerificationCommandHandlerTests.cs` (uses `IdentityServiceFixture`, `EmailDeliveryFake`):
+    - `Handle_WhenCooldownNotExpired_ReturnsError`
+    - `Handle_WhenCooldownExpired_SendsVerificationEmail`
+  - `Application/AdminAccounts/CreateAdminCommandHandlerTests.cs` (uses `IdentityServiceFixture`):
+    - `Handle_WithValidEmail_CreatesAccountWithAdminRole`
+  - `Application/AdminAccounts/DeleteUserCommandHandlerTests.cs` (uses `IdentityServiceFixture`):
+    - `Handle_WithExistingUser_RemovesAccount`
+    - `Handle_WithNonExistentUser_ReturnsNotFound`
+  - `Application/AdminAccounts/SetUserStatusCommandHandlerTests.cs` (uses `IdentityServiceFixture`):
+    - `Handle_Suspend_SetsStatusToSuspended`
+    - `Handle_Activate_SetsStatusToActive`
+  - `Application/AdminAccounts/GetUsersQueryHandlerTests.cs` (uses `IdentityServiceFixture`):
+    - `Handle_ReturnsPagedUserList`
+  - `Application/AdminAccounts/GetAdminsQueryHandlerTests.cs` (uses `IdentityServiceFixture`):
+    - `Handle_ReturnsAdminAccountsOnly`
+  - `Application/Roles/AssignSellerRoleCommandHandlerTests.cs` (uses `IdentityServiceFixture`):
+    - `Handle_WithApprovedStore_AssignsSellerRoleToUser`
+  - `Application/GoogleAuth/StartGoogleChallengeCommandHandlerTests.cs` (uses `IdentityServiceFixture`):
+    - `Handle_ReturnsGoogleAuthorizationUrl`
+  - `Application/GoogleAuth/CompleteGoogleCallbackCommandHandlerTests.cs` (uses `IdentityServiceFixture`):
+    - `Handle_WithValidCallback_CreatesOrLinksAccount`
+    - `Handle_WithMismatchedState_ReturnsError`
   - Use `EmailDeliveryFake` — no real emails sent
-  - Acceptance: `dotnet test tests/HiveSpace.IdentityService.Tests` exits with code 0; no live SMTP or identity provider calls
+  - Acceptance: `dotnet test tests/HiveSpace.IdentityService.Tests` exits with code 0; no live SMTP or identity provider calls; `coverage.ps1 -Service IdentityService` reports ≥80% line coverage on Core layer
 
 ---
 
@@ -153,7 +185,7 @@
   - `Application/StoreOnboarding/ApproveStoreCommandHandlerTests.cs` (uses `UserServiceFixture`, `FakeCurrentUser`):
     - `Handle_AssignsSellerRoleToOwner`
   - Use `DeterministicClock` in fixtures
-  - Acceptance: `dotnet test tests/HiveSpace.UserService.Tests` exits with code 0
+  - Acceptance: `dotnet test tests/HiveSpace.UserService.Tests` exits with code 0; `coverage.ps1 -Service UserService` reports ≥80% line coverage on Domain + Application layers
 
 ---
 
@@ -175,7 +207,22 @@
   - `Domain/WeightTests.cs` (no fixture — plain `[Fact]` only):
     - `Create_WithNegativeValue_ThrowsDomainException`: non-positive weight rejected
     - `TwoWeightsWithSameValueAndUnit_AreEqual`: value object equality
-  - Domain/ tests for `Product`, `Category`, and `Sku` are in task **B015** — write them there, not here. Write a Domain/ test for any aggregate that has guard invariants, factory validation, or state transitions (e.g. `Product.Deactivate`, `Product.CreateProduct` throwing on negative price).
+  - `Domain/ProductTests.cs` (no fixture — plain `[Fact]` only):
+    - `CreateProduct_WithValidFields_SetsNameStatusAndSellerId`
+    - `CreateProduct_WithNameExceedingMaxLength_ThrowsDomainException`
+    - `CreateProduct_WithNegativePrice_ThrowsDomainException`
+    - `UpdateName_WithValidName_ChangesStoredName`
+    - `UpdateName_WithEmptyName_ThrowsDomainException`
+    - `AddCategory_WithNewCategory_AppearsInCategoryCollection`
+    - `RemoveCategory_WithExistingCategory_RemovesFromCollection`
+    - `UpdateCategories_ReplacesEntireCategorySet`
+    - `Deactivate_ActiveProduct_SetsStatusToInactive`
+    - `Deactivate_AlreadyInactiveProduct_IsIdempotent`
+  - `Domain/ProductSpecificationTests.cs` (no fixture — plain `[Fact]` only):
+    - `ProductActiveSpecification_ActiveProduct_ReturnsTrue`
+    - `ProductActiveSpecification_InactiveProduct_ReturnsFalse`
+    - `ProductOwnedBySellerSpecification_MatchingSellerId_ReturnsTrue`
+    - `ProductOwnedBySellerSpecification_DifferentSellerId_ReturnsFalse`
   - Remove the existing `Application/Products/CatalogApplicationSmokeTests.cs` file if present — per TESTING.md, multi-handler smoke tests do not count as Application coverage and must be replaced by per-handler test files.
   - Application/ folder mirrors source Application/ layer; one file per handler in sub-feature sub-folders:
   - `Application/StorefrontDiscovery/SearchProductsQueryHandlerTests.cs` (uses `CatalogServiceFixture`):
@@ -196,54 +243,28 @@
   - `Application/Categories/GetCategoryAttributesQueryHandlerTests.cs` (uses `CatalogServiceFixture`):
     - `Handle_WithValidCategoryId_ReturnsAttributeDefinitions`
     - `Handle_WithInvalidCategoryId_ReturnsNotFound`
+  - `Application/Categories/GetHomepageCategoriesQueryHandlerTests.cs` (uses `CatalogServiceFixture`):
+    - `Handle_WithSeededCategories_ReturnsFeaturedCategorySubset`
+    - `Handle_WhenNoCategoriesExist_ReturnsEmptyList`
+  - `Application/SellerProducts/DeleteProductCommandHandlerTests.cs` (uses `CatalogServiceFixture`, `FakeCurrentUser`):
+    - `Handle_WithExistingProduct_RemovesProductFromDb`
+    - `Handle_ByUnauthorizedSeller_IsRejected`
+    - `Handle_WithNonExistentProductId_ReturnsNotFound`
+  - `Application/SellerProducts/GetProductQueryHandlerTests.cs` (uses `CatalogServiceFixture`, `FakeCurrentUser`):
+    - `Handle_WithValidProductId_ReturnsProductDetails`
+    - `Handle_WithNonExistentId_ReturnsNotFound`
+  - `Application/StorefrontDiscovery/GetProductsQueryHandlerTests.cs` (uses `CatalogServiceFixture`):
+    - `Handle_WithNoFilters_ReturnsPagedActiveProducts`
+    - `Handle_WithCategoryFilter_ScopesToCategory`
+    - `Handle_WithInactiveProducts_ExcludesFromResults`
+  - `Application/StorefrontDiscovery/GetProductSummariesQueryHandlerTests.cs` (uses `CatalogServiceFixture`):
+    - `Handle_WithProductIds_ReturnsMatchingSnapshots`
+    - `Handle_WithMissingProductIds_SkipsMissing`
   - `Consumers/ProjectionInputTests.cs` (uses `InMemoryTestHarness`; not `IClassFixture`):
     - `ProductDomainEvent_ProducesCorrectProjectionInput`: event published to harness bus has expected product fields captured by `InMemoryMessageCapture`
     - `ProjectionConsumer_ReadsCorrectFields`: consumer processes captured event without error
   - Use `DeterministicClock` in fixture
-  - Acceptance: `dotnet test tests/HiveSpace.CatalogService.Tests` exits with code 0
-
-- [ ] B014 Add missing CatalogService application handler tests
-  - All files go in: `../hivespace.microservice/tests/HiveSpace.CatalogService.Tests/`
-  - All application handler tests use `IClassFixture<CatalogServiceFixture>`; minimum 2 `[Fact]` per file (happy path + failure/edge case); naming `Handle_<Condition>_<ExpectedOutcome>`
-  - `Application/Categories/GetHomepageCategoriesQueryHandlerTests.cs`:
-    - `Handle_WithSeededCategories_ReturnsFeaturedCategorySubset`
-    - `Handle_WhenNoCategoriesExist_ReturnsEmptyList`
-  - `Application/SellerProducts/DeleteProductCommandHandlerTests.cs`:
-    - `Handle_WithExistingProduct_RemovesProductFromDb`
-    - `Handle_ByUnauthorizedSeller_IsRejected`
-    - `Handle_WithNonExistentProductId_ReturnsNotFound`
-  - `Application/SellerProducts/GetProductQueryHandlerTests.cs`:
-    - `Handle_WithValidProductId_ReturnsProductDetails`
-    - `Handle_WithNonExistentId_ReturnsNotFound`
-  - `Application/StorefrontDiscovery/GetProductsQueryHandlerTests.cs`:
-    - `Handle_WithNoFilters_ReturnsPagedActiveProducts`
-    - `Handle_WithCategoryFilter_ScopesToCategory`
-    - `Handle_WithInactiveProducts_ExcludesFromResults`
-  - `Application/StorefrontDiscovery/GetProductSummariesQueryHandlerTests.cs`:
-    - `Handle_WithProductIds_ReturnsMatchingSnapshots`
-    - `Handle_WithMissingProductIds_SkipsMissing`
-  - Acceptance: `dotnet test tests/HiveSpace.CatalogService.Tests` exits with code 0
-
-- [ ] B015 Add CatalogService Product aggregate and specification domain tests
-  - All files go in: `../hivespace.microservice/tests/HiveSpace.CatalogService.Tests/Domain/`
-  - All domain tests are plain `[Fact]` — no fixture, no DbContext, no fakes
-  - `Domain/ProductTests.cs`:
-    - `CreateProduct_WithValidFields_SetsNameStatusAndSellerId`
-    - `CreateProduct_WithNameExceedingMaxLength_ThrowsDomainException`
-    - `CreateProduct_WithNegativePrice_ThrowsDomainException`
-    - `UpdateName_WithValidName_ChangesStoredName`
-    - `UpdateName_WithEmptyName_ThrowsDomainException`
-    - `AddCategory_WithNewCategory_AppearsInCategoryCollection`
-    - `RemoveCategory_WithExistingCategory_RemovesFromCollection`
-    - `UpdateCategories_ReplacesEntireCategorySet`
-    - `Deactivate_ActiveProduct_SetsStatusToInactive`
-    - `Deactivate_AlreadyInactiveProduct_IsIdempotent`
-  - `Domain/ProductSpecificationTests.cs`:
-    - `ProductActiveSpecification_ActiveProduct_ReturnsTrue`
-    - `ProductActiveSpecification_InactiveProduct_ReturnsFalse`
-    - `ProductOwnedBySellerSpecification_MatchingSellerId_ReturnsTrue`
-    - `ProductOwnedBySellerSpecification_DifferentSellerId_ReturnsFalse`
-  - Acceptance: domain tests run under 50ms each with no external I/O
+  - Acceptance: `dotnet test tests/HiveSpace.CatalogService.Tests` exits with code 0; `coverage.ps1 -Service CatalogService` reports ≥80% line coverage on Domain + Application layers
 
 ---
 
@@ -297,6 +318,17 @@
     - `Confirmed_CanBeShipped_ReturnsTrue`
     - `Cancelled_CanBeConfirmed_ReturnsFalse`
     - `Confirmed_CanBeRejected_ReturnsFalse`: confirmed order cannot be rejected
+  - `Domain/CheckoutTests.cs` (no fixture — plain `[Fact]` only):
+    - `Create_WithValidCartItems_SetsCorrectTotals`
+    - `Apply_PlatformCoupon_AdjustsTotalCorrectly`
+    - `Apply_StoreCoupon_AdjustsTotalCorrectly`
+    - `Checkout_WithExpiredCoupon_ThrowsDomainException`
+  - `Domain/DiscountTests.cs` (no fixture — plain `[Fact]` only):
+    - `CreateFixed_WithPositiveAmount_StoresAmount`
+    - `CreateFixed_WithNegativeAmount_ThrowsDomainException`
+    - `CreatePercentage_WithValueAbove100_ThrowsDomainException`
+    - `Apply_FixedType_ReturnsExactAmount`
+    - `Apply_PercentageType_CapsAtMaxDiscountAmount`
   - Application/ folder mirrors source Application/ layer; one file per handler in sub-feature sub-folders:
   - `Application/Cart/AddItemToCartCommandHandlerTests.cs` (uses `OrderServiceFixture`, `FakeCurrentUser`):
     - `Handle_WithValidProduct_AddsLineItem`
@@ -305,14 +337,79 @@
     - `Handle_ChangesLineTotalForAffectedItem`
   - `Application/Cart/RemoveCartItemCommandHandlerTests.cs` (uses `OrderServiceFixture`, `FakeCurrentUser`):
     - `Handle_RemovedItemAbsentFromCart`
+  - `Application/Cart/ApplyPlatformCouponCommandHandlerTests.cs` (uses `OrderServiceFixture`, `FakeCurrentUser`):
+    - `Handle_WithValidCoupon_UpdatesCartCoupon`
+    - `Handle_WithExpiredCoupon_ReturnsError`
+    - `Handle_WhenCouponAlreadyApplied_ReplacesWithNewCoupon`
+  - `Application/Cart/ApplyStoreCouponCommandHandlerTests.cs` (uses `OrderServiceFixture`, `FakeCurrentUser`):
+    - `Handle_WithValidStoreCoupon_AppliesStoreDiscount`
+    - `Handle_WithCouponNotBelongingToStore_IsRejected`
+  - `Application/Cart/RemovePlatformCouponCommandHandlerTests.cs` (uses `OrderServiceFixture`, `FakeCurrentUser`):
+    - `Handle_ClearsAppliedPlatformCoupon`
+    - `Handle_WhenNoCouponApplied_IsIdempotent`
+  - `Application/Cart/RemoveStoreCouponCommandHandlerTests.cs` (uses `OrderServiceFixture`, `FakeCurrentUser`):
+    - `Handle_ClearsAppliedStoreCoupon`
+    - `Handle_WhenNoCouponApplied_IsIdempotent`
+  - `Application/Cart/GetCartSummaryQueryHandlerTests.cs` (uses `OrderServiceFixture`, `FakeCurrentUser`):
+    - `Handle_ReturnsGroupedStoreItems`
+    - `Handle_WithEmptyCart_ReturnsZeroItems`
+  - `Application/Cart/GetCheckoutPreviewQueryHandlerTests.cs` (uses `OrderServiceFixture`, `FakeCurrentUser`):
+    - `Handle_ReturnsTotalsAndAppliedDiscounts`
+    - `Handle_WithAppliedCoupons_ReflectsDiscountsInPreview`
+  - `Application/Cart/GetSelectedCartItemsCountQueryHandlerTests.cs` (uses `OrderServiceFixture`, `FakeCurrentUser`):
+    - `Handle_ReturnsCorrectCount`
+    - `Handle_WithNoSelectedItems_ReturnsZero`
   - `Application/Checkout/InitiateCheckoutCommandHandlerTests.cs` (uses `OrderServiceFixture`, `FakeCurrentUser`, `InMemoryMessageCapture`):
     - `Handle_WithValidCart_CreatesPendingOrderAndClearsCart`
     - `Handle_WithEmptyCart_ThrowsDomainException`
+  - `Application/Checkout/CheckoutCalculatorTests.cs` (no fixture — static helper, plain `[Fact]` only):
+    - `CalculateSubtotal_SumsAllLineItemTotals`
+    - `CalculateShippingFee_ReturnsExpectedFeeForWeight`
+    - `CalculatePlatformDiscount_WithFixedCoupon_DeductsFixed`
+    - `CalculatePlatformDiscount_WithPercentageCoupon_DeductsPercentageCapped`
+    - `CalculateTotal_SubtotalPlusShippingMinusDiscounts`
+  - `Application/Coupons/CreateCouponCommandHandlerTests.cs` (uses `OrderServiceFixture`, `FakeCurrentUser`):
+    - `Handle_WithValidInputs_PersistsCouponWithCorrectFieldsAndActiveStatus`
+    - `Handle_WithEndDateBeforeStartDate_ThrowsValidationError`
+    - `Handle_WithZeroMaxUsageCount_ThrowsValidationError`
+  - `Application/Coupons/UpdateCouponCommandHandlerTests.cs` (uses `OrderServiceFixture`, `FakeCurrentUser`):
+    - `Handle_WithValidFields_UpdatesStoredCoupon`
+    - `Handle_OnExpiredCoupon_IsRejected`
+  - `Application/Coupons/DeleteCouponCommandHandlerTests.cs` (uses `OrderServiceFixture`, `FakeCurrentUser`):
+    - `Handle_WithExistingCoupon_RemovesCouponFromDb`
+    - `Handle_WithNonExistentId_ReturnsNotFound`
+  - `Application/Coupons/EndCouponCommandHandlerTests.cs` (uses `OrderServiceFixture`, `FakeCurrentUser`):
+    - `Handle_WithActiveCoupon_SetsEndDateToNow`
+    - `Handle_OnAlreadyEndedCoupon_IsIdempotent`
+  - `Application/Coupons/GetAvailableCouponsQueryHandlerTests.cs` (uses `OrderServiceFixture`, `FakeCurrentUser`):
+    - `Handle_ReturnsOnlyActiveCouponsAboveMinOrderAmount`
+    - `Handle_WithNoEligibleCoupons_ReturnsEmptyList`
+  - `Application/Coupons/GetCouponByIdQueryHandlerTests.cs` (uses `OrderServiceFixture`, `FakeCurrentUser`):
+    - `Handle_WithValidId_ReturnsCouponDetails`
+    - `Handle_WithNonExistentId_ReturnsNotFound`
+  - `Application/Coupons/GetCouponListQueryHandlerTests.cs` (uses `OrderServiceFixture`, `FakeCurrentUser`):
+    - `Handle_ReturnsPaginatedSellerCoupons`
+    - `Handle_WithStatusFilter_ScopesResults`
   - `Application/BuyerOrders/GetBuyerOrdersQueryHandlerTests.cs` (uses `OrderServiceFixture`, `FakeCurrentUser`):
     - `Handle_ReturnsOnlyAuthenticatedBuyerOrders`
     - `Handle_WithOtherBuyerUserId_ReturnsEmpty`
   - `Application/BuyerOrders/GetOrderDetailQueryHandlerTests.cs` (uses `OrderServiceFixture`, `FakeCurrentUser`):
     - `Handle_ReturnsLineItemsAndCurrentStatus`
+  - `Application/BuyerOrders/CancelOrderCommandHandlerTests.cs` (uses `OrderServiceFixture`, `FakeCurrentUser`):
+    - `Handle_WithPendingOrder_SetsStatusToCancelled`
+    - `Handle_WithConfirmedOrder_ReturnsError`
+    - `Handle_ByDifferentBuyer_IsRejected`
+  - `Application/BuyerOrders/GetOrderByIdQueryHandlerTests.cs` (uses `OrderServiceFixture`, `FakeCurrentUser`):
+    - `Handle_WithValidId_ReturnsOrderWithLineItemsAndStatus`
+    - `Handle_WithOtherBuyerOrderId_IsRejected`
+  - `Application/BuyerOrders/GetOrderListQueryHandlerTests.cs` (uses `OrderServiceFixture`, `FakeCurrentUser`):
+    - `Handle_ReturnsOnlyAuthenticatedBuyerOrders`
+    - `Handle_WithStatusFilter_ScopesResults`
+    - `Handle_PaginationRespectsPageSizeAndPageNumber`
+  - `Application/BuyerOrders/GetCheckoutStatusQueryHandlerTests.cs` (uses `OrderServiceFixture`, `FakeCurrentUser`):
+    - `Handle_WithPendingOrder_ReturnsPendingStatus`
+    - `Handle_WithCompletedOrder_ReturnsCompletedStatus`
+    - `Handle_WithNonExistentId_ReturnsNotFound`
   - `Application/SellerOrders/GetSellerOrdersQueryHandlerTests.cs` (uses `OrderServiceFixture`, `FakeCurrentUser`):
     - `Handle_ScopesToSellerStoreId`
   - `Application/SellerOrders/ConfirmOrderCommandHandlerTests.cs` (uses `OrderServiceFixture`, `FakeCurrentUser`):
@@ -330,102 +427,7 @@
     - `ShipmentDispatched_EmitsEvent`: shipment dispatched event captured in harness
     - `SagaCompletion_MarksOrderFulfilled`: completed fulfillment saga marks order as fulfilled
   - Use `DeterministicClock` in fixture; `PaymentProviderFake` in saga tests
-  - Acceptance: `dotnet test tests/HiveSpace.OrderService.Tests` exits with code 0; `Domain/` tests run without any fixture or DB dependency
-
-- [ ] B016 Add OrderService Coupon application handler tests (7 handlers)
-  - All files go in: `../hivespace.microservice/tests/HiveSpace.OrderService.Tests/Application/Coupons/`
-  - All tests use `IClassFixture<OrderServiceFixture>` and `FakeCurrentUser`
-  - `CreateCouponCommandHandlerTests.cs`:
-    - `Handle_WithValidInputs_PersistsCouponWithCorrectFieldsAndActiveStatus`
-    - `Handle_WithEndDateBeforeStartDate_ThrowsValidationError`
-    - `Handle_WithZeroMaxUsageCount_ThrowsValidationError`
-  - `UpdateCouponCommandHandlerTests.cs`:
-    - `Handle_WithValidFields_UpdatesStoredCoupon`
-    - `Handle_OnExpiredCoupon_IsRejected`
-  - `DeleteCouponCommandHandlerTests.cs`:
-    - `Handle_WithExistingCoupon_RemovesCouponFromDb`
-    - `Handle_WithNonExistentId_ReturnsNotFound`
-  - `EndCouponCommandHandlerTests.cs`:
-    - `Handle_WithActiveCoupon_SetsEndDateToNow`
-    - `Handle_OnAlreadyEndedCoupon_IsIdempotent`
-  - `GetAvailableCouponsQueryHandlerTests.cs`:
-    - `Handle_ReturnsOnlyActiveCouponsAboveMinOrderAmount`
-    - `Handle_WithNoEligibleCoupons_ReturnsEmptyList`
-  - `GetCouponByIdQueryHandlerTests.cs`:
-    - `Handle_WithValidId_ReturnsCouponDetails`
-    - `Handle_WithNonExistentId_ReturnsNotFound`
-  - `GetCouponListQueryHandlerTests.cs`:
-    - `Handle_ReturnsPaginatedSellerCoupons`
-    - `Handle_WithStatusFilter_ScopesResults`
-  - Acceptance: `dotnet test tests/HiveSpace.OrderService.Tests` exits with code 0
-
-- [ ] B017 Add OrderService Cart missing application handler tests (6 handlers)
-  - All files go in: `../hivespace.microservice/tests/HiveSpace.OrderService.Tests/Application/Cart/`
-  - All tests use `IClassFixture<OrderServiceFixture>` and `FakeCurrentUser`
-  - `ApplyPlatformCouponCommandHandlerTests.cs`:
-    - `Handle_WithValidCoupon_AppliesDiscountToCart`
-    - `Handle_WithExpiredCoupon_IsRejected`
-    - `Handle_WhenCouponAlreadyApplied_ReplacesWithNewCoupon`
-  - `ApplyStoreCouponCommandHandlerTests.cs`:
-    - `Handle_WithValidStoreCoupon_AppliesStoreDiscount`
-    - `Handle_WithCouponNotBelongingToStore_IsRejected`
-  - `RemovePlatformCouponCommandHandlerTests.cs`:
-    - `Handle_RemovesPlatformCouponFromCart`
-    - `Handle_WhenNoCouponApplied_IsIdempotent`
-  - `RemoveStoreCouponCommandHandlerTests.cs`:
-    - `Handle_RemovesStoreCouponFromCart`
-    - `Handle_WhenNoCouponApplied_IsIdempotent`
-  - `GetCartSummaryQueryHandlerTests.cs`:
-    - `Handle_ReturnsItemCountSubtotalAndAppliedCoupons`
-    - `Handle_WithEmptyCart_ReturnsZeroItems`
-  - `GetSelectedCartItemsCountQueryHandlerTests.cs`:
-    - `Handle_ReturnsCountOfSelectedItems`
-    - `Handle_WithNoSelectedItems_ReturnsZero`
-  - `GetCheckoutPreviewQueryHandlerTests.cs` (file goes in `Application/Checkout/`):
-    - `Handle_WithValidCart_ReturnsLineItemsShippingAndTotal`
-    - `Handle_WithAppliedCoupons_ReflectsDiscountsInPreview`
-  - Acceptance: `dotnet test tests/HiveSpace.OrderService.Tests` exits with code 0
-
-- [ ] B018 Add OrderService Order additional application handler tests (4 handlers)
-  - All files go in: `../hivespace.microservice/tests/HiveSpace.OrderService.Tests/Application/BuyerOrders/`
-  - All tests use `IClassFixture<OrderServiceFixture>` and `FakeCurrentUser`
-  - `CancelOrderCommandHandlerTests.cs`:
-    - `Handle_WithCancellableOrder_TransitionsStatusToCancelled`
-    - `Handle_AfterOrderDelivered_IsRejected`
-    - `Handle_ByDifferentBuyer_IsRejected`
-  - `GetCheckoutStatusQueryHandlerTests.cs`:
-    - `Handle_WithPendingOrder_ReturnsPendingStatus`
-    - `Handle_WithCompletedOrder_ReturnsCompletedStatus`
-    - `Handle_WithNonExistentId_ReturnsNotFound`
-  - `GetOrderByIdQueryHandlerTests.cs`:
-    - `Handle_WithValidId_ReturnsOrderWithLineItemsAndStatus`
-    - `Handle_WithOtherBuyerOrderId_IsRejected`
-  - `GetOrderListQueryHandlerTests.cs`:
-    - `Handle_ReturnsOnlyAuthenticatedBuyerOrders`
-    - `Handle_WithStatusFilter_ScopesResults`
-    - `Handle_PaginationRespectsPageSizeAndPageNumber`
-  - Acceptance: `dotnet test tests/HiveSpace.OrderService.Tests` exits with code 0
-
-- [ ] B019 Add OrderService Checkout domain tests and CheckoutCalculator helper tests
-  - `Domain/CheckoutTests.cs` (no fixture — plain `[Fact]` only):
-    - `Create_WithValidCartItems_InitializesLineItemsAndCalculatesTotal`
-    - `AddItem_UpdatesSubtotal`
-    - `ApplyCoupon_ReducesTotalByDiscountAmount`
-    - `ApplyCoupon_WhenCouponAlreadyApplied_ReplacesExisting`
-    - `RemoveCoupon_RestoresSubtotalWithoutDiscount`
-  - `Domain/DiscountTests.cs` (no fixture — plain `[Fact]` only):
-    - `CreateFixed_WithPositiveAmount_StoresAmount`
-    - `CreateFixed_WithNegativeAmount_ThrowsDomainException`
-    - `CreatePercentage_WithValueAbove100_ThrowsDomainException`
-    - `Apply_FixedType_ReturnsExactAmount`
-    - `Apply_PercentageType_CapsAtMaxDiscountAmount`
-  - `Application/Checkout/CheckoutCalculatorTests.cs` (no fixture — static helper, plain `[Fact]` only):
-    - `CalculateSubtotal_SumsAllLineItemTotals`
-    - `CalculateShippingFee_ReturnsExpectedFeeForWeight`
-    - `CalculatePlatformDiscount_WithFixedCoupon_DeductsFixed`
-    - `CalculatePlatformDiscount_WithPercentageCoupon_DeductsPercentageCapped`
-    - `CalculateTotal_SubtotalPlusShippingMinusDiscounts`
-  - Acceptance: all tests run without fixture or I/O; calculation results match expected values
+  - Acceptance: `dotnet test tests/HiveSpace.OrderService.Tests` exits with code 0; `Domain/` tests run without any fixture or DB dependency; `coverage.ps1 -Service OrderService` reports ≥80% line coverage on Domain + Application layers
 
 ---
 
@@ -469,9 +471,24 @@
   - `Application/Wallet/GetWalletBalanceQueryHandlerTests.cs` (uses `PaymentServiceFixture`):
     - `Handle_ReturnsCurrentBalance`
     - `Handle_SequentialReads_DoNotMutateState`
+  - `Application/Payment/ProcessPaymentWebhookCommandHandlerTests.cs` (uses `PaymentServiceFixture`, `PaymentProviderFake`):
+    - `Handle_WithValidWebhook_UpdatesPaymentStatus`
+    - `Handle_WithDuplicateWebhook_IsIdempotent`
+    - `Handle_WithInvalidSignature_ReturnsError`
+  - `Application/Payment/GetPaymentQueryHandlerTests.cs` (uses `PaymentServiceFixture`):
+    - `Handle_WithExistingPaymentId_ReturnsPaymentDetails`
+    - `Handle_WithNonExistentId_ReturnsNotFound`
+  - `Application/Payment/GetPaymentByOrderIdQueryHandlerTests.cs` (uses `PaymentServiceFixture`):
+    - `Handle_WithOrderId_ReturnsAssociatedPayment`
+  - `Domain/TransactionTests.cs` (no fixture — plain `[Fact]` only):
+    - `Create_WithValidFields_SetsAmountAndDirection`
+    - `Create_WithNegativeAmount_ThrowsDomainException`
+  - `Domain/PaymentMethodTests.cs` (no fixture — plain `[Fact]` only):
+    - `Create_WithValidGateway_Succeeds`
+    - `TwoPaymentMethodsWithSameGateway_AreEqual`
   - Migrate any existing tests referencing live VNPay HTTP calls to use `PaymentProviderFake`
   - Do not add `Version=` to any `<PackageReference>` in existing or new `.csproj`
-  - Acceptance: `dotnet test tests/HiveSpace.PaymentService.Tests` exits with code 0; `Domain/` tests run without any fixture; idempotency assertions confirm no duplicate processing on second call
+  - Acceptance: `dotnet test tests/HiveSpace.PaymentService.Tests` exits with code 0; `Domain/` tests run without any fixture; idempotency assertions confirm no duplicate processing on second call; combined with B020, `coverage.ps1 -Service PaymentService` reports ≥80% line coverage on Domain + Application layers
 
 - [ ] B020 Add PaymentService missing handler and Payment domain tests
   - `Application/Wallet/GetTransactionHistoryQueryHandlerTests.cs` (uses `PaymentServiceFixture`):
@@ -517,7 +534,7 @@
     - `Handle_ForValidRef_MarksConfirmedInBlobStorageFake`
     - `Handle_ForAlreadyConfirmedRef_IsIdempotent`
     - `Handle_ForExpiredRef_IsRejected`
-  - Acceptance: `dotnet test tests/HiveSpace.MediaService.Tests` exits with code 0; `Domain/` tests run without any fixture; no live blob storage calls
+  - Acceptance: `dotnet test tests/HiveSpace.MediaService.Tests` exits with code 0; `Domain/` tests run without any fixture; no live blob storage calls; `coverage.ps1 -Service MediaService` reports ≥80% line coverage on Core layer
 
 ---
 
@@ -563,8 +580,15 @@
     - `Handle_EmitsSignalRInvocation_ReceivePaymentResult_WithPaymentRefAndStatus`
   - `Application/RealtimePayload/SendGeneralNotificationCommandHandlerTests.cs` (uses `NotificationServiceFixture`, `SignalRHubFake`):
     - `Handle_EmitsSignalRInvocation_ReceiveNotification_WithIdMessageAndType`
+  - `Application/Notifications/GetUnreadCountQueryHandlerTests.cs` (uses `NotificationServiceFixture`, `FakeCurrentUser`):
+    - `Handle_ReturnsCorrectUnreadCount`
+  - `Application/Preferences/UpsertChannelPreferenceCommandHandlerTests.cs` (uses `NotificationServiceFixture`, `FakeCurrentUser`):
+    - `Handle_PersistsChannelPreference`
+    - `Handle_WithUnsupportedChannelType_ReturnsValidationError`
+  - `Application/Preferences/UpsertGroupPreferenceCommandHandlerTests.cs` (uses `NotificationServiceFixture`, `FakeCurrentUser`):
+    - `Handle_PersistsGroupPreference`
   - Use `EmailDeliveryFake` (no live emails), `DeterministicClock`
-  - Acceptance: `dotnet test tests/HiveSpace.NotificationService.Tests` exits with code 0
+  - Acceptance: `dotnet test tests/HiveSpace.NotificationService.Tests` exits with code 0; `coverage.ps1 -Service NotificationService` reports ≥80% line coverage on Core layer
 
 ---
 
@@ -588,11 +612,27 @@
 - [ ] B013 Verify and update `TESTING.md` developer guide in `../hivespace.microservice`
   - File: `../hivespace.microservice/TESTING.md` — **already exists**; do not recreate from scratch
   - Read the existing file and verify the following sections are present and accurate:
-  - **Test pyramid**: `Domain/` pure unit, `Application/` in-memory EF integration — already documented
+  - **Test pyramid**: `Domain/` pure unit; `Application/` executes the real application unit using either NSubstitute or in-memory EF integration as appropriate — already documented
   - **Domain/ decision rule**: aggregate state transitions, guard invariants, value object equality, domain service orchestration — already documented
   - **Two Application test patterns**: the existing worked example uses NSubstitute (`Substitute.For<IOrderRepository>()`); ensure the guide clearly documents when to use NSubstitute (command handler, mock-verify is sufficient) vs `IClassFixture` (query handler or complex insert-then-read). Add a note if the NSubstitute pattern is not yet distinguished from the IClassFixture pattern.
   - **Smoke-test exclusion rule**: add if absent — "Do not count these as Application-layer coverage: `typeof(Handler).Should().NotBeNull()`, smoke tests that invoke multiple handlers, direct aggregate mutation in an Application test when the handler is the real unit under test."
   - **Coverage scope reference**: add if absent — "Coverage is measured by `coverage.runsettings`: includes `[HiveSpace.*.Application]*`, `[HiveSpace.*.Domain]*`, `[HiveSpace.*.Core]*`; excludes Api, Infrastructure, and test projects."
   - Do not rewrite sections that are already correct; only add what is missing
-  - Acceptance: file covers both NSubstitute and IClassFixture patterns; smoke-test exclusion rule is present; coverage scope is referenced
+  - Acceptance: file covers both NSubstitute and IClassFixture patterns; smoke-test exclusion rule is present; coverage scope is referenced; 80% line coverage target is documented
 
+---
+
+## Coverage Threshold Enforcement
+
+### Update
+
+- [ ] B021 [US2] Add 80% line coverage threshold enforcement to `quality-gate.ps1`
+  - File: `../hivespace.microservice/quality-gate.ps1`
+  - After running `dotnet test` with `--collect:"XPlat Code Coverage"`, parse the Cobertura XML output for each service test project
+  - Read the `<coverage line-rate="...">` attribute from the Cobertura file generated under `TestResults/` for each service
+  - Compare each service's `line-rate` (0.0–1.0) against the 80% threshold (0.80)
+  - If any service is below 0.80: set that service's `checkResult.status` to `"fail"`, `failureCategory` to `"coverage_below_threshold"`, `blockingDecision` to `"merge_blocking"`, and include `coveragePct` and `threshold` fields in `summary`
+  - Add `coveragePct` to each `checkResult` in the output JSON (even when passing) so coverage is always visible
+  - Do not fail for `docs-only` scope; coverage check applies to `backend:<service>`, `shared`, and `release` scopes only
+  - Prerequisite: B003 must exist; this task adds a post-test coverage check step to the existing script
+  - Acceptance: `.\quality-gate.ps1 -Scope backend:OrderService` output includes `coveragePct` per service; if coverage is below 80%, `gate.result` is `"fail"` and `failureCategory` is `"coverage_below_threshold"`; if above 80%, gate passes normally

@@ -74,7 +74,7 @@
 
 ## Decision: Organize test projects by service with layer-based internal folders
 
-**Rationale**: One test project per service keeps impact-based gating clean — running one project covers exactly one service's checks. Internal folders mirror Clean Architecture layers (`Domain/`, `Application/`, `Consumers/`) so the folder tells you both where the tested code lives and what kind of test it is. No separate `Unit/` or `Integration/` folders are needed because the layer is the test type: `Domain/` is always unit (pure entity logic, no I/O), `Application/` is always integration (real handler + in-memory EF + fakes), `Consumers/` is always integration with the MassTransit harness. All domain microservices include a `Domain/` folder. The ApiGateway has no domain model or EF Core, so it uses `Routing/` and `Auth/` instead.
+**Rationale**: One test project per service keeps impact-based gating clean — running one project covers exactly one service's checks. Internal folders mirror Clean Architecture layers (`Domain/`, `Application/`, `Consumers/`) so the folder tells you both where the tested code lives and what kind of test it is. No separate `Unit/` or `Integration/` folders are needed because the layer is the test type: `Domain/` is always unit (pure entity logic, no I/O), `Application/` always executes the real handler/query/service unit using the lightest valid pattern (`NSubstitute` for orchestration-only verification, `IClassFixture` with in-memory EF when persistence/query behavior must be observed), and `Consumers/` is always integration with the MassTransit harness. All domain microservices include a `Domain/` folder. The ApiGateway has no domain model or EF Core, so it uses `Routing/` and `Auth/` instead.
 
 **Alternatives considered**:
 

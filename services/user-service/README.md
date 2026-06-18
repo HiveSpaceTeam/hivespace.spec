@@ -29,7 +29,7 @@ Source path:
 
 ## Architecture
 
-UserService is narrowed to user-domain data after the IdentityService split. New feature work should use the current backend CQRS/Minimal API direction where practical.
+UserService is narrowed to user-domain data after the IdentityService split. The Application layer uses CQRS with Minimal API endpoints, aligned with all other Full Services.
 
 ## Runtime
 

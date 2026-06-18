@@ -67,11 +67,50 @@ None. No new or changed public endpoints are introduced — no `shared/api-catal
 
 ---
 
+## Testing Rules
+
+Both repos have `TESTING.md` files defining their rules. This section codifies the constraints the spec enforces as quality gates. Full rules are in `testing-rules.md`.
+
+### Backend (.NET / xUnit)
+
+Source: `../hivespace.microservice/TESTING.md`
+
+- **Framework**: xUnit + FluentAssertions + Coverlet
+- **One test file per production class**: `CreateProductCommandHandlerTests.cs` for `CreateProductCommandHandler`
+- **Naming**: `Method_Condition_ExpectedOutcome` (e.g., `Handle_ValidCommand_PublishesProductCreatedEvent`)
+- **Domain tests**: pure `[Fact]`, no DB, no fakes, no fixtures
+- **Application tests**: execute the real Application-layer unit; use `NSubstitute` when orchestration verification is sufficient, and use `IClassFixture<ServiceFixture>` with in-memory EF Core when persistence/query round-tripping must be observed
+- **Consumer tests**: `InMemoryMessageCapture` to assert event publishing
+- **No live infrastructure**: use `PaymentProviderFake`, `EmailDeliveryFake`, `BlobStorageFake`, `SignalRHubFake` from `HiveSpace.Testing.Shared`
+- **Coverage scope** (from `coverage.runsettings`): `[HiveSpace.*.Application]*`, `[HiveSpace.*.Domain]*`, `[HiveSpace.*.Core]*` — excludes Infrastructure, Api, migrations
+
+**Coverage target**: 80% line on measured layers per service  
+**Enforcement**: `quality-gate.ps1` — task B021 adds threshold check (currently the script reports only)
+
+### Frontend (Jest)
+
+Source: `../hivespace.web/TESTING.md`
+
+- **Framework**: Jest 29 + jsdom + `@testing-library/vue` + `@pinia/testing`
+- **Co-location**: test files live next to source — `stores/cart.test.ts` alongside `stores/cart.ts`
+- **Store tests**: `@pinia/testing`, state and actions only, no component mounting
+- **View/page tests**: `@testing-library/vue`, mount with wired stores, stub HTTP via `stubApiResponse`
+- **Naming stores**: `action_When_Result` (e.g., `login_WhenCredentialsValid_SetsAuthState`)
+- **Naming views**: `renders_What_FromWhere` or `action_CallsEndpoint`
+- **No real HTTP**: stub via `createMockAxios()` / `stubApiResponse()`
+- **Shared test-utils** from `@hivespace/shared/test-utils`: `createFakeAuthUser`, `createFakeAuthState`, `createMockAxios`, `stubApiResponse`, `createFakeSignalRHub`, `createTestI18n`
+- **i18n**: assert keys only, not hardcoded strings
+
+**Coverage target**: 80% policy-scoped line coverage  
+**Enforcement**: existing `coverage.ps1` (exits with code 1 below 80%)
+
+---
+
 ## Phase 2 — Implementation Plan
 
 See detailed tasks in:
 
-- `specs/0008-system-testing-quality-gate/tasks/backend.md` — backend test projects (B001–B013) and coverage expansion (B014–B020)
+- `specs/0008-system-testing-quality-gate/tasks/backend.md` — backend test projects (B001–B013, B020), threshold enforcement (B021)
 - `specs/0008-system-testing-quality-gate/tasks/frontend.md` — frontend test scripts and files (F001–F012)
 - `specs/0008-system-testing-quality-gate/tasks/docs-catalog.md` — contract and ADR (D001–D002)
 - `specs/0008-system-testing-quality-gate/tasks/verification.md` — build, test, runner, coverage, diagnostic (V001–V013)
@@ -84,7 +123,7 @@ This feature does not follow the standard domain → application → infrastruct
 2. Service test projects per service (parallel after B001/B002) — B004–B011
 3. Quality-gate runner `quality-gate.ps1` (after service test projects) — B003
 4. Solution file update and developer guide — B012, B013
-5. Coverage expansion — all remaining public-method classes per service — B014–B020
+5. Remaining PaymentService coverage — B020
 
 ---
 
@@ -113,32 +152,26 @@ The authoritative backend coverage scope is defined in `../hivespace.microservic
 
 ### Coverage targets
 
-| Service | Current Line % | Target Line % | Target Branch % |
-|---------|---------------|---------------|-----------------|
-| CatalogService | ~15% | ≥55% | ≥45% |
-| OrderService | ~12% | ≥50% | ≥40% |
-| PaymentService | ~18% | ≥55% | ≥45% |
-| IdentityService | ~25% | ≥60% | ≥50% |
-| NotificationService | ~10% | ≥50% | ≥40% |
-| MediaService | ~8% | ≥50% | ≥40% |
-| UserService | ~30% | ≥60% | ≥50% |
+All services must reach **80% line coverage** on Domain and Application layers. This is enforced by `quality-gate.ps1` (task B021 adds the threshold check — currently the script reports only).
 
-### Handler coverage gaps addressed by B014–B020
+| Service | Measured layers | Target Line % |
+|---------|----------------|---------------|
+| CatalogService | Domain + Application | ≥80% |
+| OrderService | Domain + Application | ≥80% |
+| PaymentService | Domain + Application | ≥80% |
+| IdentityService | Core (no separate Domain/Application split) | ≥80% |
+| NotificationService | Core | ≥80% |
+| MediaService | Core | ≥80% |
+| UserService | Domain + Application | ≥80% |
 
-**CatalogService** (5 missing handlers + domain):
-- `GetHomepageCategoriesQueryHandler`, `DeleteProductCommandHandler`, `GetProductQueryHandler` (seller), `GetProductsQueryHandler` (seller list), `GetProductSummariesQueryHandler` (storefront)
-- `Product` aggregate: `CreateProduct`, `UpdateName`, `AddCategory`, `RemoveCategory`, `Deactivate`
+### Coverage expansion summary
 
-**OrderService** (19 missing handlers + helpers):
-- Cart: `ApplyPlatformCouponCommand`, `ApplyStoreCouponCommand`, `RemovePlatformCouponCommand`, `RemoveStoreCouponCommand`, `GetCartSummaryQuery`, `GetCheckoutPreviewQuery`, `GetSelectedCartItemsCountQuery`
-- Coupons: `CreateCoupon`, `UpdateCoupon`, `DeleteCoupon`, `EndCoupon`, `GetAvailableCoupons`, `GetCouponById`, `GetCouponList`
-- Orders: `CancelOrder`, `GetCheckoutStatus`, `GetOrderById`, `GetOrderList`
-- Helpers: `CheckoutCalculator` static methods; `Checkout` aggregate; `Discount` value object
+All CatalogService, OrderService, and UserService handler and domain coverage has been folded directly into B007, B008, and B006 respectively — organized by layer (Domain/, Application/, Consumers/). These tasks are now self-contained comprehensive deliverables.
 
-**PaymentService** (2 missing handlers + domain):
+**PaymentService** remaining coverage (B020):
 - `GetTransactionHistoryQueryHandler`; `Payment` aggregate state-transition tests
 
-See tasks B014–B020 in `tasks/backend.md` for full file-by-file details.
+See tasks B006–B011, B020 in `tasks/backend.md` for full file-by-file details.
 
 ### Saga design
 
@@ -167,22 +200,26 @@ See `architecture/decisions/ADR-0007-system-testing-quality-gate.md`. Key decisi
 
 ### Test runner
 
-The project uses **Jest** (via `jest.base.cjs` factory config), not Vitest. Per-app `jest.config.cjs` files already exist under `apps/buyer/`, `apps/seller/`, and `apps/admin/`. `packages/shared/jest.config.cjs` also exists. Do not create `vitest.config.ts` files.
+The project uses **Jest** (via `jest.base.cjs` factory config), not Vitest. Per-app `jest.config.cjs` files exist under `apps/buyer/`, `apps/seller/`, and `apps/admin/`. `packages/shared/jest.config.cjs` also exists. Do not create `vitest.config.ts` files.
 
-Coverage policy: **80% policy-scoped target**. Paths measured by Jest v8 coverage provider:
-- Included: `apps/*/src/pages/**`, `apps/*/src/stores/**`, `apps/*/src/composables/**`, `apps/*/src/router/**` (guards)
-- Excluded: assets, styles, i18n, types, barrel index files, thin `services/**` wrappers, `config/**` constants, presentational `components/common/**`, icons/layout shells
+Coverage policy: **80% policy-scoped line coverage**, enforced by the existing `coverage.ps1` script (exits with code 1 if any workspace is below 80%). Paths measured by Jest v8 coverage provider:
+- Included (apps): `src/pages/**`, `src/stores/**`, `src/composables/**`, `src/router/**`
+- Included (shared): `src/features/**`, `src/composables/**`, `src/test-utils/**`
+- Excluded: assets, styles, i18n locale files, types, barrel index files, thin `services/**` wrappers, `config/**` constants, presentational `components/**`, icons
 
-### Files to create or verify
+### Files to create
 
-This feature adds test files only; no new product source files are added. Many files already exist — see tasks for "verify and extend" vs "create" status.
+This feature creates all test files as new deliverables. Test infrastructure (`jest.config.cjs`, `jest.base.cjs`, shared test-utils, coverage scripts) already exists in the repo and is not recreated.
 
-| File | Notes |
-| ---- | ----- |
-| `packages/shared/src/test-utils/` | Jest utilities, store factories, mock providers — **already exists** |
-| `apps/buyer/src/pages/**/*.test.ts` | Buyer critical-path tests co-located under `pages/<SubFolder>/` — **most already exist** |
-| `apps/seller/src/pages/**/*.test.ts` | Seller critical-path tests co-located under `pages/<SubFolder>/` — **most already exist** |
-| `apps/admin/src/pages/**/*.test.ts` | Admin critical-path tests co-located under `pages/<SubFolder>/` — **all already exist** |
+| File | Status |
+| ---- | ------ |
+| `packages/shared/src/test-utils/` | Test-utils infrastructure already present; test coverage must reach 80% on measured paths |
+| `apps/buyer/src/pages/**/*.test.ts` | Create buyer critical-path tests co-located under `pages/<SubFolder>/` |
+| `apps/buyer/src/stores/**/*.test.ts` | Create buyer store tests co-located with source |
+| `apps/seller/src/pages/**/*.test.ts` | Create seller critical-path tests co-located under `pages/<SubFolder>/` |
+| `apps/seller/src/stores/**/*.test.ts` | Create seller store tests co-located with source |
+| `apps/admin/src/pages/**/*.test.ts` | Create admin critical-path tests co-located under `pages/<SubFolder>/` |
+| `apps/admin/src/stores/**/*.test.ts` | Create admin store tests co-located with source |
 | `scripts/quality-gate.mjs` | Frontend quality-gate runner at workspace root |
 
 See `specs/0008-system-testing-quality-gate/tasks/frontend.md` for full detail.

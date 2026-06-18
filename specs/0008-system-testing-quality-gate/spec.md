@@ -2,7 +2,8 @@
 
 - **Feature Branch**: `0008-system-testing-quality-gate`
 - **Created**: 2026-06-12
-- **Status**: Draft
+- **Status**: Implemented
+- **Implemented**: 2026-06-18
 - **Input**: User description: "I want to implement to add testing for this system"
 
 ## Clarifications
@@ -88,6 +89,9 @@ As a maintainer, I need failed or missing checks to show which business capabili
 - **FR-011**: Accepted-risk results MUST identify the approving role, with maintainers allowed to accept merge risk and release owners required to accept release risk.
 - **FR-012**: Runtime changes MUST use impact-based gating that runs checks for affected journeys plus shared baseline checks; full critical-path coverage is required when a change affects multiple critical journeys, shared behavior, or release readiness.
 - **FR-013**: Inconsistent check results MAY be rerun once; repeated inconsistency MUST produce a blocking unstable-check result unless accepted through the accepted-risk process.
+- **FR-014**: Every service's Domain and Application layers MUST have dedicated test files authored as new deliverables under this feature. Tests that existed before this feature are part of this feature's scope and must reach the coverage gate defined in FR-015, not treated as a pre-existing baseline.
+- **FR-015**: Each service test project MUST reach 80% line coverage on its Domain and Application layers (as scoped by `coverage.runsettings`) before the quality gate passes. Each frontend workspace (buyer, seller, admin, shared) MUST pass the 80% policy-scoped line coverage gate enforced by `coverage.ps1`. Coverage below threshold is treated as an incomplete deliverable, not a passing result.
+- **FR-016**: All created tests MUST comply with the testing rules in `testing-rules.md`: naming conventions, layer constraints (Domain tests are pure unit; Application tests execute the real Application-layer unit and may use either NSubstitute or in-memory EF Core depending on the behavior under test), fake/stub usage requirements, and coverage scope boundaries.
 
 ### Key Entities
 
@@ -101,7 +105,7 @@ As a maintainer, I need failed or missing checks to show which business capabili
 
 ### Measurable Outcomes
 
-- **SC-001**: 100% of the v1 critical journeys listed in this specification have an associated repeatable check or an explicitly accepted coverage gap.
+- **SC-001**: 100% of the v1 critical journeys listed in this specification have an associated repeatable check or an explicitly accepted coverage gap. All service test projects reach 80% line coverage on Domain and Application layers. All frontend workspaces pass the `coverage.ps1` 80% policy-scoped gate.
 - **SC-002**: Contributors can obtain a merge-readiness decision for a typical application change in under 30 minutes.
 - **SC-003**: At least 95% of quality gate runs produce an unambiguous pass, fail, not applicable, or accepted-risk result without manual interpretation.
 - **SC-004**: 0 required checks use real customer data, real payment credentials, or live customer-impacting notification delivery.

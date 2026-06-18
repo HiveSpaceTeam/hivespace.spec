@@ -106,7 +106,7 @@ Shared backend libraries:
 
 ## Backend Architecture Pattern
 
-New backend feature work uses CQRS plus Minimal API endpoints, except where maintaining existing UserService identity code requires legacy controllers.
+New backend feature work uses CQRS plus Minimal API endpoints across all services.
 
 Standard layered services:
 

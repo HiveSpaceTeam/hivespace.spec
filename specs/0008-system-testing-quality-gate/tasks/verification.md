@@ -14,10 +14,14 @@ Run these checks after completing backend, frontend, and docs/catalog tasks. Eac
   - Do not proceed to V002 if this fails
   - Acceptance: `dotnet build` exits with code 0; no `Version=` found in new project files
 
-- [ ] V002 [US1][US2] Run full backend test suite
-  - Command: `dotnet test` from `../hivespace.microservice`
+- [ ] V002 [US1][US2] Run full backend test suite and verify coverage
+  - Commands from `../hivespace.microservice`:
+    - `dotnet test` — full test run
+    - `.\coverage.ps1` — generate coverage report per service
+    - `.\quality-gate.ps1 -Scope release` — run gate including coverage threshold check (after B021)
   - Expected: all test projects discovered and pass; test output lists `HiveSpace.Testing.Shared`, all 7 service test projects; no unexpected skips without documented reason
-  - Acceptance: `dotnet test` exits with code 0; test count is non-zero across all projects
+  - Coverage expected: each service reports ≥80% line coverage on Domain + Application layers in the Cobertura report; `quality-gate.ps1` output shows `coveragePct` ≥0.80 per service
+  - Acceptance: `dotnet test` exits with code 0; `quality-gate.ps1 -Scope release` shows all services at ≥80% line coverage and `gate.result` is `"pass"`
 
 - [ ] V003 [US2] Run service-specific backend tests independently
   - Run each command independently from `../hivespace.microservice`:
@@ -47,12 +51,13 @@ Run these checks after completing backend, frontend, and docs/catalog tasks. Eac
 
 ### Verify
 
-- [ ] V005 [US1] Verify frontend installs and test scripts exist
+- [ ] V005 [US1] Verify frontend installs, test scripts exist, and coverage gate passes
   - Commands from `../hivespace.web`:
     - `pnpm install`
     - `pnpm test`
-  - Expected: install completes without resolution errors; Turbo fans out `test` task to buyer, seller, admin, and shared package workspaces; all tests pass
-  - Acceptance: `pnpm test` exits with code 0; Turbo output shows test tasks running for all four workspaces
+    - `.\coverage.ps1`
+  - Expected: install completes without resolution errors; Turbo fans out `test` task to buyer, seller, admin, and shared workspaces; all tests pass; `coverage.ps1` exits with code 0 (all workspaces ≥80% policy-scoped line coverage)
+  - Acceptance: `pnpm test` exits with code 0; `coverage.ps1` exits with code 0; all four workspaces shown at ≥80% in `coverage-report/Summary.txt`
 
 - [ ] V006 [US2] Run app-specific frontend tests independently
   - Run each command independently from `../hivespace.web`:
@@ -60,14 +65,14 @@ Run these checks after completing backend, frontend, and docs/catalog tasks. Eac
     - `pnpm --filter seller test`
     - `pnpm --filter admin test`
     - `pnpm --filter @hivespace/shared test`
-  - Expected: each runs in isolation without requiring other apps; each test file is discovered by vitest
+  - Expected: each runs in isolation without requiring other apps; each test file is discovered by Jest
   - Acceptance: all four commands exit with code 0
 
 - [ ] V007 [US1] Verify lint and type-check baselines are not worsened
   - Commands from `../hivespace.web`:
     - `pnpm lint`
     - `pnpm type-check`
-  - Expected: error counts must not exceed documented pre-existing baseline (known buyer/seller/admin errors remain; no new errors introduced by test files or vitest configs)
+  - Expected: error counts must not exceed documented pre-existing baseline (known buyer/seller/admin errors remain; no new errors introduced by test files or Jest config changes)
   - Check: run before and after adding test files to confirm no increase in error count
   - Acceptance: no new lint or type-check failures are attributable to changes from this feature; existing baseline errors remain unchanged
 
@@ -87,8 +92,11 @@ Run these checks after completing backend, frontend, and docs/catalog tasks. Eac
 
 ### Verify
 
-- [ ] V009 [US2] Verify coverage map covers all critical journeys from FR-002 to FR-005
-  - For each required journey, confirm at least one task ID maps to a repeatable check or a documented coverage gap:
+- [ ] V009 [US2] Verify coverage map and 80% threshold
+  - Step 1: confirm all services and workspaces meet the 80% threshold:
+    - Run `.\quality-gate.ps1 -Scope release` from `../hivespace.microservice`; confirm `coveragePct` ≥0.80 for all services in JSON output
+    - Run `.\coverage.ps1` from `../hivespace.web`; confirm `coverage-report/Summary.txt` shows ≥80% for all four workspaces
+  - Step 2: for each required journey, confirm at least one task ID maps to a repeatable check or a documented coverage gap:
   
   | Journey | FR | Backend task | Frontend task | Gap? |
   | ------- | -- | ------------ | ------------- | ---- |
