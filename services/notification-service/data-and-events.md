@@ -18,6 +18,7 @@ NotificationService owns:
 | `UserCreatedIntegrationEvent` | Create user delivery reference |
 | `UserUpdatedIntegrationEvent` | Refresh user delivery reference |
 | `UserEmailVerificationRequestedIntegrationEvent` | Send verification email/notification for IdentityService-owned verification state |
+| `UserOtpChallengeRequestedIntegrationEvent` | Send OTP email containing the one-time code and expiry time to the recipient address; `Purpose` is serialized as a string and is `SignIn` in v1 |
 | `NotifySellerNewOrder` | Notify seller of a new order |
 | `NotifyBuyerOrderConfirmed` | Notify buyer that order was confirmed |
 | `NotifyBuyerOrderCancelled` | Notify buyer that order was cancelled |

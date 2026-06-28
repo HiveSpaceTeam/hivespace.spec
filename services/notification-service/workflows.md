@@ -20,6 +20,16 @@ Domain service
   -> delivery attempt recorded
 ```
 
+## OTP Sign-In Email Delivery
+
+```text
+IdentityService
+  -> UserOtpChallengeRequestedIntegrationEvent
+  -> NotificationService selects the OTP sign-in template for Purpose = SignIn
+  -> email provider send
+  -> delivery attempt recorded
+```
+
 ## Fulfillment Continuation
 
 ```text
@@ -42,4 +52,5 @@ User updates preferences
 - Delivery may be skipped by preference, but the source-domain event remains true.
 - Failed delivery should be observable through delivery attempts.
 - Realtime push complements persistence; it must not be the only record.
+- OTP challenge delivery follows the published challenge purpose; v1 supports `SignIn` only.
 - Fulfillment continuation publishes remain MassTransit consume-context orchestration messages.

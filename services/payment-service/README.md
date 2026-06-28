@@ -40,6 +40,8 @@ PaymentService follows standard Clean Architecture / DDD with CQRS and Minimal A
 | Database | SQL Server, PaymentService-owned payments/wallets schema |
 | Gateway dependency | VNPay |
 
+Backend local development starts PaymentService through Aspire AppHost in `../hivespace.microservice/src/HiveSpace.AppHost`; frontend dev servers remain separate.
+
 ## Planning Notes
 
 - Payment webhooks/IPN handlers must be idempotent.

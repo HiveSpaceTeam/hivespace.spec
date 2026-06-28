@@ -25,7 +25,7 @@ UserService owns:
 
 | Event | Producer | Purpose |
 |---|---|---|
-| `IdentityUserCreatedIntegrationEvent` | IdentityService | Create or verify the matching UserService profile for the shared public user ID |
+| `IdentityUserReadyIntegrationEvent` | IdentityService | Create or verify the matching UserService profile for the shared public user ID once the account is usable |
 | `MediaAssetProcessedIntegrationEvent` | MediaService | For `EntityType = "user_avatar"`, update the matching user's `AvatarUrl` only when `AvatarFileId` equals the event `FileId` |
 
 ## Projection Consumers

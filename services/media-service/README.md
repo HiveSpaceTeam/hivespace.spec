@@ -37,6 +37,8 @@ MediaService is a lighter service. New feature work should still follow the repo
 | Storage | Azure Blob Storage or Azurite |
 | Database | SQL Server, media asset records |
 
+Backend local development starts MediaService API through Aspire AppHost in `../hivespace.microservice/src/HiveSpace.AppHost`. The media workflow also includes MediaService Function on `http://localhost:7072`, which runs through Azure Functions Core Tools under AppHost orchestration.
+
 ## Planning Notes
 
 - Frontends upload file bytes directly to the issued storage URL.

@@ -10,7 +10,7 @@ Represents the developer-facing backend startup experience.
 | --- | --- |
 | Startup entry point | One documented command or launch action. |
 | Runtime view | One local place to inspect service/resource status, OpenTelemetry traces, metrics, and logs. |
-| Scope | Backend API services plus required local infrastructure dependencies. |
+| Scope | Backend API services, MediaService Function, and required local infrastructure dependencies. |
 | Exclusions | Frontend dev servers, production deployment, Docker Compose data migration. |
 
 ## Backend Service
@@ -39,6 +39,18 @@ Required backend services:
 | NotificationService | `http://localhost:5006` |
 | UserService | `http://localhost:5007` |
 
+Required function resources:
+
+| Resource | Local URL |
+| --- | --- |
+| MediaService Function | `http://localhost:7072` |
+
+MediaService Function requirements:
+
+- Launched by AppHost through Azure Functions Core Tools.
+- Uses the MediaService database, RabbitMQ, and Azurite blob/queue resources.
+- Preserves existing media processing behavior and queue payload contracts.
+
 ## Infrastructure Dependency
 
 Represents a local service dependency managed by the runtime.
@@ -57,7 +69,7 @@ Required dependencies:
 | --- | --- |
 | SQL Server | `localhost:1433` |
 | RabbitMQ | `localhost:5672` |
-| Kafka | `localhost:9092` |
+| Kafka | `localhost:9092` declared only; no v1 service/function dependency |
 | Redis | `localhost:6379` |
 | Azurite Blob | `localhost:10000` |
 | Azurite Queue | `localhost:10001` |
@@ -69,7 +81,7 @@ Connection string keys:
 | --- | --- |
 | Service databases | Existing service-owned database key, such as `CatalogDb`, `OrderServiceDb`, or `DefaultConnection` |
 | RabbitMQ | `RabbitMq` |
-| Kafka | `Kafka` |
+| Kafka | AppHost resource only in v1; no service/function `ConnectionStrings:Kafka` |
 | Azure Service Bus | `AzureServiceBus` |
 | Redis | `Redis` |
 | Azure Storage / Azurite | `AzureStorage` |
@@ -81,9 +93,11 @@ Represents runtime broker enablement.
 Rules:
 
 - `Messaging:EnableRabbitMq`, `Messaging:EnableKafka`, and `Messaging:EnableAzureServiceBus` choose active broker integrations.
+- `Messaging:EnableKafka` must be false or absent for every v1 service/function because Kafka is declared but unused.
 - Broker endpoint and secret values belong in `ConnectionStrings`, not nested `Messaging` provider objects.
 - `Messaging` provider objects may keep non-secret tuning only.
 - A missing connection string for an enabled broker is a startup configuration error.
+- Kafka missing-connection validation is not exercised by v1 services because no service/function enables Kafka.
 
 ## Runtime Status
 
@@ -100,6 +114,7 @@ Allowed statuses:
 Rules:
 
 - Every included backend service and infrastructure dependency must expose a visible status.
+- MediaService Function must expose visible status/logs in the same runtime workflow.
 - Startup failures must identify the failing service or dependency.
 - OpenTelemetry traces and metrics must be available for Aspire-compatible backend services from the same runtime workflow.
 - Logs must be available for backend services as supplemental diagnostics, but logs alone do not satisfy monitoring.

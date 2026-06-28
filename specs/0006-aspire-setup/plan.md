@@ -36,7 +36,7 @@ No unresolved clarification markers remain for planning. Key decisions are captu
 
 ### Research notes
 
-Research is captured in [research.md](research.md). The selected approach is a project-based Aspire AppHost plus ServiceDefaults in `../hivespace.microservice`, with Aspire starting backend API projects and local infrastructure containers on the existing local ports.
+Research is captured in [research.md](research.md). The selected approach is a project-based Aspire AppHost plus ServiceDefaults in `../hivespace.microservice`, with Aspire starting backend API projects, MediaService Function, and local infrastructure containers on the existing local ports. Kafka is declared as a local AppHost infrastructure resource only; no backend service or function uses Kafka in v1.
 
 ---
 
@@ -48,17 +48,16 @@ This is a cross-service local development runtime feature. No business service o
 
 | Service / area | Classification | Reason | Documentation/catalog action |
 | --- | --- | --- | --- |
-| Backend solution runtime | Owning area | Owns the new local orchestration entry point, ServiceDefaults integration, startup standardization, and backend developer workflow. | Update backend root run docs in `AGENTS.md` and `CLAUDE.md`; add AppHost/ServiceDefaults projects in source repo during implementation. |
+| Backend solution runtime | Owning area | Owns the new local orchestration entry point, ServiceDefaults integration, startup standardization, MediaService Function launch, and backend developer workflow. | Update backend root run docs in `AGENTS.md` and `CLAUDE.md`; add AppHost/ServiceDefaults projects in source repo during implementation. |
 | ApiGateway | Changed supporting service | Participates in Aspire startup and observability while preserving route behavior and fixed `http://localhost:5000`; startup must move out of inline `Program.cs` into the standard extension shape. | Update service docs only if startup/runtime notes change; no API catalog changes. |
 | IdentityService | Changed supporting service | Participates in Aspire startup, health/log visibility, SQL/RabbitMQ references, and fixed `http://localhost:5001`; keep IdentityServer/Razor behavior while matching startup file roles. | Runtime documentation only if needed; no endpoint/event catalog changes. |
-| UserService | Changed supporting service | Participates in Aspire startup, health/log visibility, SQL/RabbitMQ/Kafka references, and fixed `http://localhost:5007`; keep legacy controller behavior while matching startup file roles where technically possible. | Runtime documentation only if needed; no endpoint/event catalog changes. |
+| UserService | Changed supporting service | Participates in Aspire startup, health/log visibility, SQL/RabbitMQ references, and fixed `http://localhost:5007`; keep legacy controller behavior while matching startup file roles where technically possible. Kafka is not used by UserService in v1. | Runtime documentation only if needed; no endpoint/event catalog changes. |
 | CatalogService | Changed supporting service | Participates in Aspire startup, health/log visibility, SQL/RabbitMQ reference, fixed `http://localhost:5002`, and standard startup order. | Runtime documentation only if needed; no endpoint/event catalog changes. |
 | MediaService API | Changed supporting service | Participates in Aspire startup, health/log visibility, SQL/RabbitMQ/Azurite references, fixed `http://localhost:5003`, and standard startup order. | Runtime documentation only if needed; no endpoint/event catalog changes. |
-| OrderService | Changed supporting service | Participates in Aspire startup, health/log visibility, SQL/RabbitMQ/Kafka references, fixed `http://localhost:5004`, and standard startup order. | Runtime documentation only if needed; no endpoint/event catalog changes. |
-| PaymentService | Changed supporting service | Participates in Aspire startup, health/log visibility, SQL/RabbitMQ/Kafka references, fixed `http://localhost:5005`, and standard startup order. | Runtime documentation only if needed; no endpoint/event catalog changes. |
+| MediaService Function | Changed supporting runtime resource | Participates in AppHost startup as the media queue-processing Azure Function while preserving existing function behavior, queue payloads, and media processing contracts. | Document Azure Functions Core Tools prerequisite and runtime wiring; no API/event catalog changes. |
+| OrderService | Changed supporting service | Participates in Aspire startup, health/log visibility, SQL/RabbitMQ references, fixed `http://localhost:5004`, and standard startup order. Kafka is not used by OrderService in v1. | Runtime documentation only if needed; no endpoint/event catalog changes. |
+| PaymentService | Changed supporting service | Participates in Aspire startup, health/log visibility, SQL/RabbitMQ references, fixed `http://localhost:5005`, and standard startup order. Kafka is not used by PaymentService in v1. | Runtime documentation only if needed; no endpoint/event catalog changes. |
 | NotificationService | Changed supporting service | Participates in Aspire startup, health/log visibility, SQL/RabbitMQ/Redis references, and fixed `http://localhost:5006`; keep Serilog and SignalR-specific behavior while matching startup file roles. | Runtime documentation only if needed; no endpoint/event catalog changes. |
-| MediaService Function | Reused supporting service | Existing function code may remain documented separately unless a simple Aspire launch path is available without changing function behavior. | Verification only for v1; do not change function behavior. |
-| Config repo | Changed supporting repo | Docker Compose is no longer the backend local development entry point, but config may still hold appsettings sync outputs. | Update config docs/settings only if implementation changes synchronized appsettings; no catalog changes. |
 
 ### Runtime model
 
@@ -71,18 +70,19 @@ This feature introduces no domain aggregate, repository, EF Core table, business
 | Resource | Requirement |
 | --- | --- |
 | AppHost | Project-based C# Aspire AppHost in the backend solution. |
-| ServiceDefaults | Shared .NET project referenced by API projects where compatible; adds OpenTelemetry traces, metrics, default health endpoints, and Aspire dashboard export without replacing existing service-specific behavior. |
+| ServiceDefaults | Shared .NET project referenced by API projects where compatible; adds OpenTelemetry traces, metrics, default health endpoints, Aspire dashboard export, and optional wrappers for standard HiveSpace authentication/OpenAPI registration without replacing service-specific behavior. |
 | Connection string contract | Dependency endpoints and secrets exposed through `ConnectionStrings`; broker enablement remains in `Messaging` feature flags. |
 | API projects | ApiGateway, IdentityService, UserService, CatalogService, MediaService API, OrderService, PaymentService, NotificationService. |
+| Function resource | MediaService Function launched by AppHost through Azure Functions Core Tools on the existing local function port. |
 | SQL Server | Aspire-managed local container on `localhost:1433`; databases remain service-owned. |
 | RabbitMQ | Aspire-managed local container on `localhost:5672`; UI may stay on the conventional local management port if configured. |
-| Kafka | Aspire-managed local container on `localhost:9092` for services with existing Kafka-enabled local config. |
+| Kafka | Aspire-managed local container on `localhost:9092`, declared for future compatibility only. No service or function references, waits for, receives a connection string for, or enables Kafka in v1. |
 | Redis | Aspire-managed local container on `localhost:6379` for NotificationService cache/throttle dependencies. |
 | Azurite / Azure Storage emulator | Aspire-managed local storage emulator on existing blob/queue/table ports. |
 
 ### Integration events
 
-No new integration events are introduced. Existing MassTransit/RabbitMQ and Kafka contracts are reused unchanged. No `shared/event-catalog.md` update is required.
+No new integration events are introduced. Existing MassTransit/RabbitMQ contracts are reused unchanged. Kafka is declared as local infrastructure only and is not used by any service or function in v1. No `shared/event-catalog.md` update is required.
 
 ### API endpoints
 
@@ -98,7 +98,7 @@ No saga required. The feature does not add or change a MassTransit saga state ma
 
 ### Architecture decision
 
-Use [ADR-0005: Aspire Local Backend Runtime](../../architecture/decisions/ADR-0005-aspire-local-runtime.md). It records the decision to replace Docker Compose for backend local development with an Aspire AppHost while preserving existing local ports and avoiding Docker Compose data migration.
+Use [ADR-0005: Aspire Local Backend Runtime](../../architecture/decisions/ADR-0005-aspire-local-runtime.md). It records the decision to replace Docker Compose for backend local development with an Aspire AppHost while preserving existing local ports, including MediaService Function in v1, declaring Kafka without service usage, and avoiding Docker Compose data migration.
 
 ---
 
@@ -111,13 +111,13 @@ Implementation occurs in `../hivespace.microservice` after reading that repo's `
 - Add project-based Aspire orchestration:
   - `HiveSpace.AppHost`
   - `HiveSpace.ServiceDefaults`
-  - solution references for all orchestrated API projects
+  - solution references for all orchestrated API projects and MediaService Function
 - Add Aspire hosting package versions to `Directory.Packages.props`; do not use `Version=` in individual `.csproj` package references.
 - Keep the backend `global.json` SDK policy explicit. If Aspire templates or packages require a newer .NET 8 SDK than `8.0.203`, update `global.json` deliberately and document the tooling requirement.
 - Model local infrastructure in AppHost with fixed known host ports:
   - SQL Server `1433`
   - RabbitMQ `5672`
-  - Kafka `9092`
+  - Kafka `9092` declared only; no dependent service/function resources in v1
   - Redis `6379`
   - Azurite Blob `10000`, Queue `10001`, Table `10002`
 - Add AppHost project references for:
@@ -126,22 +126,35 @@ Implementation occurs in `../hivespace.microservice` after reading that repo's `
   - `src/HiveSpace.UserService/HiveSpace.UserService.Api`
   - `src/HiveSpace.CatalogService/HiveSpace.CatalogService.Api`
   - `src/HiveSpace.MediaService/HiveSpace.MediaService.Api`
+  - `src/HiveSpace.MediaService/HiveSpace.MediaService.Func`
   - `src/HiveSpace.OrderService/HiveSpace.OrderService.Api`
   - `src/HiveSpace.PaymentService/HiveSpace.PaymentService.Api`
   - `src/HiveSpace.NotificationService/HiveSpace.NotificationService.Api`
-- Configure each project resource with existing fixed application URLs from launch settings.
+- Add MediaService Function as an AppHost-managed function/executable resource:
+  - Local function port `7072`
+  - References to MediaService database, RabbitMQ, and Azurite blob/queue resources
+  - Required local prerequisite: Azure Functions Core Tools
+- Configure each API project resource with existing fixed application URLs from launch settings.
+- Configure AppHost project resources to use Aspire resource references or dependency ordering where supported so services that depend on SQL Server, RabbitMQ, Redis, or Azurite either wait/recover during slow dependency startup or surface the dependency failure in the Aspire workflow.
+- Configure MediaService Function dependency ordering so it waits for media database, RabbitMQ, and Azurite where AppHost can represent those dependencies.
+- Do not attach Kafka as a reference, wait dependency, connection string, or enabled broker to any API project or function resource in v1.
 - Inject dependency endpoints and secrets through AppHost connection strings/resource references so services continue to use current local assumptions:
   - `ConnectionStrings__*` for service databases
   - `ConnectionStrings__Redis`
   - `ConnectionStrings__RabbitMq`
-  - `ConnectionStrings__Kafka`
   - `ConnectionStrings__AzureServiceBus` when enabled
   - `ConnectionStrings__AzureStorage` for Azurite/Azure Storage
   - `Authentication__Authority`
   - `ReverseProxy__Clusters__*__Destinations__destination1__Address`
-  - `Messaging__EnableRabbitMq`, `Messaging__EnableKafka`, and `Messaging__EnableAzureServiceBus` for runtime broker selection
-- Configure `HiveSpace.ServiceDefaults` for OpenTelemetry tracing, metrics, health checks, and Aspire dashboard export.
+  - `Messaging__EnableRabbitMq` and `Messaging__EnableAzureServiceBus` for runtime broker selection when enabled
+  - `Messaging__EnableKafka=false` where an explicit disabled flag is needed to override legacy local settings
+- Configure `HiveSpace.ServiceDefaults` for OpenTelemetry tracing, metrics, health checks, Aspire dashboard export, and thin wrappers for standard HiveSpace authentication/OpenAPI registration.
 - Add `AddServiceDefaults()` and default health endpoint mapping to API startup paths where compatible, preserving existing service-specific health checks, Serilog, auth, YARP, MassTransit, and EF setup.
+- Add ServiceDefaults wrapper helpers for default registration consistency:
+  - `AddDefaultAuthentication(this IHostApplicationBuilder builder, string scope, Action<JwtBearerOptions>? configure = null)` delegates to `AddHiveSpaceJwtBearerAuthentication(...)`.
+  - `AddDefaultOpenApi(this IServiceCollection services, string title, string description = "")` delegates to `AddHiveSpaceSwaggerGen(...)`.
+  - Existing service `AddAppAuthentication()` and `AddAppOpenApi()` methods remain the service-owned place to pass scopes, titles, descriptions, and service-specific callbacks.
+  - Do not adopt the eShop `Identity:Url`/`Identity:Audience` config shape, do not replace HiveSpace `Authentication:*` keys, and do not set `ValidateAudience = false`.
 - Keep Serilog and backend service logs available as supplemental diagnostics; do not treat logs alone as satisfying local monitoring.
 - Preserve correlation context across HTTP requests and async messaging where existing service behavior and Aspire/OpenTelemetry integration support it.
 - Standardize startup structure for every included API project against `docs/agent/startup-conventions.md`:
@@ -155,24 +168,28 @@ Implementation occurs in `../hivespace.microservice` after reading that repo's `
   - NotificationService keeps Serilog bootstrap and SignalR-specific authentication behavior.
   - ApiGateway keeps YARP, session forwarding, CSRF, CORS, and token-validation behavior.
   - MediaService API keeps migration-only seeding behavior.
+  - MediaService Function keeps queue-triggered image-processing behavior unchanged.
 - Wire `AddServiceDefaults()` through the standardized `ConfigureServices()` path and map default endpoints through the standardized pipeline path; do not add per-service inline Aspire setup in `Program.cs`.
+- Wire default authentication/OpenAPI wrappers through existing service `AddAppAuthentication()` and `AddAppOpenApi()` wrappers where compatible; keep ApiGateway outside the default authentication wrapper and keep IdentityService Google/cookie/IdentityServer behavior local.
 - Standardize shared dependency configuration:
   - Keep database and Redis configuration under existing `ConnectionStrings` keys.
   - Move RabbitMQ endpoint and credentials from nested `Messaging:RabbitMq` fields to `ConnectionStrings:RabbitMq`.
-  - Move Kafka bootstrap endpoint from `Messaging:Kafka:BootstrapServers` to `ConnectionStrings:Kafka`.
+  - Remove Kafka bootstrap endpoints from service appsettings because Kafka is declared but unused by v1 services.
   - Move Azure Service Bus endpoint/secret from `Messaging:AzureServiceBus:ConnectionString` to `ConnectionStrings:AzureServiceBus`.
   - Move Azurite/Azure Storage endpoint/secret to `ConnectionStrings:AzureStorage`.
-  - Keep `Messaging:EnableRabbitMq`, `Messaging:EnableKafka`, and `Messaging:EnableAzureServiceBus` as broker feature flags.
-  - Keep only non-secret broker tuning under `Messaging`, such as RabbitMQ prefetch/outbox/heartbeat settings and Kafka client ID, consumer group, security protocol, and non-secret client behavior.
+  - Keep `Messaging:EnableRabbitMq` and `Messaging:EnableAzureServiceBus` as broker feature flags where applicable; keep `Messaging:EnableKafka=false` only when needed to override legacy defaults.
+  - Keep only non-secret broker tuning under `Messaging`, such as RabbitMQ prefetch/outbox/heartbeat settings. Remove Kafka tuning from service configs unless a future feature enables Kafka usage.
   - Fail fast with a clear configuration error when a broker flag is enabled but its required connection string is missing.
-- Refactor `HiveSpace.Infrastructure.Messaging` options and extensions so broker host/bootstrap/secret values are read from `ConnectionStrings`, while `MessagingOptions` remains the source for feature flags and non-secret tuning.
-- Keep MediaService Function out of v1 unless it can be launched by Aspire without changing function behavior or requiring a separate runtime contract.
+- Refactor `HiveSpace.Infrastructure.Messaging` options and extensions so broker host/bootstrap/secret values are read from `ConnectionStrings`, while `MessagingOptions` remains the source for feature flags and non-secret tuning. Kafka-related messaging paths must remain disabled for all v1 services.
+- Include MediaService Function in v1 local orchestration, but do not change image-processing behavior, queue payload shape, media API contracts, or integration event contracts to force inclusion.
 
 ### Documentation and config updates
 
 - Update backend `AGENTS.md` and `CLAUDE.md` together to make the Aspire AppHost the preferred backend local startup command and mark Docker Compose as replaced for backend local development.
+- Document Azure Functions Core Tools as required for the full AppHost runtime because MediaService Function is included in v1.
+- Document Kafka as declared local infrastructure only, with no v1 service/function usage.
 - Update spec repo docs after task generation through `$update-catalog` only for runtime documentation references; API and event catalogs remain unchanged.
-- If appsettings are changed in the backend repo, run the backend repo's required config sync and coordinate with `../hivespace.config`.
+- Keep `../hivespace.config` as infrastructure context only; feature implementation tasks must keep source-repo runtime settings and appsettings changes under `../hivespace.microservice`.
 - Do not migrate existing Docker Compose local data. Document that new Aspire-managed data should survive normal AppHost stop/restart when persistent resource volumes are configured.
 
 ### Verification
@@ -180,14 +197,20 @@ Implementation occurs in `../hivespace.microservice` after reading that repo's `
 - `dotnet restore` in `../hivespace.microservice`.
 - `dotnet build` in `../hivespace.microservice`.
 - Static startup convention check: all included API `Program.cs` files are entry-point only, all service registration and middleware setup lives in `HostingExtensions.cs`/`ServiceCollectionExtensions.cs`, and any unavoidable service-specific startup difference is documented in code or service docs.
-- Static config check: no service appsettings uses nested `Messaging:RabbitMq` endpoint/credential fields, `Messaging:Kafka:BootstrapServers`, or `Messaging:AzureServiceBus:ConnectionString`.
-- Run AppHost and verify the Aspire dashboard/resource view shows all API projects and infrastructure resources.
+- Static auth/OpenAPI wrapper check: default auth/OpenAPI helpers delegate to existing HiveSpace shared helpers, each API service keeps its explicit scope/title/description, NotificationService keeps its SignalR JWT callback, ApiGateway does not use the default auth wrapper, and no implementation introduces `Identity:*` auth config or disables audience validation.
+- Static config check: no service appsettings uses nested `Messaging:RabbitMq` endpoint/credential fields, any Kafka bootstrap endpoint or enabled Kafka flag, or `Messaging:AzureServiceBus:ConnectionString`.
+- Run AppHost and verify the Aspire dashboard/resource view shows all API projects, MediaService Function, and infrastructure resources.
+- Verify the Aspire dashboard/resource view shows MediaService Function as a local function resource and surfaces its status/logs in the same workflow.
+- Verify Kafka appears as a declared AppHost infrastructure resource and has no dependent service/function resources.
 - Verify the Aspire dashboard shows OpenTelemetry traces and metrics for compatible backend services, including at least one gateway-to-service request.
+- Verify that slower infrastructure startup does not require manual service-by-service restarts when Aspire resource references or dependency ordering can represent the dependency; otherwise verify the failure is visible in the AppHost output or Aspire dashboard.
 - Smoke checks:
   - `http://localhost:5000/health`
   - `http://localhost:5001/.well-known/openid-configuration`
   - service health endpoints where available
-  - RabbitMQ, Kafka, Redis, SQL Server, and Azurite reachable by dependent services
+  - MediaService Function starts on the documented local function port and binds to the Azurite queue trigger configuration
+  - RabbitMQ, Redis, SQL Server, and Azurite reachable by dependent services
+  - Kafka declared on `localhost:9092` but not required by any service/function health path
   - broker-enabled services fail with a clear error when the required broker connection string is intentionally omitted
 - Verify existing frontend gateway base URL still points to `http://localhost:5000` without config changes.
 - Run `npx gitnexus analyze` in the backend repo before PR if code changes are committed.
@@ -219,7 +242,8 @@ Implementation occurs in `../hivespace.microservice` after reading that repo's `
 - [x] Local monitoring is based on Aspire/OpenTelemetry traces and metrics plus health/status; logs remain diagnostics only.
 - [x] Startup standardization is limited to service startup wiring and must preserve business behavior, public APIs, integration events, and service responsibilities.
 - [x] Dependency endpoints and secrets are standardized under `ConnectionStrings`; `Messaging` retains broker feature flags and non-secret tuning only.
+- [x] Kafka is declared as local infrastructure only and is not a v1 service dependency.
 
 ### Post-design
 
-The design remains compliant. The cross-cutting architectural changes are local developer orchestration, startup standardization, and local OpenTelemetry monitoring, documented in ADR-0005. They do not alter service ownership, business APIs, integration events, sagas, data ownership, or browser-facing contracts.
+The design remains compliant. The cross-cutting architectural changes are local developer orchestration, startup standardization, local OpenTelemetry monitoring, MediaService Function orchestration, and Kafka declaration without v1 usage, documented in ADR-0005. They do not alter service ownership, business APIs, integration events, sagas, data ownership, or browser-facing contracts.

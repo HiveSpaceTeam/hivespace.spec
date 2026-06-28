@@ -46,7 +46,7 @@
 
 ## Decision: Use Aspire hosting integrations for local infrastructure
 
-**Rationale**: SQL Server, RabbitMQ, Kafka, Redis, and Azure Storage/Azurite have Aspire hosting integration paths or container modeling support. Modeling them in AppHost is necessary for the replacement workflow and unified runtime view.
+**Rationale**: SQL Server, RabbitMQ, Redis, and Azure Storage/Azurite are actively required by v1 services and should be modeled in AppHost. Kafka should also be declared in AppHost on the existing local port for future compatibility and runtime visibility, but it is not used by any v1 service or function.
 
 **Alternatives considered**:
 
@@ -54,10 +54,11 @@
 | --- | --- |
 | External existing dependencies through connection strings only | Would still require separate local infrastructure startup and would not replace Docker Compose. |
 | Keep Docker Compose for infrastructure | Conflicts with the clarified replacement requirement. |
+| Wire Kafka into services now | Overstates current service needs and creates unnecessary local configuration and startup coupling. |
 
 ## Decision: Use connection strings for dependency endpoints and broker feature flags for runtime selection
 
-**Rationale**: Databases and Redis already use `ConnectionStrings`, Azure Service Bus already has a connection-string shape, and Aspire resource references map naturally to connection strings. RabbitMQ and Kafka currently use nested endpoint configuration under `Messaging`, which makes Aspire injection and deployment secret handling less consistent. Keep `Messaging:EnableRabbitMq`, `Messaging:EnableKafka`, and `Messaging:EnableAzureServiceBus` as runtime feature flags, but move broker endpoints and secrets to `ConnectionStrings`.
+**Rationale**: Databases and Redis already use `ConnectionStrings`, Azure Service Bus already has a connection-string shape, and Aspire resource references map naturally to connection strings. RabbitMQ currently uses nested endpoint configuration under `Messaging`, which makes Aspire injection and deployment secret handling less consistent. Keep broker enablement as runtime feature flags, but move active broker endpoints and secrets to `ConnectionStrings`. Kafka remains declared infrastructure only in v1, so no service/function should receive `ConnectionStrings:Kafka` or enable `Messaging:EnableKafka`.
 
 **Alternatives considered**:
 
@@ -65,11 +66,12 @@
 | --- | --- |
 | Put all broker settings, including feature flags, into connection strings | Makes runtime broker selection opaque and harder to toggle per environment. |
 | Keep the current nested provider endpoint objects | Works locally, but fits Aspire and deployment secret injection less cleanly. |
-| Remove all provider tuning options | Simpler config, but loses existing RabbitMQ outbox/prefetch tuning and Kafka client behavior. |
+| Remove all provider tuning options | Simpler config, but loses existing RabbitMQ outbox/prefetch tuning. |
+| Move Kafka settings into every service connection string | Creates v1 service dependencies for infrastructure that is only declared for future compatibility. |
 
 ## Decision: Add ServiceDefaults conservatively for OpenTelemetry monitoring
 
-**Rationale**: ServiceDefaults provides the preferred local path for Aspire-backed OpenTelemetry traces, metrics, health, and dashboard behavior. Each service already has startup, logging, auth, health, EF, MassTransit, and YARP conventions, so the implementation should add OpenTelemetry monitoring defaults without replacing service-specific behavior. Logs remain available for troubleshooting, but logs alone do not satisfy the monitoring requirement.
+**Rationale**: ServiceDefaults provides the preferred local path for Aspire-backed OpenTelemetry traces, metrics, health, and dashboard behavior. Each service already has startup, logging, auth, health, EF, MassTransit, and YARP conventions, so the implementation should add OpenTelemetry monitoring defaults without replacing service-specific behavior. ServiceDefaults may also provide thin wrappers for standard HiveSpace JWT authentication and OpenAPI registration, but those wrappers should delegate to existing HiveSpace shared helpers and keep service scopes, titles, descriptions, callbacks, and gateway exceptions service-owned. Logs remain available for troubleshooting, but logs alone do not satisfy the monitoring requirement.
 
 **Alternatives considered**:
 
@@ -77,6 +79,8 @@
 | --- | --- |
 | Rewrite service startup around Aspire client integrations | Too broad for a local orchestration feature and risks business-service regressions. |
 | AppHost only, no ServiceDefaults | Simpler, but loses the OpenTelemetry monitoring benefits expected from Aspire. |
+| Copy the eShop `Identity:*` authentication defaults into ServiceDefaults | Conflicts with HiveSpace's existing `Authentication:*` contract, per-service scopes, and existing audience validation behavior. |
+| Fully centralize service authentication in ServiceDefaults | Too risky for ApiGateway, IdentityService, and NotificationService because they have gateway, IdentityServer, cookie, Google, and SignalR-specific behavior. |
 
 ## Decision: Standardize API startup file roles as part of Aspire adoption
 
@@ -90,13 +94,14 @@
 | Standardize only full DDD services | Leaves ApiGateway and lite/legacy services as special cases even though they participate in the same local runtime. |
 | Rewrite all startup behavior from scratch | Too risky; the goal is consistent file roles and wiring, not behavior replacement. |
 
-## Decision: Keep MediaService Function out of v1 unless trivial
+## Decision: Include MediaService Function in v1 AppHost orchestration
 
-**Rationale**: The core spec names backend services and required infrastructure. The function project has a different runtime model. Including it should not delay or complicate the API/runtime replacement unless it can be launched without changing function behavior.
+**Rationale**: MediaService Function is part of the backend media runtime because it processes media queue messages produced through the MediaService upload flow. Including it in AppHost gives developers one local workflow for MediaService API, function processing, RabbitMQ, media database, and Azurite blob/queue storage. The implementation must preserve function behavior and queue/event contracts; the added scope is local orchestration and configuration only.
 
 **Alternatives considered**:
 
 | Alternative | Reason not selected |
 | --- | --- |
-| Always include the function app | Adds runtime complexity and may require separate tooling beyond the core API stack. |
-| Permanently exclude it | Too strong; implementation can include it later if a safe launch path is found. |
+| Keep function out of v1 | Leaves media processing outside the replacement backend runtime and still requires a separate local startup path. |
+| Permanently exclude it | Conflicts with the goal of one backend runtime for media API plus background processing. |
+| Change function behavior to fit AppHost | Too risky; orchestration must adapt to the function without changing processing semantics. |

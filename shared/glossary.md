@@ -117,4 +117,5 @@ Shared vocabulary for specs, plans, service docs, API contracts, and implementat
 | Redis | Cache/throttle/dedup infrastructure |
 | Azurite | Local emulator for Azure Storage |
 | SQL Server | Primary local database engine |
-| Docker Compose | Local infrastructure startup mechanism under `hivespace.config` |
+| AppHost | Aspire orchestration entry point in `../hivespace.microservice` for backend local development; starts backend services, MediaService Function, and declared local dependencies |
+| Docker Compose | Historical/raw infrastructure startup mechanism under `hivespace.config`; not the supported backend local development flow after story `0006` |

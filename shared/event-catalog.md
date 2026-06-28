@@ -31,11 +31,12 @@ Rules:
 
 | Contract | Owner | Consumers / Purpose |
 |---|---|---|
-| `IdentityUserCreatedIntegrationEvent` | IdentityService | UserService creates the matching profile with the same public user ID |
+| `IdentityUserReadyIntegrationEvent` | IdentityService | UserService creates the matching profile with the same public user ID once the account is usable |
 | `UserCreatedIntegrationEvent` | UserService | Build profile/display user projections in downstream services after profile creation |
 | `UserUpdatedIntegrationEvent` | UserService | Refresh profile/display user projections |
 | `UserEmailVerificationRequestedIntegrationEvent` | IdentityService | Notification/email delivery |
 | `UserEmailVerifiedIntegrationEvent` | IdentityService | Update email-verification projections or notification state |
+| `UserOtpChallengeRequestedIntegrationEvent` | IdentityService | NotificationService sends the OTP sign-in email; fields: RecipientEmail, OtpCode, ExpiresAt, Purpose (`SignIn` in v1) |
 | `StoreCreatedIntegrationEvent` | UserService | Catalog/Order/Notification store reference projection; IdentityService seller onboarding |
 | `StoreUpdatedIntegrationEvent` | UserService | Refresh store reference projections |
 

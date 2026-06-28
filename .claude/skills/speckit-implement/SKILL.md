@@ -151,18 +151,20 @@ You **MUST** consider the user input before proceeding (if not empty).
    - **Detailed tasks**: IDs, descriptions, file paths/file sets, exact change details, forbidden behavior, affected callers/dependencies, and acceptance checks from `tasks/*.md`
    - **Task groups**: Backend/frontend/docs/verification grouping, then service/app/package/lib/docs area, then action heading
    - **Execution flow**: Overall dependency order from `tasks.md`, then ordering constraints from detailed task bullets
+   - **User-owned E2E markers**: Any task with a detail bullet that starts with `User-owned E2E:` must be treated as explicit but non-executable user work
 
 6. Execute implementation following the task plan:
    - **Index-first execution**: Use `tasks.md` dependency order to choose which detailed file/group to work on next
    - **Group-by-group execution**: Complete tasks by repository area and service/app/package/lib unless dependencies require interleaving
    - **Respect dependencies**: Run sequential tasks in order; tasks in separate files may run in parallel only when file paths and dependencies do not overlap
-   - **Follow TDD approach**: Execute test tasks before their corresponding implementation tasks
+   - **Follow coverage-scoped TDD approach**: Execute required test tasks before their corresponding implementation tasks when the work changes measured coverage scope
+   - **Skip user-owned E2E**: Do not execute tasks marked with a detail bullet that starts with `User-owned E2E:`; keep them pending for the user
    - **File-based coordination**: Tasks affecting the same files must run sequentially
    - **Validation checkpoints**: Verify each phase completion before proceeding
 
 7. Implementation execution rules:
    - **Setup first**: Complete target repo instruction reads and foundational source-layout checks
-   - **Tests before code**: If tests are requested, create test-code tasks before corresponding implementation tasks and run checks from `verification.md`
+   - **Tests before code**: If the work changes measured coverage scope, create or execute required test-code tasks before corresponding implementation tasks and run checks from `verification.md`
    - **Backend/frontend/docs work**: Follow the detailed file groups and action headings rather than user-story phases
    - **Verification last per increment**: Run relevant `verification.md` tasks after each independently testable story or implementation group
 
@@ -172,6 +174,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    - For parallel-safe tasks or groups, continue with successful tasks, report failed ones
    - Provide clear error messages with context for debugging
    - Suggest next steps if implementation cannot proceed
+   - Report skipped `User-owned E2E` tasks separately as pending user validation and do not mark their checkboxes complete
    - **IMPORTANT** For completed tasks, mark the checkbox as `[X]` in the detailed `tasks/*.md` file when present; if using the legacy single-file format, mark it in `tasks.md`
    - Update the `tasks.md` completion checklist or status table only when the corresponding detailed file/group is complete
 

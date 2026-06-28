@@ -132,6 +132,18 @@ Detailed tasks are grouped by implementation ownership, then service, app,
 package, library, or docs area. User-story labels are kept for traceability, but
 the detailed files are not primarily ordered by user story.
 
+Treat the generated task set as TDD-first within the target repo's defined
+coverage scope:
+
+- Create or update explicit test tasks only for implementation that changes the
+  measured coverage scope defined by the target repo's testing rules.
+- Required test-code tasks must appear before their paired implementation
+  tasks.
+- Do not start production code for a story/task group inside measured scope
+  until its required tests are written and confirmed red where practical.
+- Work outside measured coverage scope does not require test tasks by default,
+  though additional tests may still be added when useful.
+
 Do not generate or implement `tasks/config.md`, `C###` task IDs, or feature
 tasks that edit `../hivespace.config`. Source-repo appsettings, gateway route
 config, and frontend environment typing belong in backend or frontend tasks.
@@ -183,10 +195,17 @@ directly, but prefer the source-repo `start-story`, `verify-story`, and
 Recommended source-repo story order:
 
 1. Run `start-story` to load the feature and story/task-group scope.
-2. Implement the coherent story or task group.
-3. Run `verify-story` to audit current changes against the feature task definitions.
-4. Fix any coverage gaps or verification failures.
-5. Run `done-story` only when the story is ready to close.
+2. Confirm scenario coverage from `spec.md`, `tasks.md`, and the detailed task
+   files before coding.
+3. Write the story's required coverage-scoped tests first, then implement the
+   coherent story or task group to make them pass.
+4. Run `verify-story` to audit current changes against the feature task
+   definitions.
+5. Run the source-repo coverage command for the affected backend service or
+   frontend workspace.
+6. If coverage is below 80% for the affected measured scope, add tests for that
+   measured scope and rerun verification and coverage.
+7. Run `done-story` only when the story is ready to close.
 
 ## 9. Backend Implementation Notes
 
@@ -218,6 +237,11 @@ Use `verify-story` before `done-story` to audit current backend, docs/catalog,
 and backend verification changes against the planned task
 acceptance criteria. `verify-story` is verification-only and must not edit,
 stage, format, generate migrations, or implement missing work.
+
+After implementation, run the backend coverage flow for the affected service.
+Backend stories are expected to reach at least 80% measured line coverage for
+the affected service scope. If the reported coverage is below 80%, add tests
+for that measured scope before considering the story complete.
 
 ## 10. Frontend Implementation Notes
 
@@ -257,6 +281,12 @@ Use `verify-story` before `done-story` to audit current frontend and frontend
 verification changes against the planned task acceptance criteria.
 `verify-story` is verification-only and must not edit, stage, format, or
 implement missing work.
+
+After implementation, run the frontend coverage flow for the affected workspace
+or shared package. Frontend stories are expected to reach at least 80%
+policy-scoped line coverage for the affected workspace scope. If the reported
+coverage is below 80%, add tests for that measured scope before considering the
+story complete.
 
 ## 11. Wrap Up
 

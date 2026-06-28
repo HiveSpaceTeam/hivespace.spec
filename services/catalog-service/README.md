@@ -46,6 +46,8 @@ New feature work should use CQRS handlers and Minimal API endpoint modules.
 | Database | SQL Server, CatalogService-owned catalog schema |
 | Messaging | MassTransit/RabbitMQ for product/store projection events |
 
+Backend local development starts CatalogService through Aspire AppHost in `../hivespace.microservice/src/HiveSpace.AppHost`; frontend dev servers remain separate.
+
 ## Planning Notes
 
 - Seller product APIs require seller authorization.

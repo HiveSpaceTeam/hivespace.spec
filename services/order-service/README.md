@@ -42,6 +42,8 @@ OrderService follows standard Clean Architecture / DDD with CQRS and Minimal API
 | Database | SQL Server, OrderService-owned order/cart/coupon/saga schema |
 | Messaging | MassTransit/RabbitMQ sagas and projections |
 
+Backend local development starts OrderService through Aspire AppHost in `../hivespace.microservice/src/HiveSpace.AppHost`; frontend dev servers remain separate.
+
 ## Planning Notes
 
 - Use a saga when checkout/fulfillment crosses CatalogService, PaymentService, NotificationService, or compensation is needed.

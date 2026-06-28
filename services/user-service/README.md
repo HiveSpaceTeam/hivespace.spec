@@ -29,7 +29,7 @@ Source path:
 
 ## Architecture
 
-UserService is narrowed to user-domain data after the IdentityService split. New feature work should use the current backend CQRS/Minimal API direction where practical.
+UserService is narrowed to user-domain data after the IdentityService split. The Application layer uses CQRS with Minimal API endpoints, aligned with all other Full Services.
 
 ## Runtime
 
@@ -40,16 +40,19 @@ UserService is narrowed to user-domain data after the IdentityService split. New
 | Database | SQL Server, UserService-owned profile/settings/address/store schema |
 | Auth provider | IdentityService-issued JWTs |
 
+Backend local development starts UserService through Aspire AppHost in `../hivespace.microservice/src/HiveSpace.AppHost`; frontend dev servers remain separate.
+
 ## Planning Notes
 
 - Store creation publishes `StoreCreatedIntegrationEvent`; IdentityService consumes it to grant seller access, so seller app must force token refresh after propagation.
-- UserService consumes `IdentityUserCreatedIntegrationEvent` to create the matching profile for an identity-owned account.
+- UserService consumes `IdentityUserReadyIntegrationEvent` to create the matching profile for an identity-owned account once it is usable.
 - User profile/settings APIs are shared by admin, seller, and buyer apps.
 - Buyer avatar changes use the existing profile update API with an optional `avatarFileId`; MediaService still owns upload, storage, and processing.
 - Address APIs are buyer-facing but remain UserService-owned because addresses belong to the user profile.
 - Downstream services should consume user/store events or maintain projections instead of querying UserService database.
 - The split is documented in [ADR-0001](../../architecture/decisions/ADR-0001-split-identity-service.md).
 - Standardized integration event naming, inheritance, and publisher policy are documented in [ADR-0002](../../architecture/decisions/ADR-0002-standardized-integration-event-contracts.md).
+- Readiness-based profile provisioning for verified email/password and Google-created accounts is documented in [ADR-0006](../../architecture/decisions/ADR-0006-email-verification-activation-boundary.md).
 
 ## Detail
 
