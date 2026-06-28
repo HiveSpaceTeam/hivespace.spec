@@ -5,6 +5,7 @@ Step 1 - Resolve the feature
 - If a feature name is supplied, use `specs/[feature-name]`.
 - Otherwise read `.specify/feature.json`; if absent, use the most recently modified folder under `specs/`.
 - Read `spec.md`, `plan.md`, and `tasks.md`.
+- Read `tasks/verification.md` when present so user-owned E2E items can be identified before closing the feature.
 
 Step 2 - Update service docs
 Classify every service mentioned by the feature before editing:
@@ -33,6 +34,8 @@ Step 3 - Verify catalogs
 - Do not rewrite common catalog rows just to mention one feature-specific use.
 
 Step 4 - Mark spec done
+- Confirm any `User-owned E2E` tasks were completed by the user or are being carried as explicit follow-up.
+- Do not mark `User-owned E2E` tasks complete on the user's behalf.
 - In the feature `spec.md`, set status to `Implemented`.
 - Add the implementation date.
 

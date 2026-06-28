@@ -18,6 +18,7 @@ Implementation source:
 | `IdentityRole` / role records | ASP.NET Identity role | Authorization roles such as buyer, seller, admin, and system admin |
 | External login records | ASP.NET Identity external login | Durable Google provider link owned by IdentityService |
 | IdentityServer clients/grants | IdentityServer data | OIDC client configuration, persisted grants, refresh tokens, and protocol state |
+| `OtpChallenge` | EF Core entity | Reusable auth-scoped OTP challenge owned by IdentityService; v1 uses `Purpose = SignIn`; holds challenge token, code, expiry, cooldown, attempt count, and used/invalidated flags; table: `otp_challenges` |
 
 ## Business Rules
 
@@ -29,6 +30,7 @@ Implementation source:
 - Google sign-in is allowed only for buyer and seller app contexts. Admin accounts cannot be created or signed in through Google.
 - New Google-authenticated users start as normal user accounts. Seller access still requires the existing store onboarding flow.
 - A matching existing email/password account may link Google only after Google provides the same verified email, the user explicitly consents, and the existing password is confirmed.
+- OTP-based auth challenges are IdentityService-owned credential state. The reusable challenge model may support future IdentityService auth flows, but this feature exposes sign-in only.
 
 ## Lifecycle
 

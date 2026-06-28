@@ -51,10 +51,12 @@ Backend local development starts IdentityService through Aspire AppHost in `../h
 - Account readiness publishes `IdentityUserReadyIntegrationEvent`; UserService consumes it to create the matching profile once the account is usable.
 - Store registration remains UserService-owned. IdentityService consumes `StoreCreatedIntegrationEvent` idempotently to grant seller role/claims and store reference on the identity account.
 - Email verification events are IdentityService-owned; NotificationService only delivers the email/notification.
+- Email OTP sign-in is also IdentityService-owned. Public v1 behavior stays on `/api/v1/accounts/otp/request` and `/api/v1/accounts/otp/verify`, while internal state is stored as a reusable `OtpChallenge` with `Purpose = SignIn`.
 - Browser auth responses set secure HttpOnly token cookies and a CSRF token; responses must not expose access or refresh tokens to frontend scripts.
 - Google sign-in is buyer/seller only. New Google-authenticated accounts are normal user accounts; seller access still comes from UserService store onboarding and `StoreCreatedIntegrationEvent` role propagation.
 - Existing email/password accounts may link Google only after verified Google email match, explicit consent, and correct password confirmation. When a verified Google email matches an existing unlinked password account, the user must link, sign in with password, reset password, or use another Google account; IdentityService must not create a duplicate Google-only account for that email. Successful linking marks the matching account email verified.
 - Old user-facing IdentityService account pages and `AccountCompatibilityEndpoints` are removed; keep only non-page IdentityServer protocol behavior still required by Duende.
+- IdentityService Minimal API endpoint organization should keep OTP routes in a dedicated `OtpSignInEndpoints` module alongside the existing `IdentityEndpoints`, `GoogleExternalAuthEndpoints`, and `AdminIdentityEndpoints` modules.
 - Seller access may require token refresh after role propagation.
 - The split is documented in [ADR-0001](../../architecture/decisions/ADR-0001-split-identity-service.md).
 - Standardized integration event naming, inheritance, and publisher policy are documented in [ADR-0002](../../architecture/decisions/ADR-0002-standardized-integration-event-contracts.md).

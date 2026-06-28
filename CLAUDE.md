@@ -91,6 +91,18 @@ Always follow this order:
 5. Update catalogs after task generation.
 6. Wrap up after the full feature ships.
 
+Task generation and implementation are TDD-first by default:
+
+- Create or update explicit test tasks only for implementation that changes the
+  target repo's measured coverage scope.
+- Required test-code tasks must precede their paired implementation tasks.
+- Story completion requires running the target repo coverage flow and adding
+  tests for the affected measured scope when that measured scope is below 80%
+  coverage.
+- End-to-end or browser-journey tasks are user-owned. Keep them explicit in
+  `tasks/verification.md`, but mark them as `User-owned E2E` so agents skip
+  them in start/implement/verify/done flows and leave completion to the user.
+
 When referring to a command, use the active agent's syntax from the table above.
 
 ## Service Documentation Scope
@@ -115,6 +127,10 @@ Example: if UserService stores a buyer avatar reference and consumes existing Me
 6. Wait for user approval before planning technical artifacts.
 7. Then run checklist, plan, tasks, and catalog update in that order.
 
+When generating or reviewing implementation tasks, ensure scenarios implemented
+inside measured coverage scope have matching test coverage tasks before
+implementation starts.
+
 ## Repo Rules
 
 - This repo is planning-only; do not add runnable product code here.
@@ -134,6 +150,11 @@ Before switching to `../hivespace.microservice` or `../hivespace.web`:
 2. Include owning service docs, changed supporting service docs, and relevant catalog references in the implementation context.
 3. Keep backend and frontend work scoped to one coherent story or task group.
 4. Follow the target repo's own agent instruction files.
+5. After implementation, run the target repo coverage workflow for the affected
+   service/workspace and add tests for the measured scope if the measured
+   coverage is below 80%.
+6. Treat any task marked `User-owned E2E` as out of agent execution scope. The
+   agent may reference it, but the user must run and confirm that validation.
 
 ## Config Repo Scope
 

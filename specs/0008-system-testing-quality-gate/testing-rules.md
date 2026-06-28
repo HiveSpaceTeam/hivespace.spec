@@ -8,13 +8,16 @@ Consolidated from `../hivespace.microservice/TESTING.md` and `../hivespace.web/T
 
 | Repo / Workspace | Measured scope | Target | Enforcement |
 |------------------|---------------|--------|-------------|
-| Backend - all services | Domain + Application layers (per `coverage.runsettings`) | 80% line | `quality-gate.ps1` (B021 adds check) |
+| Backend - all services | Domain + Application layers (per `coverage.runsettings`) | 80% line | `quality-gate.ps1` |
 | `hivespace.web/apps/buyer` | `src/pages/**, src/stores/**, src/composables/**, src/router/**` | 80% line | existing `coverage.ps1` |
 | `hivespace.web/apps/seller` | `src/pages/**, src/stores/**, src/composables/**, src/router/**` | 80% line | existing `coverage.ps1` |
 | `hivespace.web/apps/admin` | `src/pages/**, src/stores/**, src/composables/**, src/router/**` | 80% line | existing `coverage.ps1` |
 | `hivespace.web/packages/shared` | `src/features/**, src/composables/**, src/test-utils/**` | 80% line | existing `coverage.ps1` |
 
-Coverage below threshold is treated as an incomplete deliverable, not a passing result.
+Coverage below threshold means the story is not sufficiently protected yet.
+After implementation, review the coverage output, add missing tests for the
+affected measured scope, and rerun coverage until the reported percentage meets
+or exceeds the target.
 
 ---
 

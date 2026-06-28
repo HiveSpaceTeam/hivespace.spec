@@ -47,6 +47,7 @@ Backend local development starts NotificationService through Aspire AppHost in `
 - Other services publish notification intent; NotificationService decides delivery mechanics.
 - Notification preferences affect delivery, not whether source-domain events occurred.
 - SignalR clients receive `ReceiveNotification` events through the shared frontend realtime composable.
+- NotificationService consumes `UserOtpChallengeRequestedIntegrationEvent` for OTP email delivery. V1 handles only `Purpose = SignIn`; future purposes require explicit feature and catalog review before delivery behavior is expanded.
 - Fulfillment continuation events use standardized `*IntegrationEvent` names while remaining MassTransit consume-context orchestration messages per [ADR-0002](../../architecture/decisions/ADR-0002-standardized-integration-event-contracts.md).
 
 ## Detail

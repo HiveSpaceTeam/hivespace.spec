@@ -152,7 +152,7 @@ The authoritative backend coverage scope is defined in `../hivespace.microservic
 
 ### Coverage targets
 
-All services must reach **80% line coverage** on Domain and Application layers. This is enforced by `quality-gate.ps1` (task B021 adds the threshold check — currently the script reports only).
+All services must reach **80% line coverage** on Domain and Application layers. This is enforced by `quality-gate.ps1`.
 
 | Service | Measured layers | Target Line % |
 |---------|----------------|---------------|

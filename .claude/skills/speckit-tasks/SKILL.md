@@ -73,6 +73,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    - If plan.md links ADRs: Generate tasks that honor the accepted/draft architectural decisions and include required follow-up docs/catalog updates
    - Generate docs/catalog update tasks only for owning services, changed supporting services, new contracts, or changed contracts
    - Generate verification-only tasks for reused supporting services and unchanged common API/event contracts
+   - Generate end-to-end or browser-journey validation only as explicit user-owned items in `verification.md`; do not mix them into backend/frontend executable implementation tasks
    - Generate detailed tasks under `FEATURE_DIR/tasks/`, grouped by implementation ownership, then service/app/package/lib, then action (see Task Generation Rules below)
    - Use user-story labels only for traceability, not as the primary grouping
    - Generate dependency order showing implementation group sequencing and story traceability
@@ -84,7 +85,8 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Detailed task files under `FEATURE_DIR/tasks/` as needed: `backend.md`, `frontend.md`, `docs-catalog.md`, and `verification.md`
    - Detailed tasks grouped by service/app/package/lib and then action headings: Create, Update, Remove, Move/Rename, Verify
    - Detailed tasks with stable prefixes: B### backend, F### frontend, D### docs/catalog, V### verification
-   - Test-code tasks for every AC in spec.md, placed in the relevant detailed file (backend.md or frontend.md) BEFORE their corresponding implementation tasks; run-test tasks in `verification.md`
+   - Test-code tasks for implementation inside measured coverage scope, placed in the relevant detailed file (backend.md or frontend.md) BEFORE their corresponding implementation tasks; run-test tasks in `verification.md`
+   - User-owned E2E items in `verification.md` must remain explicit `V###` tasks, but include a detail bullet that starts with `User-owned E2E:` and an acceptance check that requires user execution/confirmation rather than agent execution
    - Documentation/catalog scope that says which service docs and catalog entries are editable, and which supporting services are verification-only
 
 5. **Report**: Output path to generated `tasks.md` and generated detailed task files, plus summary:
@@ -133,7 +135,7 @@ The generated task set should be immediately executable. `tasks.md` is the entry
 
 **CRITICAL**: Detailed tasks MUST be organized by implementation ownership, not primarily by user story. Preserve user-story labels (`[US1]`, `[US2]`, etc.) for traceability and independent acceptance.
 
-**Tests are ALWAYS generated (TDD-first)**: For every feature, generate test tasks covering every Acceptance Criteria (AC) from spec.md. Test tasks must be placed BEFORE their corresponding implementation tasks in both the detailed file and the dependency order.
+**Tests are generated for coverage-defined scope (TDD-first)**: For every feature, generate required test tasks only for implementation that changes files, layers, or behaviors inside the target repo's measured coverage scope. Required test tasks must be placed BEFORE their corresponding implementation tasks in both the detailed file and the dependency order.
 
 ### Task Files (REQUIRED)
 
@@ -143,6 +145,7 @@ Keep `tasks.md` as the compatibility entrypoint and high-level tracker. Generate
 - `frontend.md` for frontend apps, shared package, services, stores, components, pages, routes, i18n
 - `docs-catalog.md` for service docs, API catalog, event catalog, ADRs, architecture docs
 - `verification.md` for builds, tests, lint/type-check, quickstart/manual validation, final searches
+- User-owned end-to-end validation belongs only in `verification.md`, marked with a detail bullet that starts with `User-owned E2E:`
 
 Do not generate `tasks/config.md`, `C###` task IDs, or feature tasks that edit `../hivespace.config`. Source-repo runtime settings, appsettings, gateway route config, and frontend environment typing belong in `backend.md` or `frontend.md` based on the owning source repo. The config repo may remain referenced only as local infrastructure context, such as starting Docker Compose.
 
@@ -166,6 +169,7 @@ Every detailed task MUST strictly follow this format:
    - Cross-cutting setup, docs, and verification tasks may omit story labels only when they do not map to a single story
 4. **Action and primary target**: Start with Create, Update, Remove, Move/Rename, or Verify
 5. **Detail bullets**: Include target file path or explicit file set, exact fields/types/methods/routes/events/config keys/docs sections to create/update/remove/move, forbidden behavior, affected callers/dependencies when relevant, and acceptance
+   - For user-owned E2E verification tasks, add a detail bullet that starts with `User-owned E2E:` and describe the manual/browser flow the user must run
 
 **Examples**:
 
@@ -175,18 +179,18 @@ Every detailed task MUST strictly follow this format:
 - WRONG: `- [ ] B001 [US1] Create ApplicationUser` with no detail bullets
 - WRONG: `- [ ] T001 [US1] Create model` (wrong ID prefix and missing file path/detail)
 
-### AC-to-Test Task Mapping (REQUIRED)
+### Coverage-Scoped Test Task Mapping (REQUIRED)
 
-For every Acceptance Criteria (AC) in spec.md, generate at least one test task:
+For every Acceptance Criteria (AC) in spec.md that is implemented through measured coverage scope, generate at least one test task:
 
-1. **Reference the AC**: Include the AC scenario label (e.g., `AC1.1`) in the task description
+1. **Reference the AC**: Include the AC scenario label (e.g., `AC1.1`) in the task description when the covered implementation maps to that AC
 2. **Specify test file location** per source-repo TESTING.md guides:
    - Backend: mirror the class under test — `CreateOrderCommandHandlerTests.cs` for `CreateOrderCommandHandler`
    - Frontend: co-locate with source — `cart.store.test.ts` next to `cart.store.ts`, `CartPage.test.ts` next to `CartPage.vue`
 3. **Describe the test assertion** in plain language using the repo-mandated naming style:
    - Backend: `Method_Condition_ExpectedOutcome` (e.g., `Handle_ValidCommand_CreatesOrder`)
    - Frontend (all types): `should …` plain English sentence (e.g., `should render empty cart when no items exist`) — per `hivespace.web/TESTING.md`
-4. **Task ID**: Use B###/F### prefix, assign a lower number than the paired implementation task so test tasks sort first in the same group
+4. **Task ID**: Use B###/F### prefix, assign a lower number than the paired implementation task so required test tasks sort first in the same group
 5. **Verification**: Add a `V###` task in `verification.md` per service/app group to run its test suite and confirm green
 
 **Example backend test task:**
@@ -223,7 +227,7 @@ For every Acceptance Criteria (AC) in spec.md, generate at least one test task:
 
 2. **From Contracts**:
    - Map each interface contract to the owning implementation area and the user story it serves
-   - Always create test-code tasks in the relevant backend/frontend group BEFORE implementation tasks (one per AC), and run-test tasks in `verification.md`
+   - Create required test-code tasks in the relevant backend/frontend group BEFORE implementation tasks only when the contract work changes measured coverage scope, and add run-test tasks in `verification.md`
 
 3. **From Data Model**:
    - Map each entity to the owning service/lib and user story labels
@@ -236,6 +240,7 @@ For every Acceptance Criteria (AC) in spec.md, generate at least one test task:
    - Source-repo appsettings, gateway route config, and frontend environment typing go in `backend.md` or `frontend.md`
    - Do not create feature tasks for Docker, local/cloud infrastructure config, environment sync, or `../hivespace.config`
    - Cross-cutting verification goes in `verification.md`
+   - End-to-end or manual browser-flow validation goes in `verification.md` as `User-owned E2E` tasks and is never agent-executable implementation work
 
 5. **From Documentation/Catalog Scope**:
    - Owning service docs: doc update tasks when the shipped feature changes that service

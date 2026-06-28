@@ -36,6 +36,7 @@ Rules:
 | `UserUpdatedIntegrationEvent` | UserService | Refresh profile/display user projections |
 | `UserEmailVerificationRequestedIntegrationEvent` | IdentityService | Notification/email delivery |
 | `UserEmailVerifiedIntegrationEvent` | IdentityService | Update email-verification projections or notification state |
+| `UserOtpChallengeRequestedIntegrationEvent` | IdentityService | NotificationService sends the OTP sign-in email; fields: RecipientEmail, OtpCode, ExpiresAt, Purpose (`SignIn` in v1) |
 | `StoreCreatedIntegrationEvent` | UserService | Catalog/Order/Notification store reference projection; IdentityService seller onboarding |
 | `StoreUpdatedIntegrationEvent` | UserService | Refresh store reference projections |
 

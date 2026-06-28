@@ -66,6 +66,8 @@ IdentityServer public OIDC protocol endpoints are served directly by IdentitySer
 | POST | `/api/v1/accounts/email-verification` | `RequireAdminOrUser` | Send verification email |
 | POST | `/api/v1/accounts/email-verification/resend` | Anonymous | Request another verification email for pending accounts with generic success semantics, cooldown protection, and `204 No Content` success |
 | POST | `/api/v1/accounts/email-verification/verify` | Anonymous | Verify email token and return `204 No Content` on success |
+| POST | `/api/v1/accounts/otp/request` | Anonymous | Request a one-time sign-in code sent to an email address; always returns generic `200 OK` with challenge token, expiry timestamp, and cooldown timestamp regardless of account existence or cooldown state |
+| POST | `/api/v1/accounts/otp/verify` | Anonymous | Verify OTP code using opaque challenge token; on success issues a browser session (HttpOnly cookies + CSRF token) identical to password sign-in and returns a same-origin redirect URL |
 | GET | `/api/v1/accounts/external/google/challenge` | Anonymous | Start Google from buyer/seller sign-in or sign-up context and preserve a safe return URL |
 | GET | `/api/v1/accounts/external/google/complete` | Anonymous | Complete Google sign-in, create/sign in a Google-linked normal user account only when no same-email password account exists, or redirect to required frontend account-link confirmation |
 | POST | `/api/v1/accounts/external/google/link` | Temporary Google link state + CSRF/link token | Confirm consent and existing account password, link Google, mark verified matching email, and set browser session cookies |

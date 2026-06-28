@@ -8,6 +8,7 @@ IdentityService owns:
 - Duende IdentityServer configuration and operational grants.
 - Identity-owned account status used by authentication and authorization.
 - Email verification state and verification tokens.
+- `OtpChallenge` records used for email OTP sign-in and future identity-owned auth OTP purposes.
 - Identity seed data for users, roles, claims, account status, seller authorization references, and OIDC configuration.
 - Google external login links and temporary pending-link state.
 
@@ -20,6 +21,7 @@ IdentityService owns:
 | `IdentityUserReadyIntegrationEvent` | Let UserService create a matching profile with the same public user ID once the account is usable |
 | `UserEmailVerificationRequestedIntegrationEvent` | Trigger NotificationService verification email/notification delivery |
 | `UserEmailVerifiedIntegrationEvent` | Signal identity-owned verified email state |
+| `UserOtpChallengeRequestedIntegrationEvent` | Trigger NotificationService OTP email delivery when a valid challenge is generated; fields: RecipientEmail, OtpCode, ExpiresAt, Purpose (`SignIn` in v1) |
 
 ### Consumed Events
 
