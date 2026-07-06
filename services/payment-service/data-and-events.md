@@ -7,6 +7,7 @@ PaymentService owns:
 - `payments`
 - `wallets`
 - `transactions`
+- `platform_currency_config_refs`
 
 ## Core Data
 
@@ -22,6 +23,7 @@ PaymentService owns:
 | Message | Purpose |
 |---|---|
 | `InitiatePayment` | Create payment and payment URL for checkout |
+| `PlatformCurrencyPolicyUpdatedIntegrationEvent` | Refresh local currency-policy validation projection for payment initiation and payment read normalization |
 
 ## Published Events
 
@@ -40,6 +42,7 @@ PaymentService owns:
 ## Invariants
 
 - Payment status changes are idempotent and monotonic for a gateway transaction.
+- Currency policy ownership remains in UserService; PaymentService uses the local projection only for synchronous validation.
 - Gateway transaction IDs must not process twice.
 - Wallet running balances must stay consistent with transaction history.
 - PaymentService does not directly update orders.

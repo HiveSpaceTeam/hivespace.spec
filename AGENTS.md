@@ -162,5 +162,5 @@ Before switching to `../hivespace.microservice` or `../hivespace.web`:
 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
-shell commands, and other important information, read `specs/0008-system-testing-quality-gate/plan.md`.
+shell commands, and other important information, read `specs/0010-standardize-money-handling/plan.md`.
 <!-- SPECKIT END -->

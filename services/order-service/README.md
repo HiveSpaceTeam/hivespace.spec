@@ -20,6 +20,7 @@ Source path:
 - Coupon creation, usage, and early ending.
 - CheckoutSaga and FulfillmentSaga state.
 - Product, SKU, and store projections needed for order processing.
+- Local currency-policy validation projection used for coupon, cart, checkout, and order money rules.
 
 ## Must Not Own
 
@@ -49,8 +50,12 @@ Backend local development starts OrderService through Aspire AppHost in `../hive
 - Use a saga when checkout/fulfillment crosses CatalogService, PaymentService, NotificationService, or compensation is needed.
 - Order item/product data should be snapshotted at purchase time.
 - Seller order actions must enforce seller/store ownership.
+- Coupon writes use one canonical aggregate `CurrencyCode` for `DiscountAmount`, `MaxDiscountAmount`, and `MinOrderAmount` instead of repeated per-field currency state.
+- Cart, coupon application, checkout preview, and checkout initiation must reject mixed or disabled currency states before totals or payment flow proceed.
+- Order read models must return explicit money metadata and invalid-money diagnostics for malformed historical money data instead of falling back to `VND`.
 - Payment result handling belongs to PaymentService; OrderService reacts to payment success/failure events.
 - Checkout, fulfillment, and shared handoff workflow contracts use standardized `*IntegrationEvent` names per [ADR-0002](../../architecture/decisions/ADR-0002-standardized-integration-event-contracts.md).
+- Currency-policy ownership remains in UserService per [ADR-0010](../../architecture/decisions/ADR-0010-user-service-platform-currency-policy.md); OrderService only consumes the projection for validation.
 
 ## Detail
 

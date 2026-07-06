@@ -15,6 +15,7 @@ OrderService owns:
 - `product_refs`
 - `sku_refs`
 - `store_refs`
+- `platform_currency_config_refs`
 
 ## Consumed Projection Events
 
@@ -26,6 +27,7 @@ OrderService owns:
 | `ProductSkuUpdatedIntegrationEvent` | Refresh SKU projection |
 | `StoreCreatedIntegrationEvent` | Create store projection |
 | `StoreUpdatedIntegrationEvent` | Refresh store projection |
+| `PlatformCurrencyPolicyUpdatedIntegrationEvent` | Refresh local currency-policy validation projection for coupon, cart, checkout, and order money rules |
 
 ## Consumed Saga Events
 
@@ -61,6 +63,7 @@ OrderService owns:
 ## Invariants
 
 - OrderService coordinates checkout but does not own catalog truth or payment gateway truth.
+- Currency policy ownership remains in UserService; OrderService uses the local projection only for synchronous validation.
 - Order records keep purchase-time snapshots of product, SKU, address, and pricing data.
 - Coupon usage is committed only after the checkout path reaches the appropriate success point.
 - Saga state and outbox/inbox tables must remain configured together.

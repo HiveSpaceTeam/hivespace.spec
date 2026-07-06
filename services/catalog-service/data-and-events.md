@@ -15,6 +15,7 @@ CatalogService owns:
 - `product_attributes`
 - `category_attributes`
 - `store_refs`
+- `platform_currency_config_refs`
 
 ## Consumed Events
 
@@ -22,6 +23,7 @@ CatalogService owns:
 |---|---|
 | `StoreCreatedIntegrationEvent` | Create local store reference |
 | `StoreUpdatedIntegrationEvent` | Refresh local store reference |
+| `PlatformCurrencyPolicyUpdatedIntegrationEvent` | Refresh local currency-policy validation projection for product and SKU writes |
 
 ## Published Events
 
@@ -53,5 +55,6 @@ CatalogService owns:
 ## Invariants
 
 - Product/SKU facts are authoritative only in CatalogService.
+- Currency policy ownership remains in UserService; CatalogService uses the local projection only for synchronous validation.
 - Product/SKU projections in OrderService are read models, not catalog ownership.
 - Anonymous storefront APIs must not expose seller-only draft or private data.

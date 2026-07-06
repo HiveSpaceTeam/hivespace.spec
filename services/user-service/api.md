@@ -9,6 +9,18 @@
 | GET | `/api/v1/users/settings` | `RequireAdminOrUser` | Get user settings |
 | PUT | `/api/v1/users/settings` | `RequireAdminOrUser` | Update user settings |
 
+## Platform Configuration
+
+| Method | Path | Auth | Purpose |
+|---|---|---|---|
+| GET | `/api/v1/users/platform-currency-policy` | `RequireAdminOrUser` | Get the enabled/default platform currency policy for authenticated admin, seller, and buyer clients |
+
+### Currency Policy Read Rules
+
+- The authenticated read returns supported currencies, enabled state, default currency, and policy version.
+- `defaultCurrencyCode` is a client-visible preselection hint for eligible admin/seller flows, not a backend fallback for omitted money currency values.
+- Clients should treat the response as the authoritative source for enabled currencies when rendering money-authoring flows.
+
 ### Profile Avatar Flow
 
 - Avatar changes reuse `PUT /api/v1/users/me`; clients omit `avatarFileId` when no avatar change is requested.
@@ -33,6 +45,13 @@
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
 | POST | `/api/v1/stores` | `RequireUser` | Register seller store |
+
+## Admin Configuration
+
+| Method | Path | Auth | Purpose |
+|---|---|---|---|
+| GET | `/api/v1/admins/configuration/currencies` | `RequireAdmin` | Get persisted platform currency configuration, including enabled currencies, default currency, and version |
+| PUT | `/api/v1/admins/configuration/currencies` | `RequireAdmin` | Update enabled/default platform currencies and reject disabling the current default unless a replacement default is saved in the same request |
 
 ## Admin Profile And Store Review
 

@@ -18,6 +18,7 @@ Source path:
 - Product attributes and values.
 - Storefront product read models.
 - Store reference projection used for catalog ownership/display.
+- Local currency-policy validation projection used for product and SKU money writes.
 
 ## Must Not Own
 
@@ -52,9 +53,12 @@ Backend local development starts CatalogService through Aspire AppHost in `../hi
 
 - Seller product APIs require seller authorization.
 - Storefront product discovery APIs are anonymous.
+- Product and SKU writes must validate explicit currency codes against the local currency-policy projection; CatalogService must fail closed when that projection is missing, unreadable, or stale for a write path.
+- Product read models expose explicit money metadata and invalid-money diagnostics instead of assuming `VND`.
 - OrderService should use product/SKU projections from events rather than querying CatalogService database.
 - Media references should point to MediaService assets, but CatalogService owns the product association decision.
 - Inventory workflow events use standardized `*IntegrationEvent` names per [ADR-0002](../../architecture/decisions/ADR-0002-standardized-integration-event-contracts.md).
+- Currency-policy ownership remains in UserService per [ADR-0010](../../architecture/decisions/ADR-0010-user-service-platform-currency-policy.md); CatalogService only consumes the projection for validation.
 
 ## Detail
 

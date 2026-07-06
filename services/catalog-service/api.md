@@ -4,10 +4,10 @@
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
-| POST | `/api/v1/products` | `RequireSeller` | Create product |
+| POST | `/api/v1/products` | `RequireSeller` | Create product with explicit price currency validated against the enabled platform currency policy |
 | GET | `/api/v1/products` | `RequireSeller` | List seller products |
-| GET | `/api/v1/products/{id}` | `RequireSeller` | Get seller product detail |
-| PUT | `/api/v1/products/{id}` | `RequireSeller` | Update product |
+| GET | `/api/v1/products/{id}` | `RequireSeller` | Get seller product detail with explicit SKU money metadata and invalid-money diagnostics when needed |
+| PUT | `/api/v1/products/{id}` | `RequireSeller` | Update product with explicit price currency validated against the enabled platform currency policy |
 | DELETE | `/api/v1/products/{id}` | `RequireSeller` | Delete or deactivate product |
 
 ## Storefront Products
@@ -15,7 +15,7 @@
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
 | GET | `/api/v1/products/summaries` | Anonymous | Search/list storefront product summaries |
-| GET | `/api/v1/products/detail/{id}` | Anonymous | Get storefront product detail with SKUs |
+| GET | `/api/v1/products/detail/{id}` | Anonymous | Get storefront product detail with SKUs, explicit money metadata, and invalid-money diagnostics when needed |
 
 ## Categories
 

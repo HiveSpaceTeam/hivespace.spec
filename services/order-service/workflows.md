@@ -5,8 +5,9 @@
 ```text
 Buyer app
   -> POST /api/v1/orders/checkout/preview
-  -> OrderService reads cart, coupons, projections
-  -> returns totals, discounts, delivery/payment information
+  -> OrderService reads cart, coupons, product/store refs, and local currency-policy projection
+  -> rejects mixed, disabled, missing, or stale currency validation state before returning totals
+  -> returns totals, discounts, delivery/payment information with explicit money metadata
 ```
 
 Preview must not reserve inventory, create payment state, or commit coupon usage.
@@ -15,6 +16,7 @@ Preview must not reserve inventory, create payment state, or commit coupon usage
 
 ```text
 Initial
+  -> validate cart, coupon, and payment currency state against local currency-policy projection
   -> create order records
   -> reserve inventory
   -> if COD:
@@ -32,6 +34,8 @@ Initial
 ```
 
 Checkout success publishes `OrderReadyForFulfillmentIntegrationEvent` as the shared handoff to fulfillment.
+
+Currency validation is a guard inside the existing checkout flow only; feature `0010` does not add new saga states, compensation branches, or timeouts.
 
 ## Fulfillment Saga
 

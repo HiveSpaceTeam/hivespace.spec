@@ -6,8 +6,8 @@
 |---|---|---|---|
 | GET | `/api/v1/payments/vnpay/return` | Anonymous | Handle VNPay browser return |
 | GET | `/api/v1/payments/webhook/{gateway}` | Anonymous | Handle payment gateway webhook/IPN |
-| GET | `/api/v1/payments/{paymentId}` | `Authorize` | Get payment detail |
-| GET | `/api/v1/payments/by-order/{orderId}` | `Authorize` | Get payment for an order |
+| GET | `/api/v1/payments/{paymentId}` | `Authorize` | Get payment detail with explicit money metadata and invalid-money diagnostics when needed |
+| GET | `/api/v1/payments/by-order/{orderId}` | `Authorize` | Get payment for an order with explicit money metadata and invalid-money diagnostics when needed |
 
 ## Wallets
 

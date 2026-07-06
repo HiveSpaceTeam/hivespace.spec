@@ -8,6 +8,8 @@ UserService owns:
 - User settings such as culture and theme.
 - User addresses.
 - Store registration records and store lifecycle data.
+- Platform configuration records that hold config-level default/version state for UserService-owned list settings.
+- Platform currency item rows that hold enabled/disabled state for supported currencies.
 - User-owned profile, address, settings, and store seed data.
 
 ## Integration Events
@@ -20,6 +22,7 @@ UserService owns:
 | `UserUpdatedIntegrationEvent` | Refresh downstream user projections |
 | `StoreCreatedIntegrationEvent` | Let CatalogService/OrderService create store references and let IdentityService grant seller access |
 | `StoreUpdatedIntegrationEvent` | Refresh downstream store references |
+| `PlatformCurrencyPolicyUpdatedIntegrationEvent` | Let CatalogService, OrderService, and PaymentService refresh local currency-policy validation projections after admin configuration changes |
 
 ### Consumed Events
 
@@ -40,6 +43,7 @@ UserService owns:
 ## Invariants
 
 - Profile, settings, address, and store state are authoritative only in UserService.
+- Platform currency policy state is authoritative only in UserService even though other services keep local validation projections.
 - IdentityService is authoritative for authentication, roles, claims, lockout, account status, and email verification.
 - Store registration is the only supported UserService trigger for seller/store-owner role propagation.
 - Other services must not assume store/user display data without a projection event or public API contract.
@@ -47,3 +51,4 @@ UserService owns:
 ## Publisher Policy
 
 - UserService application publishing uses service-owned publisher abstractions such as `IStoreEventPublisher` for user/store integration events.
+- Platform currency policy publishing should use a service-owned publisher abstraction so outbox-backed event publication stays outside direct endpoint code.

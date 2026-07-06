@@ -5,6 +5,7 @@
 ```text
 OrderService CheckoutSaga
   -> InitiatePayment
+  -> PaymentService validates order currency against local currency-policy projection
   -> PaymentService creates payment
   -> PaymentService requests gateway URL
   -> PaymentInitiatedIntegrationEvent or PaymentInitiationFailedIntegrationEvent
@@ -18,6 +19,8 @@ Gateway
   -> PaymentService validates gateway payload
   -> payment status changes once
   -> PaymentSucceededIntegrationEvent or PaymentFailedIntegrationEvent
+
+Payment read APIs must preserve the stored payment currency explicitly and surface invalid-money diagnostics rather than inferring `VND` when historical data is malformed.
 ```
 
 ## Workflow Rules

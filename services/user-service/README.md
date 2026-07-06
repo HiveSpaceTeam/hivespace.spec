@@ -15,8 +15,10 @@ Source path:
 - User profile and settings.
 - User addresses.
 - Store registration and seller-role transition.
+- Platform configuration foundation records for list-based settings owned by UserService.
+- Platform currency configuration rows, default currency selection, and policy version state.
 - User-owned profile and store seed data.
-- User/store profile and projection integration events.
+- User/store profile, projection, and platform-currency-policy integration events.
 
 ## Must Not Own
 
@@ -47,12 +49,15 @@ Backend local development starts UserService through Aspire AppHost in `../hives
 - Store creation publishes `StoreCreatedIntegrationEvent`; IdentityService consumes it to grant seller access, so seller app must force token refresh after propagation.
 - UserService consumes `IdentityUserReadyIntegrationEvent` to create the matching profile for an identity-owned account once it is usable.
 - User profile/settings APIs are shared by admin, seller, and buyer apps.
+- UserService owns the persisted platform currency policy and exposes both admin management and authenticated read endpoints for it.
+- Currency policy updates publish `PlatformCurrencyPolicyUpdatedIntegrationEvent` so CatalogService, OrderService, and PaymentService can refresh local validation projections without direct database reads.
 - Buyer avatar changes use the existing profile update API with an optional `avatarFileId`; MediaService still owns upload, storage, and processing.
 - Address APIs are buyer-facing but remain UserService-owned because addresses belong to the user profile.
 - Downstream services should consume user/store events or maintain projections instead of querying UserService database.
 - The split is documented in [ADR-0001](../../architecture/decisions/ADR-0001-split-identity-service.md).
 - Standardized integration event naming, inheritance, and publisher policy are documented in [ADR-0002](../../architecture/decisions/ADR-0002-standardized-integration-event-contracts.md).
 - Readiness-based profile provisioning for verified email/password and Google-created accounts is documented in [ADR-0006](../../architecture/decisions/ADR-0006-email-verification-activation-boundary.md).
+- Currency-policy ownership and cross-service projection distribution are documented in [ADR-0010](../../architecture/decisions/ADR-0010-user-service-platform-currency-policy.md).
 
 ## Detail
 

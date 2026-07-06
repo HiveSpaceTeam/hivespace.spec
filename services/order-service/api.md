@@ -4,7 +4,7 @@
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
-| POST | `/api/v1/carts/summary` | `RequireUser` | Get cart summary |
+| POST | `/api/v1/carts/summary` | `RequireUser` | Get cart summary with explicit money metadata and reject mixed-currency cart state |
 | POST | `/api/v1/carts/items` | `RequireUser` | Add item to cart |
 | PUT | `/api/v1/carts/items` | `RequireUser` | Update cart item quantities |
 | DELETE | `/api/v1/carts/items/{cartItemId}` | `RequireUser` | Remove cart item |
@@ -23,15 +23,15 @@
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
-| POST | `/api/v1/orders/checkout/preview` | `Authorize` | Preview checkout totals |
-| POST | `/api/v1/orders/checkout` | `Authorize` | Start checkout saga |
+| POST | `/api/v1/orders/checkout/preview` | `Authorize` | Preview checkout totals with explicit money metadata and reject mixed or invalid currency calculation contexts |
+| POST | `/api/v1/orders/checkout` | `Authorize` | Start checkout saga only when cart, coupon, and payment currency state is enabled and internally consistent |
 
 ## Buyer Orders
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
 | GET | `/api/v1/orders` | `Authorize` | List buyer orders |
-| GET | `/api/v1/orders/{orderId}` | `Authorize` | Get order detail |
+| GET | `/api/v1/orders/{orderId}` | `Authorize` | Get order detail with explicit money metadata and invalid-money diagnostics when needed |
 
 ## Seller Orders
 
@@ -46,9 +46,9 @@
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
 | GET | `/api/v1/coupons/available` | `RequireUser` | List available coupons |
-| POST | `/api/v1/coupons` | `RequireSeller` | Create coupon |
-| GET | `/api/v1/coupons` | `RequireSeller` | List seller coupons |
-| GET | `/api/v1/coupons/{id}` | `RequireSeller` | Get coupon detail |
-| PUT | `/api/v1/coupons/{id}` | `RequireSeller` | Update coupon |
+| POST | `/api/v1/coupons` | `RequireSeller` | Create coupon using one canonical `currencyCode` for all coupon money fields and reject disabled currencies |
+| GET | `/api/v1/coupons` | `RequireSeller` | List seller coupons with normalized coupon money metadata under one canonical `currencyCode` |
+| GET | `/api/v1/coupons/{id}` | `RequireSeller` | Get coupon detail with normalized coupon money metadata under one canonical `currencyCode` |
+| PUT | `/api/v1/coupons/{id}` | `RequireSeller` | Update coupon while preserving one canonical `currencyCode` across all coupon money fields |
 | DELETE | `/api/v1/coupons/{id}` | `RequireSeller` | Delete or deactivate coupon |
 | POST | `/api/v1/coupons/{id}/end` | `RequireSeller` | End coupon early |

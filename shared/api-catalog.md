@@ -99,6 +99,12 @@ Google sign-in is buyer/seller only. New Google-authenticated users are normal u
 | GET | `/api/v1/users/settings` | `RequireAdminOrUser` | Get locale/theme/user settings |
 | PUT | `/api/v1/users/settings` | `RequireAdminOrUser` | Update locale/theme/user settings |
 
+### Platform Configuration
+
+| Method | Path | Auth | Purpose |
+|---|---|---|---|
+| GET | `/api/v1/users/platform-currency-policy` | `RequireAdminOrUser` | Get the current enabled/default platform currency policy for authenticated admin, seller, and buyer clients |
+
 ### Addresses
 
 | Method | Path | Auth | Purpose |
@@ -117,6 +123,13 @@ Google sign-in is buyer/seller only. New Google-authenticated users are normal u
 |---|---|---|---|
 | POST | `/api/v1/stores` | `RequireUser` | Register seller store |
 
+### Admin Configuration
+
+| Method | Path | Auth | Purpose |
+|---|---|---|---|
+| GET | `/api/v1/admins/configuration/currencies` | `RequireAdmin` | Get persisted platform currency configuration, including enabled currencies, default currency, and policy version |
+| PUT | `/api/v1/admins/configuration/currencies` | `RequireAdmin` | Update enabled/default platform currencies; reject disabling the current default without saving a replacement default in the same request |
+
 Admin profile/store review APIs that do not change credentials, roles, lockout, email verification, or account status remain UserService-owned.
 
 ## CatalogService
@@ -125,10 +138,10 @@ Admin profile/store review APIs that do not change credentials, roles, lockout, 
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
-| POST | `/api/v1/products` | `RequireSeller` | Create product |
+| POST | `/api/v1/products` | `RequireSeller` | Create product with explicit price currency validated against the enabled platform currency policy |
 | GET | `/api/v1/products` | `RequireSeller` | List seller products |
-| GET | `/api/v1/products/{id}` | `RequireSeller` | Get seller product detail |
-| PUT | `/api/v1/products/{id}` | `RequireSeller` | Update product |
+| GET | `/api/v1/products/{id}` | `RequireSeller` | Get seller product detail with explicit money metadata for SKU prices and invalid-money diagnostics when needed |
+| PUT | `/api/v1/products/{id}` | `RequireSeller` | Update product with explicit price currency validated against the enabled platform currency policy |
 | DELETE | `/api/v1/products/{id}` | `RequireSeller` | Delete or deactivate product |
 
 ### Storefront Catalog
@@ -136,7 +149,7 @@ Admin profile/store review APIs that do not change credentials, roles, lockout, 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
 | GET | `/api/v1/products/summaries` | Anonymous | Search/list storefront product summaries |
-| GET | `/api/v1/products/detail/{id}` | Anonymous | Get storefront product detail with SKUs |
+| GET | `/api/v1/products/detail/{id}` | Anonymous | Get storefront product detail with SKUs, explicit money metadata, and invalid-money diagnostics when needed |
 | GET | `/api/v1/categories` | Anonymous | Get category tree |
 | GET | `/api/v1/categories/homepage` | Anonymous | Get homepage categories |
 | GET | `/api/v1/categories/{id}/attributes` | Anonymous | Get category attribute definitions |
@@ -147,7 +160,7 @@ Admin profile/store review APIs that do not change credentials, roles, lockout, 
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
-| POST | `/api/v1/carts/summary` | `RequireUser` | Get cart summary for checkout |
+| POST | `/api/v1/carts/summary` | `RequireUser` | Get cart summary for checkout with explicit money metadata and reject mixed-currency cart state |
 | POST | `/api/v1/carts/items` | `RequireUser` | Add item to cart |
 | PUT | `/api/v1/carts/items` | `RequireUser` | Update cart item quantities |
 | DELETE | `/api/v1/carts/items/{cartItemId}` | `RequireUser` | Remove cart item |
@@ -166,10 +179,10 @@ Admin profile/store review APIs that do not change credentials, roles, lockout, 
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
-| POST | `/api/v1/orders/checkout/preview` | `Authorize` | Preview checkout totals |
-| POST | `/api/v1/orders/checkout` | `Authorize` | Start checkout saga |
+| POST | `/api/v1/orders/checkout/preview` | `Authorize` | Preview checkout totals with explicit money metadata and reject mixed or invalid currency calculation contexts |
+| POST | `/api/v1/orders/checkout` | `Authorize` | Start checkout saga only when cart, coupon, and payment currency state is enabled and internally consistent |
 | GET | `/api/v1/orders` | `Authorize` | List buyer orders |
-| GET | `/api/v1/orders/{orderId}` | `Authorize` | Get order detail |
+| GET | `/api/v1/orders/{orderId}` | `Authorize` | Get order detail with explicit order money metadata and invalid-money diagnostics when needed |
 | GET | `/api/v1/orders/seller` | `RequireSeller` | List seller orders |
 | POST | `/api/v1/orders/{orderId}/confirm` | `RequireSeller` | Seller confirms order |
 | POST | `/api/v1/orders/{orderId}/reject` | `RequireSeller` | Seller rejects order |
@@ -179,10 +192,10 @@ Admin profile/store review APIs that do not change credentials, roles, lockout, 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
 | GET | `/api/v1/coupons/available` | `RequireUser` | List available coupons for cart/store/products |
-| POST | `/api/v1/coupons` | `RequireSeller` | Create coupon |
-| GET | `/api/v1/coupons` | `RequireSeller` | List seller coupons |
-| GET | `/api/v1/coupons/{id}` | `RequireSeller` | Get coupon detail |
-| PUT | `/api/v1/coupons/{id}` | `RequireSeller` | Update coupon |
+| POST | `/api/v1/coupons` | `RequireSeller` | Create coupon using one canonical `currencyCode` for all coupon money fields and reject disabled currencies |
+| GET | `/api/v1/coupons` | `RequireSeller` | List seller coupons with normalized coupon money metadata under one canonical `currencyCode` |
+| GET | `/api/v1/coupons/{id}` | `RequireSeller` | Get coupon detail with normalized coupon money metadata under one canonical `currencyCode` |
+| PUT | `/api/v1/coupons/{id}` | `RequireSeller` | Update coupon while preserving one canonical `currencyCode` across all coupon money fields |
 | DELETE | `/api/v1/coupons/{id}` | `RequireSeller` | Delete or deactivate coupon |
 | POST | `/api/v1/coupons/{id}/end` | `RequireSeller` | End coupon early |
 
@@ -192,8 +205,8 @@ Admin profile/store review APIs that do not change credentials, roles, lockout, 
 |---|---|---|---|
 | GET | `/api/v1/payments/vnpay/return` | Anonymous | VNPay browser return endpoint |
 | GET | `/api/v1/payments/webhook/{gateway}` | Anonymous | Payment gateway webhook/IPN |
-| GET | `/api/v1/payments/{paymentId}` | `Authorize` | Get payment detail |
-| GET | `/api/v1/payments/by-order/{orderId}` | `Authorize` | Get payment by order |
+| GET | `/api/v1/payments/{paymentId}` | `Authorize` | Get payment detail with explicit payment money metadata and invalid-money diagnostics when needed |
+| GET | `/api/v1/payments/by-order/{orderId}` | `Authorize` | Get payment by order with explicit payment money metadata and invalid-money diagnostics when needed |
 | GET | `/api/v1/wallets/me` | `Authorize` | Get current wallet balance |
 | GET | `/api/v1/wallets/me/transactions` | `Authorize` | List wallet transactions |
 

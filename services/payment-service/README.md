@@ -18,6 +18,7 @@ Source path:
 - Wallet balances and escrow balances.
 - Wallet transaction ledger.
 - Payment idempotency.
+- Local currency-policy validation projection used for payment initiation and money read normalization.
 
 ## Must Not Own
 
@@ -46,9 +47,12 @@ Backend local development starts PaymentService through Aspire AppHost in `../hi
 
 - Payment webhooks/IPN handlers must be idempotent.
 - Gateway callbacks should not cause duplicate payment success/failure events.
+- Payment initiation validates explicit order currency against the local currency-policy projection and fails closed when that projection is missing, unreadable, or stale for a write path.
+- Payment read models return explicit money metadata and invalid-money diagnostics instead of inferring `VND`.
 - OrderService reacts to payment outcomes; PaymentService does not mutate order state directly.
 - Wallet ledger entries should be append-only.
 - Payment workflow events use standardized `*IntegrationEvent` names and service-owned publisher policy per [ADR-0002](../../architecture/decisions/ADR-0002-standardized-integration-event-contracts.md).
+- Currency-policy ownership remains in UserService per [ADR-0010](../../architecture/decisions/ADR-0010-user-service-platform-currency-policy.md); PaymentService only consumes the projection for validation.
 
 ## Detail
 

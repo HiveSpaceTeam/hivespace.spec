@@ -39,6 +39,7 @@ Rules:
 | `UserOtpChallengeRequestedIntegrationEvent` | IdentityService | NotificationService sends the OTP sign-in email; fields: RecipientEmail, OtpCode, ExpiresAt, Purpose (`SignIn` in v1) |
 | `StoreCreatedIntegrationEvent` | UserService | Catalog/Order/Notification store reference projection; IdentityService seller onboarding |
 | `StoreUpdatedIntegrationEvent` | UserService | Refresh store reference projections |
+| `PlatformCurrencyPolicyUpdatedIntegrationEvent` | UserService | CatalogService, OrderService, and PaymentService update local currency-policy validation projections after admin currency configuration changes |
 
 ## Product and Media Events
 
