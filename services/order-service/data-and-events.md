@@ -8,6 +8,7 @@ OrderService owns:
 - `order_items`
 - `order_checkouts`
 - `order_discounts`
+- linked payment summary fields on order read/state records
 - cart tables and selected cart state
 - coupon tables and usage records
 - saga state tables for checkout and fulfillment
@@ -34,8 +35,8 @@ OrderService owns:
 | Event | Purpose |
 |---|---|
 | `InventoryReservedIntegrationEvent` / `InventoryReservationFailedIntegrationEvent` | Continue or compensate checkout |
-| `PaymentSucceededIntegrationEvent` / `PaymentFailedIntegrationEvent` | Continue or fail payment path |
-| `PaymentInitiatedIntegrationEvent` / `PaymentInitiationFailedIntegrationEvent` | Continue or compensate payment initiation |
+| `PaymentSucceededIntegrationEvent` / `PaymentFailedIntegrationEvent` | Continue or fail payment path only when checkout correlation and attempt identity match the current payment attempt |
+| `PaymentInitiatedIntegrationEvent` / `PaymentInitiationFailedIntegrationEvent` | Continue or compensate payment initiation with checkout-level payment reference, current attempt identity, and linked order context |
 | `OrderReadyForFulfillmentIntegrationEvent` | Start fulfillment after checkout completion |
 | `SellerNewOrderNotifiedIntegrationEvent` | Continue fulfillment notification step |
 | `BuyerNotifiedIntegrationEvent` | Complete buyer notification step |
@@ -50,7 +51,7 @@ OrderService owns:
 | `ReserveInventory` | CatalogService |
 | `ReleaseInventory` | CatalogService |
 | `ConfirmInventory` | CatalogService |
-| `InitiatePayment` | PaymentService |
+| `InitiatePayment` | PaymentService; sent once per checkout with canonical method, final total, currency, and full linked order set |
 | `NotifySellerNewOrder` | NotificationService |
 | `NotifyBuyerOrderConfirmed` | NotificationService |
 | `NotifyBuyerOrderCancelled` | NotificationService |
@@ -63,6 +64,9 @@ OrderService owns:
 ## Invariants
 
 - OrderService coordinates checkout but does not own catalog truth or payment gateway truth.
+- OrderService owns per-order `ORD-{ULID}` generation and keeps historical order codes readable/searchable.
+- OrderService stores linked payment summaries for order reads, but PaymentService remains the payment truth.
+- Payment outcome handling must validate checkout correlation and current attempt identity before changing order lifecycle.
 - Currency policy ownership remains in UserService; OrderService uses the local projection only for synchronous validation.
 - Order records keep purchase-time snapshots of product, SKU, address, and pricing data.
 - Coupon usage is committed only after the checkout path reaches the appropriate success point.

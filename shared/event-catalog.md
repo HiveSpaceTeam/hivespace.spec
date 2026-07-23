@@ -55,8 +55,8 @@ Rules:
 
 | Contract | Owner | Consumers / Purpose |
 |---|---|---|
-| `PaymentSucceededIntegrationEvent` | PaymentService | OrderService checkout saga marks payment success |
-| `PaymentFailedIntegrationEvent` | PaymentService | OrderService checkout saga fails or compensates payment path |
+| `PaymentSucceededIntegrationEvent` | PaymentService | OrderService checkout saga applies one shared checkout-level payment success to every linked order exactly once when checkout correlation and event attempt identity match the current payment attempt |
+| `PaymentFailedIntegrationEvent` | PaymentService | OrderService checkout saga records current-attempt failure/expiry/cancel for one shared payment and linked order set only when checkout correlation and event attempt identity match the current payment attempt |
 
 ## Checkout Saga Commands
 
@@ -68,7 +68,7 @@ These contracts coordinate the checkout workflow. OrderService owns the saga, bu
 | `CreateOrder` | Create order records for checkout | OrderService |
 | `ReserveInventory` | Reserve SKU inventory | CatalogService |
 | `ReleaseInventory` | Release reserved inventory during compensation | CatalogService |
-| `InitiatePayment` | Create payment and redirect URL | PaymentService |
+| `InitiatePayment` | Create one checkout-level payment and initial payment attempt for the checkout correlation, canonical method, final checkout total, currency, and linked generated order set, returning a redirect URL only for online methods | PaymentService |
 | `MarkOrderAsPaid` | Mark order payment status paid | OrderService |
 | `MarkOrderAsCOD` | Mark order as cash-on-delivery path | OrderService |
 | `CommitCouponUsage` | Commit coupon usage after payment/order success | OrderService |
@@ -81,7 +81,7 @@ These contracts coordinate the checkout workflow. OrderService owns the saga, bu
 | `OrderCreatedIntegrationEvent` | Order records were created |
 | `InventoryReservedIntegrationEvent` | Inventory reservation succeeded |
 | `InventoryReleasedIntegrationEvent` | Inventory was released during compensation |
-| `PaymentInitiatedIntegrationEvent` | Payment record/link was created |
+| `PaymentInitiatedIntegrationEvent` | Checkout-level payment ID/reference, current attempt identity, method, total, currency, redirect URL when applicable, and linked order set were created for the checkout correlation |
 | `OrderMarkedAsPaidIntegrationEvent` | Order payment status was marked paid |
 | `OrderMarkedAsCODIntegrationEvent` | Order was marked for COD processing |
 | `CouponUsageCommittedIntegrationEvent` | Coupon usage was committed |
@@ -93,7 +93,7 @@ These contracts coordinate the checkout workflow. OrderService owns the saga, bu
 |---|---|
 | `OrderCreationFailedIntegrationEvent` | Order creation failed |
 | `InventoryReservationFailedIntegrationEvent` | Inventory could not be reserved |
-| `PaymentInitiationFailedIntegrationEvent` | Payment initiation failed |
+| `PaymentInitiationFailedIntegrationEvent` | Checkout-level payment initiation failed for the checkout correlation after amount, currency, method, or linked order set validation, with failure reason and any available payment/attempt identity |
 | `MarkOrderAsPaidFailedIntegrationEvent` | Mark-paid step failed |
 | `MarkOrderAsCODFailedIntegrationEvent` | COD marking failed |
 | `CommitCouponUsageFailedIntegrationEvent` | Coupon usage commit failed |

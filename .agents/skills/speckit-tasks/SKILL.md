@@ -130,7 +130,7 @@ The generated task set should be immediately executable. `tasks.md` is the entry
 
 **CRITICAL**: Detailed tasks MUST be organized by implementation ownership, not primarily by user story. Preserve user-story labels (`[US1]`, `[US2]`, etc.) for traceability and independent acceptance.
 
-**Tests are generated for coverage-defined scope (TDD-first)**: For every feature, generate required test tasks only for implementation that changes files, layers, or behaviors inside the target repo's measured coverage scope. Required test tasks must be placed BEFORE their corresponding implementation tasks in both the detailed file and the dependency order.
+**Tests are generated for coverage-defined scope (TDD-first)**: For every feature, generate required test-code tasks only for implementation that changes files, layers, or behaviors inside the target repo's measured coverage scope. Required test-code tasks must be placed BEFORE their corresponding implementation tasks in both the detailed file and the dependency order. Do not create test-code tasks for implementation outside measured coverage scope; use build, type-check, search, schema, migration, or manual verification tasks instead.
 
 ### Task Files (REQUIRED)
 
@@ -176,7 +176,21 @@ Every detailed task MUST strictly follow this format:
 
 ### Coverage-Scoped Test Task Mapping (REQUIRED)
 
-For every Acceptance Criteria (AC) in spec.md that is implemented through measured coverage scope, generate at least one test task:
+Before generating any backend or frontend test-code task, read the target source repo's test/coverage policy when that repo is affected:
+
+- Backend: read `../hivespace.microservice/AGENTS.md`, `../hivespace.microservice/CLAUDE.md`, `../hivespace.microservice/TESTING.md`, and `../hivespace.microservice/coverage.runsettings`.
+- Frontend: read `../hivespace.web/AGENTS.md`, `../hivespace.web/CLAUDE.md`, `../hivespace.web/TESTING.md`, and inspect `../hivespace.web/coverage.ps1` policy include/exclude rules.
+
+For every Acceptance Criteria (AC) in spec.md that is implemented through measured coverage scope, generate at least one test task. If an AC is implemented only through files outside measured coverage scope, do not generate a required test-code task for it; add the smallest relevant non-test verification task instead.
+
+Coverage scope rules for HiveSpace source repos:
+
+- Backend measured scope is service business behavior in Domain/Application/Core and API consumer coverage scope, as defined by `coverage.runsettings`.
+- Backend excluded scope includes Infrastructure, Persistence, migrations, config, generated code, validators, command/query DTOs, mapper files, consumer definitions, service defaults, AppHost, shared infrastructure libraries, test projects, and docs/catalog files.
+- Frontend measured scope is policy-scoped runtime behavior from `coverage.ps1`: app `pages/**`, `stores/**`, `composables/**`, `router/**`; shared `features/**` only when the changed file is a `create*Store.ts` store factory or other included runtime file; shared `composables/**`; shared `test-utils/**`.
+- Frontend excluded scope includes `types/**`, `i18n/**`, `assets/**`, `config/**`, thin `services/**`, barrel `index.ts`, shared `features/**/*.service.ts`, shared `features/**/*.types.ts`, broad presentational components, icons, styles, utilities unless promoted into coverage policy, and docs.
+- If a normally excluded frontend/backend surface gains meaningful branching, orchestration, validation, permissions, stateful behavior, or async workflow ownership, either move that behavior into an already measured surface or generate an explicit coverage-policy update task plus paired tests in the same task set.
+- Thin transport wrappers, type-only contracts, DTOs, i18n/resources, config, appsettings, gateway route config, migrations, EF mappings, docs, ADRs, and shared catalogs should have type-check/build/schema/search/manual acceptance, not required test-code tasks, unless they also change measured runtime behavior.
 
 1. **Reference the AC**: Include the AC scenario label (e.g., `AC1.1`) in the task description when the covered implementation maps to that AC
 2. **Specify test file location** per source-repo TESTING.md guides:
@@ -187,6 +201,7 @@ For every Acceptance Criteria (AC) in spec.md that is implemented through measur
    - Frontend (all types): `should …` plain English sentence (e.g., `should render empty cart when no items exist`) — per `hivespace.web/TESTING.md`
 4. **Task ID**: Use B###/F### prefix, assign a lower number than the paired implementation task so required test tasks sort first in the same group
 5. **Verification**: Add a `V###` task in `verification.md` per service/app group to run its test suite and confirm green
+6. **Non-coverage implementation acceptance**: For implementation outside measured coverage scope, add acceptance such as "workspace type-checks", "service builds", "migration scaffolds/applies", "route table covers the path", "final search finds no stale constants", or "catalog row exists"; do not add fake/smoke tests only to satisfy TDD wording.
 
 **Example backend test task:**
 
@@ -223,6 +238,7 @@ For every Acceptance Criteria (AC) in spec.md that is implemented through measur
 2. **From Contracts**:
    - Map each interface contract to the owning implementation area and the user story it serves
    - Create required test-code tasks in the relevant backend/frontend group BEFORE implementation tasks only when the contract work changes measured coverage scope, and add run-test tasks in `verification.md`
+   - For contract-only updates outside measured coverage scope, validate through type-check/build, consumer store/page tests, schema checks, catalog checks, or final searches instead of direct type/service/DTO tests
 
 3. **From Data Model**:
    - Map each entity to the owning service/lib and user story labels

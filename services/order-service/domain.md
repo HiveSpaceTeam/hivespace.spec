@@ -18,7 +18,7 @@ Implementation source:
 | `CartItem` | Entity under `Cart` | Product/SKU/quantity row with selected state |
 | `Coupon` | Aggregate root | Platform or store promotion with discount type, scope, date window, usage limits, applicability rules, and usage history |
 | `CouponUsage` / `CouponRule` | Entities under `Coupon` | Coupon usage audit and custom validation rules |
-| `Order` | Aggregate root | Purchase record split by store with delivery snapshot, item snapshots, checkout breakdown, discounts, totals, status, and tracking entries |
+| `Order` | Aggregate root | Purchase record split by store with `ORD-{ULID}` order code, delivery snapshot, item snapshots, checkout breakdown, discounts, totals, status, linked payment summary, and tracking entries |
 | `OrderItem`, `Checkout`, `Discount`, `OrderTracking` | Child entities/value objects | Purchase-time details and audit trail under an order |
 | `ProductRef`, `SkuRef`, `StoreRef` | Projection models | Local copies of catalog/store facts required for cart, checkout, and notifications |
 | `DeliveryAddress`, `ProductSnapshot`, `PackageDimensions`, `PhoneNumber` | Value objects | Immutable checkout/order snapshots |
@@ -50,14 +50,15 @@ Implementation source:
 ## Order Rules
 
 - An order requires buyer user ID, store ID, and delivery address.
-- New orders start as `Created`, receive a generated `ORD-{timestamp}-{random}` code, and expire after 24 hours.
+- New orders start as `Created`, receive a unique generated `ORD-{26-character uppercase ULID}` code, and expire after 24 hours.
+- Historical order codes remain readable and searchable.
 - Items, shipping fee, and discounts may be changed only while the order is in a valid pre-payment state.
 - Discounts cannot be applied before all item/shipping changes are complete; item/shipping changes are blocked after discounts exist.
 - Store coupons may apply only to orders for the same store.
 - Platform discounts can be prorated across store orders.
 - Totals are recalculated from item line totals, discounts, and buyer-paid shipping.
-- Online payment moves `Created` orders to `Paid`; duplicate paid marking is idempotent.
-- COD marking is allowed only from `Created` and fails when total amount exceeds the COD limit.
+- Online payment moves `Created` orders to `Paid` only when the PaymentService outcome matches the current checkout payment attempt; duplicate paid marking is idempotent.
+- COD marking is allowed only from `Created`, waits for PaymentService-created offline payment confirmation, and fails when total amount exceeds the COD limit.
 - Seller confirmation/rejection is allowed only from `Paid` or `COD`.
 - Confirmed orders can be assigned shipping and moved through `ReadyToShip`, `Shipped`, `Delivered`, and `Completed`.
 - Orders can be cancelled only while `Created`, `Paid`, `COD`, or `Confirmed`.
@@ -72,13 +73,13 @@ Implementation source:
 | Confirm/reject | `Paid` or `COD` only |
 | Ship | `Confirmed` or `ReadyToShip`; shipping ID is required before shipment |
 | Final states | `Completed`, `Refunded`, `Solved`, `Expired`; cancelled/rejected are terminal business outcomes even though they are not `IsFinal()` in the enumeration helper |
-| Checkout saga | Creates orders, reserves inventory, handles COD/payment path, commits coupon usage, clears cart, and starts fulfillment |
+| Checkout saga | Creates orders, reserves inventory, initiates one checkout-level payment for all generated orders, validates current-attempt payment outcomes, handles COD/payment path, commits coupon usage, clears cart, and starts fulfillment |
 | Fulfillment saga | Notifies seller, waits for seller action/timeout, confirms inventory or compensates, then notifies buyer |
 
 ## Cross-Service Facts
 
 - OrderService consumes product, SKU, and store events to maintain local projections.
 - Product and SKU projections are snapshots for order processing; CatalogService remains the catalog source of truth.
-- PaymentService owns gateway/payment truth; OrderService reacts to payment success/failure events.
+- PaymentService owns gateway/payment truth, payment reference numbers, linked payment records, and attempts; OrderService stores linked payment summaries and reacts only to current-attempt payment success/failure events for matching checkout correlations.
 - CatalogService owns inventory reservation/confirmation; OrderService coordinates those steps through saga messages.
 - NotificationService owns delivery; OrderService requests buyer/seller notifications through saga messages.

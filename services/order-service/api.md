@@ -24,14 +24,14 @@
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
 | POST | `/api/v1/orders/checkout/preview` | `Authorize` | Preview checkout totals with explicit money metadata and reject mixed or invalid currency calculation contexts |
-| POST | `/api/v1/orders/checkout` | `Authorize` | Start checkout saga only when cart, coupon, and payment currency state is enabled and internally consistent |
+| POST | `/api/v1/orders/checkout` | `Authorize` | Start checkout saga with a canonical payment method code and one checkout-level payment covering all generated orders when cart, coupon, and payment currency state is enabled and internally consistent |
 
 ## Buyer Orders
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
 | GET | `/api/v1/orders` | `Authorize` | List buyer orders |
-| GET | `/api/v1/orders/{orderId}` | `Authorize` | Get order detail with explicit money metadata and invalid-money diagnostics when needed |
+| GET | `/api/v1/orders/{orderId}` | `Authorize` | Get order detail with explicit money metadata, order code, linked checkout payment reference, and invalid-money diagnostics when needed |
 
 ## Seller Orders
 

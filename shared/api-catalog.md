@@ -180,9 +180,9 @@ Admin profile/store review APIs that do not change credentials, roles, lockout, 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
 | POST | `/api/v1/orders/checkout/preview` | `Authorize` | Preview checkout totals with explicit money metadata and reject mixed or invalid currency calculation contexts |
-| POST | `/api/v1/orders/checkout` | `Authorize` | Start checkout saga only when cart, coupon, and payment currency state is enabled and internally consistent |
+| POST | `/api/v1/orders/checkout` | `Authorize` | Start checkout saga with a canonical payment method code and one checkout-level payment covering all generated orders when cart, coupon, and payment currency state is enabled and internally consistent |
 | GET | `/api/v1/orders` | `Authorize` | List buyer orders |
-| GET | `/api/v1/orders/{orderId}` | `Authorize` | Get order detail with explicit order money metadata and invalid-money diagnostics when needed |
+| GET | `/api/v1/orders/{orderId}` | `Authorize` | Get order detail with explicit order money metadata, order code, linked checkout payment reference, and invalid-money diagnostics when needed |
 | GET | `/api/v1/orders/seller` | `RequireSeller` | List seller orders |
 | POST | `/api/v1/orders/{orderId}/confirm` | `RequireSeller` | Seller confirms order |
 | POST | `/api/v1/orders/{orderId}/reject` | `RequireSeller` | Seller rejects order |
@@ -203,14 +203,17 @@ Admin profile/store review APIs that do not change credentials, roles, lockout, 
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
+| GET | `/api/v1/payments/methods` | `Authorize` | Get PaymentService-owned canonical payment method metadata for COD, VNPay, and future/unavailable Stripe across buyer, seller, and admin apps |
 | GET | `/api/v1/payments/vnpay/return` | Anonymous | VNPay browser return endpoint |
 | GET | `/api/v1/payments/webhook/{gateway}` | Anonymous | Payment gateway webhook/IPN |
-| GET | `/api/v1/payments/{paymentId}` | `Authorize` | Get payment detail with explicit payment money metadata and invalid-money diagnostics when needed |
-| GET | `/api/v1/payments/by-order/{orderId}` | `Authorize` | Get payment by order with explicit payment money metadata and invalid-money diagnostics when needed |
+| GET | `/api/v1/payments/{paymentId}` | `Authorize` | Get checkout-level payment detail with payment reference number, linked orders, canonical method metadata, explicit payment money metadata, latest attempt, and privileged attempt history when authorized |
+| GET | `/api/v1/payments/by-reference/{referenceNo}` | `Authorize` | Get checkout-level payment detail by public `PAY-{ULID}` reference for support/admin reconciliation with linked orders, latest attempt, attempt history when authorized, and explicit money metadata |
+| GET | `/api/v1/payments/by-order/{orderId}` | `Authorize` | Get the shared checkout-level payment linked to an order with linked orders, latest attempt, explicit payment money metadata, and invalid-money diagnostics when needed |
+| POST | `/api/v1/payments/{paymentId}/attempts` | `Authorize` | Create an idempotent COD or VNPay retry attempt under an existing checkout-level payment after a failed, expired, or cancelled attempt while linked orders remain eligible and no attempt has succeeded |
 | GET | `/api/v1/wallets/me` | `Authorize` | Get current wallet balance |
 | GET | `/api/v1/wallets/me/transactions` | `Authorize` | List wallet transactions |
 
-Webhook endpoints should acknowledge gateway delivery even when internal processing is deferred or logged.
+PaymentService owns canonical payment method configuration. COD and VNPay are checkout-selectable in this feature; Stripe is returned as unavailable/future metadata for non-checkout displays until its gateway implementation is explicitly enabled later. VNPay initiation uses payment `ReferenceNo` as the merchant transaction reference, while gateway transaction identifiers are stored separately on payment attempts after return/IPN. Webhook endpoints should acknowledge gateway delivery even when internal processing is deferred or logged.
 
 ## MediaService
 

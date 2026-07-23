@@ -48,7 +48,7 @@ Shared vocabulary for specs, plans, service docs, API contracts, and implementat
 
 | Term | Meaning |
 |---|---|
-| Payment | Payment aggregate tied to an order |
+| Payment | PaymentService aggregate for a checkout-level payment that may cover one or more generated orders |
 | Gateway | External payment provider such as VNPay |
 | IPN | Instant payment notification/webhook from a payment gateway |
 | Wallet | User balance account managed by PaymentService |

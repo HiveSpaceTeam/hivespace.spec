@@ -17,16 +17,19 @@ Preview must not reserve inventory, create payment state, or commit coupon usage
 ```text
 Initial
   -> validate cart, coupon, and payment currency state against local currency-policy projection
-  -> create order records
+  -> create order records with distinct ORD-{ULID} codes
   -> reserve inventory
   -> if COD:
-       mark order as COD
+       initiate one checkout-level offline payment
+       wait for PaymentService attempt confirmation
+       mark linked orders as COD
        clear/commit checkout side effects
        start fulfillment
   -> if online payment:
-       initiate payment
+       initiate one checkout-level payment for all generated orders
        wait for payment success/failure
-       mark paid
+       validate current attempt identity
+       mark linked orders paid
        commit coupon usage
        start fulfillment
   -> on failure:
@@ -35,7 +38,9 @@ Initial
 
 Checkout success publishes `OrderReadyForFulfillmentIntegrationEvent` as the shared handoff to fulfillment.
 
-Currency validation is a guard inside the existing checkout flow only; feature `0010` does not add new saga states, compensation branches, or timeouts.
+Payment initiation and payment outcome messages carry the checkout correlation, linked order set, shared payment reference, and current attempt identity. OrderService ignores stale payment outcomes from older attempts after a newer attempt exists or the payment already succeeded.
+
+Currency validation is a guard inside checkout. Checkout-level payment changes from feature `0011` extend the existing saga payment state and messages without moving payment gateway truth into OrderService.
 
 ## Fulfillment Saga
 
