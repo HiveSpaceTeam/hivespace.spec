@@ -51,6 +51,20 @@ Rules:
 | `ProductSkuUpdatedIntegrationEvent` | CatalogService | Refresh SKU price/availability projections |
 | `MediaAssetProcessedIntegrationEvent` | MediaService | Notify owning domain that media processing completed |
 
+## Background Job Lifecycle Events
+
+These events are generic observer facts for long-running service-owned jobs. Consumers may build dashboards, alerts, or audit projections from them, but they must not execute the domain work or become the source of truth for job result details.
+
+| Contract | Owner | Consumers / Purpose |
+|---|---|---|
+| `BackgroundJobQueuedIntegrationEvent` | Producing service | Observer-only monitoring when a service-owned background job is accepted and queued |
+| `BackgroundJobStartedIntegrationEvent` | Producing service | Observer-only monitoring when a service-owned background job starts processing |
+| `BackgroundJobProgressedIntegrationEvent` | Producing service | Observer-only monitoring of progress counts or milestones for a service-owned background job |
+| `BackgroundJobCompletedIntegrationEvent` | Producing service | Observer-only monitoring when a service-owned background job completes successfully |
+| `BackgroundJobFailedIntegrationEvent` | Producing service | Observer-only monitoring when a service-owned background job fails with an operator-safe error summary |
+
+CatalogService publishes these for asynchronous catalog import jobs such as category provisioning, category-attribute provisioning, bundle submission, validation, seller provisioning, and ready-product import. CatalogService job status endpoints remain the source of truth for import progress, result summaries, errors, and retry eligibility.
+
 ## Payment Events
 
 | Contract | Owner | Consumers / Purpose |

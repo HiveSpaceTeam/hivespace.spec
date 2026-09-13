@@ -13,9 +13,10 @@ HiveSpace is a microservices-based e-commerce platform built across multiple rep
 | Spec | `hivespace.spec` | Planning, specs, architecture docs, catalogs, constitution |
 | Backend | `../hivespace.microservice` | .NET 8 backend services |
 | Frontend | `../hivespace.web` | Vue 3 apps and shared frontend package |
+| Crawler | `../hivespace.crawler` | Python catalog crawl tooling, local crawl state, and export bundle generation |
 | Config | `../hivespace.config` | Local/cloud infrastructure configuration |
 
-The spec repo is documentation and planning only. It does not contain runnable product code.
+The spec repo is documentation and planning only. It does not contain runnable product code. Backend, frontend, and crawler repositories are source repos and must be covered by feature specs, plans, tasks, and verification when their behavior or contracts change.
 
 ### Required Reads Before Planning
 
@@ -33,6 +34,7 @@ Before implementing in a source repo, also read that repo's `AGENTS.md`:
 
 - `../hivespace.microservice/AGENTS.md`
 - `../hivespace.web/AGENTS.md`
+- `../hivespace.crawler/AGENTS.md` when present
 
 ### Service Boundaries
 
@@ -46,6 +48,12 @@ Before implementing in a source repo, also read that repo's `AGENTS.md`:
 | OrderService | Cart, checkout, orders, coupons, sagas | Catalog truth, payment gateway truth, notification delivery |
 | PaymentService | Payments, gateways, wallets, transactions | Orders, inventory, notifications |
 | NotificationService | Notifications, templates, preferences, delivery, realtime hub | Business decisions owned by other services |
+
+### Crawler Boundary
+
+The crawler repository owns external source crawling, crawler CLI behavior, local crawl/checkpoint state, source traceability, and normalized export files that match feature-defined contracts.
+
+The crawler must not own HiveSpace account, store, catalog, media, order, payment, or notification domain truth. It must not create seller accounts or stores, decide product import readiness, perform catalog validation authority, store media binaries, publish integration messages, or call service databases directly.
 
 ## Article II - Backend Principles
 
@@ -226,3 +234,4 @@ Generated or temporary documentation folders must not be required for future pla
 | 2026-05-17 | All | Replaced generated-doc dependencies with durable `architecture/`, `services/`, and `shared/` source-of-truth references | Allow future deletion of generated documentation without losing planning context |
 | 2026-05-24 | I, II | Added IdentityService boundary and narrowed UserService to profile/settings/address/store ownership | Reflect shipped split of identity ownership from UserService |
 | 2026-06-07 | IV | Clarified `hivespace.config` as infrastructure context only, not the supported backend local development startup flow after Aspire AppHost adoption | Keep planning guidance aligned with story `0006` runtime documentation |
+| 2026-09-13 | I | Added `../hivespace.crawler` as a source repo and documented crawler ownership boundaries | Ensure crawler behavior and export contracts are covered by feature specs, plans, tasks, and verification |

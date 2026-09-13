@@ -45,6 +45,7 @@
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
 | POST | `/api/v1/stores` | `RequireUser` | Register seller store |
+| POST | `/api/v1/admins/imported-seller-stores` | `RequireCatalogImportProvisioning` | Create or match a UserService-owned store for an imported seller account while preserving existing store uniqueness and seller-role propagation rules |
 
 ## Admin Configuration
 

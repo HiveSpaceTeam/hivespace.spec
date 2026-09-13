@@ -28,6 +28,7 @@ Implementation lives in sibling repositories:
 | --- | --- | --- |
 | Backend | `../hivespace.microservice` | .NET 8 backend services |
 | Frontend | `../hivespace.web` | Vue 3 frontend monorepo |
+| Crawler | `../hivespace.crawler` | Python catalog crawl tooling and export bundle generation |
 | Config | `../hivespace.config` | Local/cloud infrastructure configuration |
 
 ## On Every Session Start
@@ -144,17 +145,20 @@ implementation starts.
 
 ## Source Repo Preparation Rules
 
-Before switching to `../hivespace.microservice` or `../hivespace.web`:
+Before switching to `../hivespace.microservice`, `../hivespace.web`, or `../hivespace.crawler`:
 
 1. Use the current feature's `spec.md`, `plan.md`, `tasks.md`, and detailed `tasks/` files as the implementation scope.
 2. Include owning service docs, changed supporting service docs, and relevant catalog references in the implementation context.
-3. Keep backend and frontend work scoped to one coherent story or task group.
+3. Keep backend, frontend, and crawler work scoped to one coherent story or task group.
 4. Follow the target repo's own agent instruction files.
 5. After implementation, run the target repo coverage workflow for the affected
    service/workspace and add tests for the measured scope if the measured
    coverage is below 80%.
 6. Treat any task marked `User-owned E2E` as out of agent execution scope. The
    agent may reference it, but the user must run and confirm that validation.
+7. When crawler behavior, local crawl state, or export bundle contracts change,
+   treat `../hivespace.crawler` as a source repo that must be covered by the
+   active feature spec, plan, tasks, and verification flow.
 
 ## Config Repo Scope
 
@@ -162,6 +166,6 @@ Before switching to `../hivespace.microservice` or `../hivespace.web`:
 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
-shell commands, and other important information, read `specs/0011-multi-order-payment-methods/plan.md`.
+shell commands, and other important information, read `specs/0012-tiki-catalog-crawl/plan.md`.
 <!-- SPECKIT END -->
 

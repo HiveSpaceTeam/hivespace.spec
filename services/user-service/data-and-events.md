@@ -8,6 +8,7 @@ UserService owns:
 - User settings such as culture and theme.
 - User addresses.
 - Store registration records and store lifecycle data.
+- Imported seller store provisioning keys used to create or match stores for catalog import workflows.
 - Platform configuration records that hold config-level default/version state for UserService-owned list settings.
 - Platform currency item rows that hold enabled/disabled state for supported currencies.
 - User-owned profile, address, settings, and store seed data.
@@ -46,6 +47,7 @@ UserService owns:
 - Platform currency policy state is authoritative only in UserService even though other services keep local validation projections.
 - IdentityService is authoritative for authentication, roles, claims, lockout, account status, and email verification.
 - Store registration is the only supported UserService trigger for seller/store-owner role propagation.
+- Imported seller store provisioning also publishes the existing `StoreCreatedIntegrationEvent` for newly created stores; it does not grant identity roles directly.
 - Other services must not assume store/user display data without a projection event or public API contract.
 
 ## Publisher Policy

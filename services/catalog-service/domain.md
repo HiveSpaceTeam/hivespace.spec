@@ -20,6 +20,10 @@ Implementation source:
 | `SkuVariant` | Value object | Concrete variant selection on a SKU |
 | `ProductImage` / `SkuImage` | Value objects | Media file reference plus optional resolved image URL |
 | `Category` | Aggregate root | Category hierarchy node with optional parent, image reference, active flag, and assigned category attributes |
+| `CatalogImportJob` | Aggregate/entity | Durable execution state for asynchronous category provisioning, bundle submission, validation, seller provisioning, and ready-product import |
+| `ExternalCategoryLink` | Entity / reference model | Provisioned source category link from Tiki external category IDs to CatalogService categories before product import |
+| `ExternalCategoryAttributeLink` | Entity / reference model | Provisioned source category-attribute link from Tiki attribute/value IDs to CatalogService category attribute definitions and selectable values |
+| `SellerOwnershipLink` | Entity / reference model | Approved mapping from an imported external seller identity to an eligible HiveSpace seller account/store for import ownership |
 | `AttributeDefinition` | Aggregate root | Attribute metadata with type, input behavior, mandatory flag, and value-count limit |
 | `AttributeValue` | Entity | Allowed attribute value under an attribute definition |
 | `StoreRef` | Projection aggregate | Local copy of UserService store data used for catalog ownership/display |
@@ -35,6 +39,12 @@ Implementation source:
 - SKU price is represented by the shared `Money` value object and uses the platform money convention.
 - Product categories, attributes, variants, and SKUs are replaced as collections during product upsert/update flows.
 - Category attributes link categories to attribute definitions; removing a missing attribute is a no-op.
+- Tiki external category links must be provisioned before product import validation can resolve product categories.
+- Tiki external category-attribute links must be provisioned before product import validation can treat required category attributes and selectable values as ready.
+- Catalog import jobs use statuses `Pending`, `Running`, `Completed`, and `Failed`; APIs return job IDs for long-running import operations instead of blocking until completion.
+- Catalog import job execution stays inside CatalogService background consumers hosted with the CatalogService deployment for v1.
+- Imported seller ownership links are keyed by external seller identity; similar store names are review signals and cannot create ownership automatically.
+- Operator-approved seller ownership links must not mutate the existing store profile, owner, metadata, lifecycle state, or existing products.
 - Attribute definitions describe both value type and input type, including whether a value is mandatory and how many values may be supplied.
 - Product physical metadata may include weight and dimensions; each dimension/weight value must be non-negative.
 
@@ -44,6 +54,7 @@ Implementation source:
 |---|---|
 | Product | Created or updated by seller workflows; deleted/deactivated products publish projection updates for downstream services |
 | SKU inventory | Quantity changes are validated at the SKU level and participate in checkout inventory reservation/confirmation flows |
+| Catalog import job | `Pending -> Running -> Completed` or `Pending -> Running -> Failed`; retry creates or reuses an idempotent pending job according to operation type and source identity/fingerprint |
 | Media URL resolution | Product, SKU, thumbnail, and category image URLs are set after MediaService processing completes |
 | Store projection | `StoreRef` is created/refreshed from UserService store events |
 
@@ -51,6 +62,7 @@ Implementation source:
 
 - CatalogService consumes `StoreCreatedIntegrationEvent` and `StoreUpdatedIntegrationEvent` to maintain `StoreRef`.
 - CatalogService publishes product and SKU events so OrderService can maintain `product_refs` and `sku_refs`.
+- CatalogService publishes generic background job lifecycle events for observer-only monitoring of CatalogService-owned async import jobs.
 - CatalogService participates in checkout by reserving, releasing, and confirming inventory through saga messages.
 - CatalogService owns product/SKU truth; OrderService projections are local read models, not catalog ownership.
 - MediaService owns binary storage and processing; CatalogService owns product/category association to media references.

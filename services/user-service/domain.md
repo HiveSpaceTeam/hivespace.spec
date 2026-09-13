@@ -28,6 +28,7 @@ Implementation source:
 - Full name is trimmed and must be 2-100 characters when creating a user.
 - UserService does not own account status, lockout, email verification, credentials, roles, or claims.
 - A user can own at most one store. Store registration creates the store and publishes a store-created fact for IdentityService seller-role propagation.
+- Imported seller store provisioning creates or matches stores idempotently by external seller identity while preserving the one-store-per-user and unique-store-name rules.
 - Store names are unique case-insensitively, 2-100 characters, and cannot contain `<`, `>`, `"`, `|`, `\`, `/`, `*`, `?`, or `:`.
 - Store logo references are stored as `LogoFileId` until MediaService processing provides a URL.
 - Store description is optional and limited to 500 characters; store address is required and limited to 500 characters.

@@ -20,9 +20,10 @@ Use this file with:
 | Spec | `hivespace.spec` | Product specs, architecture docs, service reference, catalogs, constitution |
 | Backend | `../hivespace.microservice` | .NET 8 microservice backend |
 | Frontend | `../hivespace.web` | Vue 3 pnpm/Turbo frontend monorepo |
+| Crawler | `../hivespace.crawler` | Python catalog crawl tooling, local crawl state, and export bundle generation |
 | Config | `../hivespace.config` | Infrastructure configuration and historical/raw container orchestration context |
 
-The spec repo is the planning source of truth. Backend and frontend repos are the implementation source of truth.
+The spec repo is the planning source of truth. Backend, frontend, and crawler repos are the implementation source of truth. Historical crawler experiments, including `../hivespace.crawl-data`, are reference material only unless a feature explicitly promotes behavior into `../hivespace.crawler`.
 
 ## Platform Shape
 
@@ -120,6 +121,20 @@ Domain -> Application -> Infrastructure -> Api
 - Api owns endpoints, middleware, authorization wiring, health checks, and dependency registration.
 
 Lite services still use CQRS and Minimal API entrypoints where implemented, but with fewer projects and less DDD ceremony.
+
+## Crawler System
+
+`../hivespace.crawler` is a Python source repo for operator-run catalog crawling and normalized export generation. Feature specs that change crawler behavior, local crawl/checkpoint state, or export bundle contracts must include crawler tasks and verification.
+
+```text
+Tiki APIs
+  -> hivespace.crawler Python CLI
+  -> local JSON crawl outputs and import bundles
+  -> Admin app upload
+  -> CatalogService validation, provisioning, and import
+```
+
+The crawler owns source collection and export shaping only. CatalogService remains authoritative for category provisioning, catalog validation, duplicate handling, product import, publication state, and imported seller ownership orchestration.
 
 ## Integration Model
 
@@ -227,6 +242,9 @@ pnpm install
 pnpm dev:admin
 pnpm dev:seller
 pnpm dev:buyer
+
+cd ../hivespace.crawler
+python -m hivespace_crawler --help
 ```
 
 `../hivespace.config` remains infrastructure context only for feature workflows. It may still be referenced for raw container/infrastructure setup, but it is not the supported backend local development startup flow after story `0006`. Feature plans and tasks must not require edits to that repo; source-repo runtime settings, appsettings, gateway route config, and frontend environment typing belong with backend or frontend work.
@@ -240,6 +258,6 @@ Before planning a feature:
 3. Read `services/_inventory.md`.
 4. Read each affected `services/<service-name>/` document.
 5. Read `shared/coding-conventions.md`.
-6. Inspect implementation source in `../hivespace.web` or `../hivespace.microservice` for final truth before editing code.
+6. Inspect implementation source in `../hivespace.web`, `../hivespace.microservice`, or `../hivespace.crawler` for final truth before editing code.
 
 Do not add an API, event, service responsibility, shared component, or workflow that duplicates an existing catalog entry.

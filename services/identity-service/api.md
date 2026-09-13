@@ -44,5 +44,6 @@ Google sign-in is limited to buyer and seller app contexts. New Google-authentic
 | GET | `/api/v1/admins` | `RequireAdmin` | List identity-owned admin accounts |
 | PUT | `/api/v1/admins/users/status` | `RequireAdmin` | Suspend, reactivate, or otherwise change identity-owned account status |
 | DELETE | `/api/v1/admins/users/{userId}` | `RequireAdmin` | Delete or deactivate identity-owned account access |
+| POST | `/api/v1/admins/imported-seller-accounts` | `RequireCatalogImportProvisioning` | Create or match an identity-owned seller account for a catalog import seller without issuing browser session cookies, access tokens, refresh tokens, or caller-visible passwords |
 
 Admin profile/store review actions that do not change identity-owned account state remain UserService-owned.

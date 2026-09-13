@@ -15,6 +15,7 @@ Source path:
 - User profile and settings.
 - User addresses.
 - Store registration and seller-role transition.
+- Imported seller store provisioning for catalog import workflows.
 - Platform configuration foundation records for list-based settings owned by UserService.
 - Platform currency configuration rows, default currency selection, and policy version state.
 - User-owned profile and store seed data.
@@ -47,6 +48,7 @@ Backend local development starts UserService through Aspire AppHost in `../hives
 ## Planning Notes
 
 - Store creation publishes `StoreCreatedIntegrationEvent`; IdentityService consumes it to grant seller access, so seller app must force token refresh after propagation.
+- Imported seller store provisioning uses `/api/v1/admins/imported-seller-stores` with `RequireCatalogImportProvisioning`; it creates or matches UserService-owned stores for CatalogService import orchestration while preserving store uniqueness and lifecycle rules.
 - UserService consumes `IdentityUserReadyIntegrationEvent` to create the matching profile for an identity-owned account once it is usable.
 - User profile/settings APIs are shared by admin, seller, and buyer apps.
 - UserService owns the persisted platform currency policy and exposes both admin management and authenticated read endpoints for it.

@@ -19,6 +19,7 @@ Source path:
 - Temporary failed-login lockout state.
 - Email verification state and verification workflows.
 - Identity-owned seed users, roles, claims, account status, and OIDC configuration.
+- Imported seller account provisioning for catalog import workflows.
 - Seller role propagation after UserService publishes a store-created fact.
 
 ## Must Not Own
@@ -50,6 +51,7 @@ Backend local development starts IdentityService through Aspire AppHost in `../h
 - IdentityService and UserService share the same public user ID for the same user, but each service writes only its own database.
 - Account readiness publishes `IdentityUserReadyIntegrationEvent`; UserService consumes it to create the matching profile once the account is usable.
 - Store registration remains UserService-owned. IdentityService consumes `StoreCreatedIntegrationEvent` idempotently to grant seller role/claims and store reference on the identity account.
+- Imported seller account provisioning uses `/api/v1/admins/imported-seller-accounts` with `RequireCatalogImportProvisioning`; it creates or matches identity-owned seller accounts for CatalogService import orchestration without issuing browser sessions, tokens, cookies, or caller-visible passwords.
 - Email verification events are IdentityService-owned; NotificationService only delivers the email/notification.
 - Email OTP sign-in is also IdentityService-owned. Public v1 behavior stays on `/api/v1/accounts/otp/request` and `/api/v1/accounts/otp/verify`, while internal state is stored as a reusable `OtpChallenge` with `Purpose = SignIn`.
 - Browser auth responses set secure HttpOnly token cookies and a CSRF token; responses must not expose access or refresh tokens to frontend scripts.
